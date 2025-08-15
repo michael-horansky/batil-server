@@ -1,0 +1,24 @@
+# Home view for Batil
+# For registered users, this contains all of their functionalities: launching games, editing boards, archive, rulebooks etc
+# For unregistered users, this contains an introduction and an option to register/log in
+
+from flask import (
+    Blueprint, flash, g, redirect, render_template, request, url_for
+)
+from werkzeug.exceptions import abort
+
+from batil.auth import is_logged_in
+from batil.db import get_db
+
+bp = Blueprint('home', __name__)
+
+@bp.route('/')
+def index():
+    db = get_db()
+    if is_logged_in():
+        skibidis = db.execute(
+            "SELECT FNAME, LNAME FROM BOC_USER WHERE USER_ID = ?", (g.user['USER_ID'],)
+            ).fetchone()
+        return render_template('home/index.html', logged=True, credentials=skibidis)
+    else:
+        return render_template('home/index.html', logged=False)

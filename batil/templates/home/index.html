@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}{% if logged %}Welcome back, {{ credentials['FNAME'] }} {{ credentials['LNAME'] }}{% else %}And who are you?{% endif %}{% endblock %}</h1>
+{% endblock %}

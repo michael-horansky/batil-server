@@ -24,13 +24,23 @@ def create_app(test_config=None):
     except OSError:
         pass
 
+    # init database
+    from . import db
+    db.init_app(app)
+
+    # BLUEPRINTS
+    # Authentification blueprint
+    from . import auth
+    app.register_blueprint(auth.bp)
+
+    # Home blueprint
+    from . import home
+    app.register_blueprint(home.bp)
+    app.add_url_rule('/', endpoint='index')
+
     # a simple page that says hello
     @app.route('/hello')
     def hello():
         return 'Hello, World!'
-
-    # init database
-    from . import db
-    db.init_app(app)
 
     return app
