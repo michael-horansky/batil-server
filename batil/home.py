@@ -17,7 +17,7 @@ def index():
     db = get_db()
     if is_logged_in():
         skibidis = db.execute(
-            "SELECT FNAME, LNAME FROM BOC_USER WHERE USER_ID = ?", (g.user['USER_ID'],)
+            "SELECT USERNAME FROM BOC_USER WHERE USERNAME = ?", (g.user['USERNAME'],)
             ).fetchone()
         return render_template('home/index.html', logged=True, credentials=skibidis)
     else:

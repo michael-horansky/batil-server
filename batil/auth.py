@@ -17,8 +17,6 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        fname    = request.form['fname']
-        lname    = request.form['lname']
         email    = request.form['email']
         db = get_db()
         error = None
@@ -27,10 +25,6 @@ def register():
             error = 'Username is required.'
         elif not password:
             error = 'Password is required.'
-        elif not fname:
-            error = 'First name is required.'
-        elif not lname:
-            error = 'Last name is required.'
         elif not email:
             error = 'E-mail is required.'
 
@@ -41,8 +35,8 @@ def register():
                 random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
                 db.execute(
-                    "INSERT INTO BOC_USER (USER_ID, FNAME, LNAME, EMAIL, PASSWORD, AUTH_CODE, N_FAILS, D_CREATED, D_CHANGED, PRIVILEGE) VALUES (?, ?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, \'USER\')",
-                    (username, fname, lname, email, generate_password_hash(password), random_string),
+                    "INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, AUTH_CODE, N_FAILS, D_CREATED, D_CHANGED, PRIVILEGE) VALUES (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, \'USER\')",
+                    (username, email, generate_password_hash(password), random_string),
                 )
                 db.commit()
             except db.IntegrityError:
@@ -57,12 +51,20 @@ def register():
 @bp.route('/login', methods=('GET', 'POST'))
 def login():
     if request.method == 'POST':
+
         username = request.form['username']
         password = request.form['password']
         db = get_db()
+
+        alluser = db.execute(
+            'SELECT * FROM BOC_USER WHERE USERNAME = ?', (username,)
+        ).fetchall()
+        print("all users:")
+        print(alluser)
+
         error = None
         user = db.execute(
-            'SELECT * FROM BOC_USER WHERE USER_ID = ?', (username,)
+            'SELECT * FROM BOC_USER WHERE USERNAME = ?', (username,)
         ).fetchone()
 
         if user is None:
@@ -72,7 +74,7 @@ def login():
 
         if error is None:
             session.clear()
-            session['USER_ID'] = user['USER_ID']
+            session['USERNAME'] = user['USERNAME']
             return redirect(url_for('index'))
 
         flash(error)
@@ -81,13 +83,13 @@ def login():
 
 @bp.before_app_request
 def load_logged_in_user():
-    user_id = session.get('USER_ID')
+    user_id = session.get('USERNAME')
 
     if user_id is None:
         g.user = None
     else:
         g.user = get_db().execute(
-            'SELECT * FROM BOC_USER WHERE USER_ID = ?', (user_id,)
+            'SELECT * FROM BOC_USER WHERE USERNAME = ?', (user_id,)
         ).fetchone()
 
 @bp.route('/logout')
