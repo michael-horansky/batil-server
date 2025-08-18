@@ -132,3 +132,43 @@ input[type=submit] {
   align-self: start;
   min-width: 10em;
 }
+
+.action_form_tabs {
+  display: flex;
+  border-bottom: 2px solid #bbb;
+  margin-bottom: 1em;
+}
+.action_form_tab {
+  padding: 10px 30px;
+  background: #eee;
+  border: 2px solid #bbb;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  margin-right: 5px;
+  cursor: pointer;
+  position: relative;
+  top: 2px;
+  transition: background 0.2s;
+}
+.action_form_tab.active {
+  background: #fff;
+  border-bottom: 2px solid #fff;
+  font-weight: bold;
+  z-index: 2;
+}
+.action_form_section {
+  display: none;
+  background: #fff;
+  border: 2px solid #bbb;
+  border-radius: 0 0 10px 10px;
+  padding: 20px;
+  margin-top: -2px;
+  z-index: 1;
+}
+.action_form_section.active {
+  display: block;
+}
+.action_form_form_group { margin-bottom: 1em; }
+label { display: block; margin-bottom: .5em; }
+input, textarea, select { width: 100%; padding: 8px; }
+.action_form_actions { margin-top: 2em; }

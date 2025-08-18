@@ -9,6 +9,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from batil.db import get_db
 
+from batil.page_register import PageRegister
+from batil.page_login import PageLogin
+
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
@@ -46,7 +49,9 @@ def register():
 
         flash(error)
 
-    return render_template('auth/register.html')
+    #return render_template('auth/register.html')
+    rendered_page = PageRegister()
+    return(rendered_page.render_page())
 
 @bp.route('/login', methods=('GET', 'POST'))
 def login():
@@ -55,12 +60,6 @@ def login():
         username = request.form['username']
         password = request.form['password']
         db = get_db()
-
-        alluser = db.execute(
-            'SELECT * FROM BOC_USER WHERE USERNAME = ?', (username,)
-        ).fetchall()
-        print("all users:")
-        print(alluser)
 
         error = None
         user = db.execute(
@@ -74,16 +73,18 @@ def login():
 
         if error is None:
             session.clear()
-            session['USERNAME'] = user['USERNAME']
+            session['username'] = user['username']
             return redirect(url_for('index'))
 
         flash(error)
 
-    return render_template('auth/login.html')
+    #return render_template('auth/login.html')
+    rendered_page = PageLogin()
+    return(rendered_page.render_page())
 
 @bp.before_app_request
 def load_logged_in_user():
-    user_id = session.get('USERNAME')
+    user_id = session.get('username')
 
     if user_id is None:
         g.user = None

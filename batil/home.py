@@ -10,15 +10,21 @@ from werkzeug.exceptions import abort
 from batil.auth import is_logged_in
 from batil.db import get_db
 
+from batil.page_home import PageHome
+
 bp = Blueprint('home', __name__)
 
 @bp.route('/')
 def index():
     db = get_db()
-    if is_logged_in():
+
+    rendered_page = PageHome()
+    return(rendered_page.render_page())
+
+    """if is_logged_in():
         skibidis = db.execute(
             "SELECT USERNAME FROM BOC_USER WHERE USERNAME = ?", (g.user['USERNAME'],)
             ).fetchone()
         return render_template('home/index.html', logged=True, credentials=skibidis)
     else:
-        return render_template('home/index.html', logged=False)
+        return render_template('home/index.html', logged=False)"""
