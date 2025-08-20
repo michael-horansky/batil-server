@@ -58,3 +58,23 @@ sqlite3.register_converter(
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
+
+# Helpful functions
+def get_table_as_list_of_dicts(query, identifiers, columns):
+    db = get_db()
+    cur = db.cursor()
+    cur.execute(query)
+    rows = cur.fetchall()
+    # Convert rows to dicts
+    dict_rows = []
+    for row in rows:
+        raw_row_dict = dict(row)
+        row_dict = {}
+        row_identifier_list = []
+        for identifier in identifiers:
+            row_identifier_list.append(f"{identifier} = {raw_row_dict[identifier]}")
+        row_dict["IDENTIFIER"] = " AND ".join(row_identifier_list)
+        for col in columns:
+            row_dict[col] = raw_row_dict[col]
+        dict_rows.append(row_dict)
+    return(dict_rows)

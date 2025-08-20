@@ -136,7 +136,6 @@ input[type=submit] {
 .action_form_tabs {
   display: flex;
   border-bottom: 2px solid #bbb;
-  margin-bottom: 1em;
 }
 .action_form_tab {
   padding: 10px 30px;
@@ -156,6 +155,16 @@ input[type=submit] {
   font-weight: bold;
   z-index: 2;
 }
+.action_form_title {
+  margin-left: auto;
+  padding-left: 2em;
+  padding-right: 1em;
+  padding-top: 10px;
+  font-size: 1.2em;
+  color: #444;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
 .action_form_section {
   display: none;
   background: #fff;
@@ -164,6 +173,8 @@ input[type=submit] {
   padding: 20px;
   margin-top: -2px;
   z-index: 1;
+  height: 100%;
+  overflow-y: scroll;
 }
 .action_form_section.active {
   display: block;
@@ -172,3 +183,62 @@ input[type=submit] {
 label { display: block; margin-bottom: .5em; }
 input, textarea, select { width: 100%; padding: 8px; }
 .action_form_actions { margin-top: 2em; }
+
+#action_form_existing_games {
+  width : 100%;
+  height : 480px;
+}
+
+#action_form_new_game {
+  width : 100%;
+  height : 480px;
+}
+
+
+
+
+.action_table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: inherit;
+  margin-top: 1em;
+  box-shadow: 0 2px 8px rgba(80,80,80,0.07);
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.action_table thead tr {
+  background-color: #eee;
+  color: #222;
+  font-weight: bold;
+  border-bottom: 2px solid #bbb;
+}
+.action_table th, .action_table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ececec;
+}
+.action_table tbody tr:last-child td {
+  border-bottom: none;
+}
+.action_table tbody tr {
+  transition: background 0.2s;
+}
+.action_table tbody tr.selected,
+.action_table tbody tr[data-selected="true"] {
+  background-color: #ffeeba;
+}
+.action_table_button {
+  font-family: inherit;
+  font-size: 1em;
+  padding: 6px 16px;
+  margin: 0 2px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+
+

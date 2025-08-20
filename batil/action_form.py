@@ -4,9 +4,10 @@ from batil.html_object import HTMLObject
 
 class ActionForm(HTMLObject):
 
-    def __init__(self, identifier):
+    def __init__(self, identifier, form_title):
         super().__init__()
         self.identifier = identifier
+        self.form_title = form_title
         self.cls = "action_form"
 
         self.number_of_tabs = 0
@@ -23,6 +24,13 @@ class ActionForm(HTMLObject):
             else:
                 cur_class = "action_form_tab"
             self.structured_html.append(f"  <div id=\"action_form_{self.identifier}_tab_{i}\" class=\"{cur_class}\" onclick=\"action_form_{self.identifier}_select({i})\">{list_of_tabs[i]}</div>")
+
+        # Form title
+        self.structured_html.append([
+                f"  <div id=\"action_form_{self.identifier}_form_title_div\" class=\"action_form_title\">",
+                f"    <span id=\"action_form_{self.identifier}_form_title_span\">{self.form_title}</span>",
+                f"  </div>"
+            ])
         self.structured_html.append("</div>")
 
     def open_section(self, ordinator):

@@ -9,7 +9,7 @@ class HTMLObject():
         # This returns a string formed by flattening self.structured_html
         def commit_element(element):
             if isinstance(element, str):
-                return(element)
+                return(element + "\n")
             else:
                 res = ""
                 for sub_element in element:
