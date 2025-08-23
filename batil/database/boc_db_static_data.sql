@@ -47,3 +47,5 @@ INSERT INTO BOC_RULES VALUES( 'hide_future', 'viewing_scope', 'The players can o
 
 INSERT INTO BOC_RULES VALUES( 'presence', 'unlock_tagscreen_behaviour', 'If both "unlock" and "lock" are present, they cancel each other out, regardless of the number of tagscreens of each type.', 0, '', '', 'Antidote' );
 INSERT INTO BOC_RULES VALUES( 'saturation', 'unlock_tagscreen_behaviour', 'The difference between the number of "unlock" and "lock" tagscreens for each stone is calculated in each time-slice. If negative, lock state is forced. If zero, nothing happens. If positive, stones in lock state become unlocked and unlocked states are interfered with.', 1, '', '', 'Tug-o-war' );
+
+

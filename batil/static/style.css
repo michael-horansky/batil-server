@@ -165,7 +165,7 @@ input[type=submit] {
   font-weight: 500;
   letter-spacing: 0.02em;
 }
-.action_form_section {
+/*.action_form_section {
   display: none;
   background: #fff;
   border: 2px solid #bbb;
@@ -175,9 +175,44 @@ input[type=submit] {
   z-index: 1;
   height: 100%;
   overflow-y: scroll;
+}*/
+.action_form_section {
+  display: none;
+  background: #fff;
+  border: 2px solid #bbb;
+  border-radius: 0 0 10px 10px;
+  margin-top: -2px;
+  z-index: 1;
+  height: 100%;
+  /*min-height: 360px;*/
 }
 .action_form_section.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
+}
+.action_form_section_content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 20px 20px 1em 20px;
+}
+.action_form_section_footer {
+  border-top: 1px solid #eee;
+  background: #fafafa;
+  padding: 0.75em 1em;
+  display: flex;
+  justify-content: flex-end; /* or center/space-between */
+  gap: 0.5em;
+}
+.action_form_button {
+  font-family: inherit;
+  font-size: 1em;
+  padding: 6px 16px;
+  margin: 0 2px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 .action_form_form_group { margin-bottom: 1em; }
 label { display: block; margin-bottom: .5em; }
@@ -240,5 +275,60 @@ input, textarea, select { width: 100%; padding: 8px; }
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
+
+
+.cascade_form_wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+  margin-bottom: 1em;
+}
+
+.cascade_form_selection_group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+}
+
+.cascade_form_label {
+  flex: 1 0 150px;
+  text-align: right;
+  margin-right: 0;
+  font-weight: 500;
+  font-size: 1em;
+  padding-right: 0.25em;
+}
+
+.cascade_form_select {
+  flex: 1 0 200px;
+  min-width: 200px;
+  max-width: 200px;
+  padding: 0.3em 1em;
+  border-radius: 5px;
+  border: 1px solid #bbb;
+  font-size: 1em;
+}
+
+.cascade_form_explain {
+  flex: 1 0 100px;
+  min-width: 100px;
+  max-width: 100px;
+  margin-left: 0.75em;
+  padding: 0.5em 0.5em;
+  border-radius: 6px;
+  border: none;
+  background: #e3f1ff;
+  color: #2069c6;
+  font-weight: 500;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 1px 3px rgba(32,105,198,0.08);
+}
+
+.cascade_form_explain:hover {
+  background: #c6e2ff;
+}
 
 

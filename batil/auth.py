@@ -1,13 +1,11 @@
 import functools
-import random
-import string
 
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from batil.db import get_db
+from batil.db import get_db, add_user
 
 from batil.page_register import PageRegister
 from batil.page_login import PageLogin
@@ -33,15 +31,7 @@ def register():
 
         if error is None:
             try:
-                # Generate authentification code
-                length = 32
-                random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
-
-                db.execute(
-                    "INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, AUTH_CODE, N_FAILS, D_CREATED, D_CHANGED, PRIVILEGE) VALUES (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, \'USER\')",
-                    (username, email, generate_password_hash(password), random_string),
-                )
-                db.commit()
+                add_user(username, email, password)
             except db.IntegrityError:
                 error = f"User {username} is already registered."
             else:

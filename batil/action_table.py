@@ -39,7 +39,10 @@ class ActionTable(HTMLObject):
         for datum in data:
             self.structured_html.append(f"    <tr data-rowid=\"{datum["IDENTIFIER"]}\">")
             for column_id in self.headers.keys():
-                self.structured_html.append(f"      <td>{ datum[column_id] }</td>")
+                if self.include_select:
+                    self.structured_html.append(f"      <td class=\"{self.identifier}_select_row_btn\" data-rowid=\"{ datum["IDENTIFIER"] }\">{ datum[column_id] }</td>")
+                else:
+                    self.structured_html.append(f"      <td>{ datum[column_id] }</td>")
             if self.include_select:
                 self.structured_html.append([
                         "      <td>",
@@ -62,7 +65,7 @@ class ActionTable(HTMLObject):
         # hidden input: row selection
         self.structured_html.append([
                 "</table>",
-                f"<input type=\"hidden\" name=\"action_table_{self.identifier}_selected_row\" id=\"action_table_{self.identifier}_selected_row_input\" value=\"\">"
+                f"<input type=\"hidden\" name=\"action_table_{self.identifier}_selected_row\" id=\"action_table_{self.identifier}_selected_row_input\" value=\"\" autocomplete=\"off\">"
             ])
 
         # script for buttons
@@ -74,26 +77,28 @@ class ActionTable(HTMLObject):
                 f"        tr.classList.remove('selected');",
                 f"        tr.removeAttribute('data-selected');",
                 f"      }});",
-                f"    var rowId = btn.getAttribute('data-rowid');",
-                f"    var selectedRow = document.querySelector('tr[data-rowid=\"' + rowId + '\"]');",
-                f"    selectedRow.classList.add('selected');",
-                f"    selectedRow.setAttribute('data-selected', 'true');",
-                f"    document.getElementById('action_table_{self.identifier}_selected_row_input').value = rowId;",
-                f"  }});",
-                f"}});",
-                f"document.querySelectorAll('.{self.identifier}_submit_btn').forEach(function(btn) {{",
-                f"  btn.addEventListener('click', function(e) {{",
-                f"    var rowId = btn.getAttribute('data-rowid');",
-                f"    document.getElementById('action_table_{self.identifier}_selected_row_input').value = rowId;",
-                f"    document.querySelectorAll('#action_table_{self.identifier} tbody tr').forEach(function(tr) {{",
-                f"      tr.classList.remove('selected');",
-                f"      tr.removeAttribute('data-selected');",
+                f"      var rowId = btn.getAttribute('data-rowid');",
+                f"      var selectedRow = document.querySelector('tr[data-rowid=\"' + rowId + '\"]');",
+                f"      selectedRow.classList.add('selected');",
+                f"      selectedRow.setAttribute('data-selected', 'true');",
+                f"      document.getElementById('action_table_{self.identifier}_selected_row_input').value = rowId;",
+                f"      document.getElementById('action_table_{self.identifier}_selected_row_input').dispatchEvent(new Event(\"change\"));",
                 f"    }});",
-                f"    var selectedRow = document.querySelector('tr[data-rowid=\"' + rowId + '\"]');",
-                f"    selectedRow.classList.add('selected');",
-                f"    selectedRow.setAttribute('data-selected', 'true');",
                 f"  }});",
-                f"}});",
+                f"  document.querySelectorAll('.{self.identifier}_submit_btn').forEach(function(btn) {{",
+                f"    btn.addEventListener('click', function(e) {{",
+                f"      var rowId = btn.getAttribute('data-rowid');",
+                f"      document.getElementById('action_table_{self.identifier}_selected_row_input').value = rowId;",
+                f"      document.getElementById('action_table_{self.identifier}_selected_row_input').dispatchEvent(new Event(\"change\"));",
+                f"      document.querySelectorAll('#action_table_{self.identifier} tbody tr').forEach(function(tr) {{",
+                f"        tr.classList.remove('selected');",
+                f"        tr.removeAttribute('data-selected');",
+                f"      }});",
+                f"      var selectedRow = document.querySelector('tr[data-rowid=\"' + rowId + '\"]');",
+                f"      selectedRow.classList.add('selected');",
+                f"      selectedRow.setAttribute('data-selected', 'true');",
+                f"    }});",
+                f"  }});",
                 "</script>"
             ])
 

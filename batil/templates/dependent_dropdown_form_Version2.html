@@ -1,0 +1,158 @@
+<form id="cascadeForm">
+  <div class="form-group">
+    <label for="primarySelect">Primary Choice:</label>
+    <select id="primarySelect" name="primary">
+      <option value="">-- Select --</option>
+      <option value="fruits">Fruits</option>
+      <option value="animals">Animals</option>
+    </select>
+  </div>
+  <div class="form-group" id="secondaryGroup" style="display:none;">
+    <label for="secondarySelect">Secondary Choice:</label>
+    <select id="secondarySelect" name="secondary"></select>
+  </div>
+  <div class="form-group" id="tertiaryGroup" style="display:none;">
+    <label for="tertiarySelect">Tertiary Choice:</label>
+    <select id="tertiarySelect" name="tertiary"></select>
+  </div>
+  <button type="submit" id="submitBtn">Submit</button>
+</form>
+
+<style>
+  .form-group {
+    margin-bottom: 1em;
+  }
+  label {
+    margin-right: 0.5em;
+    font-weight: 500;
+  }
+  select {
+    padding: 0.3em 1em;
+    border-radius: 5px;
+    border: 1px solid #bbb;
+    font-size: 1em;
+    min-width: 120px;
+  }
+  #submitBtn {
+    padding: 0.5em 2em;
+    border-radius: 6px;
+    border: none;
+    background: #2069c6;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 1em;
+    box-shadow: 0 1px 3px rgba(32,105,198,0.08);
+    display: inline-block;
+  }
+  #submitBtn[hidden] {
+    display: none;
+  }
+</style>
+
+<script>
+const secondaryOptions = {
+  fruits: [
+    {value: "apple", text: "Apple"},
+    {value: "banana", text: "Banana"},
+    {value: "cherry", text: "Cherry"}
+  ],
+  animals: [
+    {value: "cat", text: "Cat"},
+    {value: "dog", text: "Dog"},
+    {value: "elephant", text: "Elephant"}
+  ]
+};
+
+const tertiaryOptions = {
+  apple: [
+    {value: "red", text: "Red Apple"},
+    {value: "green", text: "Green Apple"}
+  ],
+  banana: [
+    {value: "ripe", text: "Ripe Banana"},
+    {value: "unripe", text: "Unripe Banana"}
+  ],
+  cat: [
+    {value: "persian", text: "Persian Cat"},
+    {value: "siamese", text: "Siamese Cat"}
+  ],
+  dog: [
+    {value: "labrador", text: "Labrador"},
+    {value: "beagle", text: "Beagle"}
+  ]
+};
+
+function updateSubmitVisibility() {
+  const primary = document.getElementById("primarySelect");
+  const secondaryGroup = document.getElementById("secondaryGroup");
+  const tertiaryGroup = document.getElementById("tertiaryGroup");
+  const secondary = document.getElementById("secondarySelect");
+  const tertiary = document.getElementById("tertiarySelect");
+  const submit = document.getElementById("submitBtn");
+
+  let visibleSelects = [];
+  visibleSelects.push(primary);
+  if (secondaryGroup.style.display !== "none") visibleSelects.push(secondary);
+  if (tertiaryGroup.style.display !== "none") visibleSelects.push(tertiary);
+
+  // Hide submit if any visible select is empty
+  for (let sel of visibleSelects) {
+    if (!sel.value) {
+      submit.hidden = true;
+      return;
+    }
+  }
+  submit.hidden = false;
+}
+
+document.getElementById("primarySelect").addEventListener("change", function() {
+  const value = this.value;
+  const secondary = document.getElementById("secondarySelect");
+  const secondaryGroup = document.getElementById("secondaryGroup");
+  secondary.innerHTML = "";
+  document.getElementById("tertiaryGroup").style.display = "none";
+  if (secondaryOptions[value]) {
+    secondaryGroup.style.display = "";
+    secondary.innerHTML = '<option value="">-- Select --</option>';
+    secondaryOptions[value].forEach(opt => {
+      const o = document.createElement("option");
+      o.value = opt.value;
+      o.textContent = opt.text;
+      secondary.appendChild(o);
+    });
+  } else {
+    secondaryGroup.style.display = "none";
+  }
+  updateSubmitVisibility();
+});
+
+document.getElementById("secondarySelect").addEventListener("change", function() {
+  const value = this.value;
+  const tertiary = document.getElementById("tertiarySelect");
+  const tertiaryGroup = document.getElementById("tertiaryGroup");
+  tertiary.innerHTML = "";
+  if (tertiaryOptions[value]) {
+    tertiaryGroup.style.display = "";
+    tertiary.innerHTML = '<option value="">-- Select --</option>';
+    tertiaryOptions[value].forEach(opt => {
+      const o = document.createElement("option");
+      o.value = opt.value;
+      o.textContent = opt.text;
+      tertiary.appendChild(o);
+    });
+  } else {
+    tertiaryGroup.style.display = "none";
+  }
+  updateSubmitVisibility();
+});
+
+document.getElementById("tertiarySelect").addEventListener("change", function() {
+  updateSubmitVisibility();
+});
+
+// Initial state
+updateSubmitVisibility();
+</script>

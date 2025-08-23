@@ -1,4 +1,7 @@
 import os
+import json
+import random
+import string
 import sqlite3
 from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -29,14 +32,35 @@ def init_db():
         os.remove(db_path)
         print(f"Deleted old database: {db_path}")
     db = get_db()
+    cur = db.cursor()
     # Create table structure
     with current_app.open_resource('database/boc_db_init_sqlite.sql') as f:
-        db.executescript(f.read().decode('utf8'))
+        cur.executescript(f.read().decode('utf8'))
     # Populate with static data
     with current_app.open_resource('database/boc_db_static_data.sql') as f:
-        db.executescript(f.read().decode('utf8'))
+        cur.executescript(f.read().decode('utf8'))
     # Default admin user
-    db.execute(f"INSERT INTO BOC_USER VALUES( 'admin', 'dvojka@110zbor.sk', '{generate_password_hash('Allegro4Ever')}', 'omitted', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 'ADMIN', 'ACTIVE' )")
+    cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS) VALUES( 'batil', 'dvojka@110zbor.sk', '{generate_password_hash('loopinsohard')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE' )")
+    cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS) VALUES( 'dvojka110', 'dvojka@110zbor.sk', '{generate_password_hash('Allegro4Ever')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE' )")
+    cur.execute("INSERT INTO BOC_USER_RELATIONSHIPS VALUES('batil', 'dvojka110', 'friends')")
+
+    # Add default boards
+    default_boards_file = current_app.open_resource("database/default_boards.json")
+    default_boards_data = json.load(default_boards_file)
+    default_boards_file.close()
+    for default_board in default_boards_data:
+        sql, params = add_default_board_script(default_board)
+        #cur.execute(sql, params)
+        cur.execute(sql, params)
+        board_id = cur.lastrowid
+        users = cur.execute("SELECT USERNAME FROM BOC_USER").fetchall()
+        for (username,) in users:
+            cur.execute(
+                "INSERT INTO BOC_USER_SAVED_BOARDS (BOARD_ID, USERNAME, D_SAVED) VALUES (?, ?, CURRENT_TIMESTAMP)",
+                (board_id, username)
+            )
+
+
     #db.execute(
     #    "INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, AUTH_CODE, N_FAILS, D_CREATED, D_CHANGED, PRIVILEGE) VALUES (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, \'USER\')",
     #    (username, email, generate_password_hash(password), random_string),
@@ -78,3 +102,39 @@ def get_table_as_list_of_dicts(query, identifiers, columns):
             row_dict[col] = raw_row_dict[col]
         dict_rows.append(row_dict)
     return(dict_rows)
+
+def add_default_board_script(default_board):
+    #return(f"WITH new_board AS (INSERT INTO BOC_BOARDS (T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, D_PUBLISHED, BOARD_NAME ) VALUES ({default_board["T_DIM"]}, {default_board["X_DIM"]}, {default_board["Y_DIM"]}, {json.dumps(default_board["STATIC_REPRESENTATION"])}, {json.dumps(default_board["SETUP_REPRESENTATION"])}, {json.dumps(default_board["AUTHOR"])}, {default_board["IS_PUBLIC"]}, {json.dumps(default_board["D_CREATED"])}, {json.dumps(default_board["D_CHANGED"])}, {json.dumps(default_board["D_PUBLISHED"])}, {json.dumps(default_board["BOARD_NAME"])})  RETURNING BOARD_ID) INSERT INTO BOC_USER_SAVED_BOARDS (BOARD_ID, USERNAME, D_SAVED) SELECT new_board.BOARD_ID, u.USERNAME, CURRENT_TIMESTAMP FROM BOC_USER u, new_board;")
+    sql = """
+        INSERT INTO BOC_BOARDS (
+            T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, D_PUBLISHED, BOARD_NAME
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
+    params = (
+        default_board["T_DIM"], default_board["X_DIM"], default_board["Y_DIM"],
+        default_board["STATIC_REPRESENTATION"], default_board["SETUP_REPRESENTATION"],
+        default_board["AUTHOR"], default_board["IS_PUBLIC"], default_board["D_CREATED"],
+        default_board["D_CHANGED"], default_board["D_PUBLISHED"], default_board["BOARD_NAME"]
+    )
+    return(sql, params)
+
+def add_user(username, email, password):
+    db = get_db()
+    # Generate authentification code
+    length = 32
+    random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+    db.execute(
+        "INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, AUTH_CODE, N_FAILS, D_CREATED, D_CHANGED, PRIVILEGE) VALUES (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, \'USER\')",
+        (username, email, generate_password_hash(password), random_string),
+    )
+
+    # We check default boards
+    default_boards = db.execute("SELECT BOARD_ID FROM BOC_BOARDS WHERE AUTHOR = \"batil\"").fetchall()
+    for (board_id,) in default_boards:
+        db.execute(
+            "INSERT INTO BOC_USER_SAVED_BOARDS (BOARD_ID, USERNAME, D_SAVED) VALUES (?, ?, CURRENT_TIMESTAMP)",
+            (board_id, username)
+        )
+
+    db.commit()
