@@ -10,7 +10,7 @@ class ActionForm(HTMLObject):
         ActionForm.id_generator += 1
         return(ActionForm.id_generator - 1)
 
-    def __init__(self, identifier, form_title):
+    def __init__(self, identifier, form_title, method = "post"):
         super().__init__()
         self.identifier = identifier
         self.form_title = form_title
@@ -18,7 +18,7 @@ class ActionForm(HTMLObject):
 
         self.number_of_tabs = 0
 
-        self.structured_html.append(f"<form id=\"action_form_{self.identifier}\">")
+        self.structured_html.append(f"<form id=\"action_form_{self.identifier}\" method=\"{method}\">")
 
         self.last_section_opened = None
 
@@ -95,14 +95,14 @@ class ActionForm(HTMLObject):
 
     # ----------------- Little HTML elements --------------------
 
-    def add_button(self, btn_type, btn_name, btn_value, btn_description, btn_id = None, btn_class = "action_form_button", selection_condition = None):
+    def add_button(self, btn_type, btn_value, btn_description, btn_id = None, btn_class = "action_form_button", selection_condition = None):
         if selection_condition is not None and btn_id is None:
             # We need to generate an ID!
             btn_id = f"action_form_{self.identifier}_btn_{ActionForm.generate_id()}"
         if btn_id is not None:
-            self.structured_html.append(f"<button type=\"{btn_type}\" name=\"{btn_name}\" value=\"{btn_value}\" id=\"{btn_id}\" class=\"{btn_class}\">{btn_description}</button>")
+            self.structured_html.append(f"<button type=\"{btn_type}\" name=\"action_{self.identifier}\" value=\"{btn_value}\" id=\"{btn_id}\" class=\"{btn_class}\">{btn_description}</button>")
         else:
-            self.structured_html.append(f"<button type=\"{btn_type}\" name=\"{btn_name}\" value=\"{btn_value}\" class=\"{btn_class}\">{btn_description}</button>")
+            self.structured_html.append(f"<button type=\"{btn_type}\" name=\"action_{self.identifier}\" value=\"{btn_value}\" class=\"{btn_class}\">{btn_description}</button>")
         if selection_condition is not None:
             # The button is only displayed if the HTML element with id selection_condition has "value" attribute equal to a non-empty string
             self.structured_html.append([

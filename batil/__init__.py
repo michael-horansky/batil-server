@@ -2,6 +2,13 @@ import os
 
 from flask import Flask
 
+from werkzeug.routing import BaseConverter
+
+# Custom regex converter, to automatically reject game_ids which do not match the regex
+class RegexConverter(BaseConverter):
+    def __init__(self, map, *items):
+        super().__init__(map)
+        self.regex = items[0]
 
 def create_app(test_config=None):
     # create and configure the app
@@ -32,6 +39,12 @@ def create_app(test_config=None):
     # Authentification blueprint
     from . import auth
     app.register_blueprint(auth.bp)
+
+    # Game blueprint and id converter
+    # Register converter
+    app.url_map.converters['regex'] = RegexConverter
+    from . import game
+    app.register_blueprint(game.bp)
 
     # Home blueprint
     from . import home

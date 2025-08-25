@@ -14,7 +14,7 @@ from batil.page_home import PageHome
 
 bp = Blueprint('home', __name__)
 
-@bp.route('/')
+@bp.route('/', methods=['GET', 'POST'])
 def index():
     db = get_db()
 

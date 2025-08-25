@@ -11,6 +11,10 @@ class Page(HTMLObject):
     def __init__(self):
         super().__init__()
 
+    def resolve_request(self):
+        if request.method == 'POST':
+            pass
+
     def html_open(self, title, stylesheet):
         self.structured_html.append([
                 "<!doctype html>",
@@ -45,6 +49,7 @@ class Page(HTMLObject):
         self.structured_html.append(navlist)
 
     def render_page(self):
+        self.resolve_request()
         self.html_open("default", "style")
         self.html_navbar()
         return(self.print_html())

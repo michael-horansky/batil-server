@@ -1,5 +1,9 @@
 # HTML table initialised from sql. This is meant to be included within a form
 
+from flask import (
+    Flask, Blueprint, flash, g, redirect, render_template, request, url_for
+)
+
 from batil.html_object import HTMLObject
 
 class ActionTable(HTMLObject):
@@ -11,10 +15,11 @@ class ActionTable(HTMLObject):
 
         self.structured_html.append(f"<table id=\"action_table_{self.identifier}\" class=\"action_table\">")
 
-    def make_head(self, headers, actions = None):
+    def make_head(self, headers, actions = None, action_instructions = {}):
         # Both headers and actions are dictionaries in the form {id : name}
         self.headers = headers
         self.actions = actions
+        self.action_instructions = action_instructions
         self.structured_html.append([
                 "  <thead>",
                 "    <tr>",
@@ -51,11 +56,23 @@ class ActionTable(HTMLObject):
                     ])
             if self.actions is not None:
                 for iden, name in self.actions.items():
-                    self.structured_html.append([
-                            "      <td>",
-                            f"        <button type=\"submit\" name=\"action\" value=\"{iden}\" class=\"{self.identifier}_submit_btn action_table_button\" data-rowid=\"{ datum["IDENTIFIER"] }\">{name}</button>",
-                            "      </td>"
-                        ])
+                    if iden in self.action_instructions.keys():
+                        # Special type of button
+                        if self.action_instructions[iden]["type"] == "link":
+                            target_url = self.action_instructions[iden]["url_func"](datum["IDENTIFIER"])
+                            self.structured_html.append([
+                                    "      <td>",
+                                    f"        <a href=\"{target_url}\" target=\"_blank\">",
+                                    f"          <button type=\"button\" class=\"action_table_button\">{name}</button>",
+                                    f"        </a>",
+                                    "      </td>"
+                                ])
+                    else:
+                        self.structured_html.append([
+                                "      <td>",
+                                f"        <button type=\"submit\" name=\"action_{self.identifier}\" value=\"{iden}\" class=\"{self.identifier}_submit_btn action_table_button\" data-rowid=\"{ datum["IDENTIFIER"] }\">{name}</button>",
+                                "      </td>"
+                            ])
             self.structured_html.append("    </tr>")
         self.structured_html.append("  </tbody>")
 
