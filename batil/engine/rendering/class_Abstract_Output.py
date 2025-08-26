@@ -39,6 +39,18 @@ class Abstract_Output():
             "choice_keyword"
         ]
 
+    integer_command_keywords = [
+            "stone_ID",
+            "t",
+            "x",
+            "y",
+            "a",
+            "target_t",
+            "target_x",
+            "target_y",
+            "target_a",
+        ]
+
     def shift_process(cur_process, delta_index):
         return Abstract_Output.process_list[(Abstract_Output.process_list.index(cur_process) + delta_index) % len(Abstract_Output.process_list)]
 

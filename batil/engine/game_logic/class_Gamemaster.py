@@ -784,7 +784,7 @@ class Gamemaster():
             flags_added = self.add_base(command["faction"], command["x"], command["y"])
         elif command["type"] == "spatial_move":
             # stone_ID, t, old_x, old_y, new_x, new_y, new_a
-            flags_added = self.add_flag_spatial_move(command["stone_ID"], command["t"], command["x"], command["y"], command["new_x"], command["new_y"], command["new_a"])
+            flags_added = self.add_flag_spatial_move(command["stone_ID"], command["t"], command["x"], command["y"], command["target_x"], command["target_y"], command["target_a"])
         elif command["type"] == "attack":
             # Here we resolve the various ways in which the different stone types attack!
             if self.stones[command["stone_ID"]].stone_type == "bombardier":
@@ -799,9 +799,9 @@ class Gamemaster():
         elif command["type"] == "timejump":
             # stone_ID, old_t, old_x, old_y, new_t, new_x, new_y, new_a, adopted_stone_ID
             if "adopted_stone_ID" not in command.keys():
-                flags_added = self.add_flag_timejump(command["stone_ID"], command["t"], command["x"], command["y"], command["new_t"], command["new_x"], command["new_y"], command["new_a"], None)
+                flags_added = self.add_flag_timejump(command["stone_ID"], command["t"], command["x"], command["y"], command["target_t"], command["target_x"], command["target_y"], command["target_a"], None)
             else:
-                flags_added = self.add_flag_timejump(command["stone_ID"], command["t"], command["x"], command["y"], command["new_t"], command["new_x"], command["new_y"], command["new_a"], command["adopted_stone_ID"])
+                flags_added = self.add_flag_timejump(command["stone_ID"], command["t"], command["x"], command["y"], command["target_t"], command["target_x"], command["target_y"], command["target_a"], command["adopted_stone_ID"])
 
         # We record the flags into the time rep
         self.flags_by_turn[self.current_turn_index][commander] += flags_added
@@ -1960,7 +1960,7 @@ class Gamemaster():
                         self.commit_commands([], self.current_turn_index, player)
                     elif output_message.header == "option":
                         if output_message.msg == "quit":
-                            self.exit_routine(player)
+                            self.prepare_for_rendering(player)
                             return(0)
 
 
@@ -1987,7 +1987,7 @@ class Gamemaster():
             if current_game_winner is not None:
                 self.print_heading_message(f"Player {current_game_winner} wins the game!", 0)
                 self.outcome = (constants.Gamemaster_delim).join(["win", current_game_winner])
-                self.exit_routine(None)
+                self.prepare_for_rendering(None)
                 return(0)
 
             self.round_number += 1
@@ -2018,7 +2018,7 @@ class Gamemaster():
                 self.commit_commands([], self.current_turn_index, player)
             elif output_message.header == "option":
                 if output_message.msg == "quit":
-                    self.exit_routine(player)
+                    self.prepare_for_rendering(player)
                     return(0)
 
         # For every player that didn't play their turn yet, but has no causally
@@ -2057,7 +2057,7 @@ class Gamemaster():
                 if current_game_winner is not None:
                     self.print_heading_message(f"Player {current_game_winner} wins the game!", 0)
                     self.outcome = (constants.Gamemaster_delim).join(["win", current_game_winner])
-                    self.exit_routine(player)
+                    self.prepare_for_rendering(player)
                     return(0)
 
                 self.effects_by_round.append([])
@@ -2068,9 +2068,93 @@ class Gamemaster():
             self.current_turn_index += 1
             self.open_game(player)
 
-        self.exit_routine(player)
+        self.prepare_for_rendering(player)
 
-    def exit_routine(self, prompted_player):
+    # -------------------------------------------------------------------------
+    # ---------------------------- Client methods -----------------------------
+    # -------------------------------------------------------------------------
+
+    def submit_commands(self, player, commands):
+        # Function to be called by client
+
+        # First we check if it's the player's turn
+        self.bring_board_to_turn(self.current_turn_index)
+        current_round, active_timeslice = self.round_from_turn(self.current_turn_index)
+
+        if self.did_player_finish_turn(player, self.current_turn_index):
+            # This player has already submitted their moves
+            self.print_heading_message(f"ERROR: Player {player} has already finished their turn, and is waiting for their opponent.", 2)
+            # In case key does not exist, we go ahead and populate with empty string
+            if player not in self.flags_by_turn[self.current_turn_index].keys():
+                print("WARNING: Mismatch detected: Player finished his turn, but no relevant key detected in dynamical representation.")
+                self.commit_commands([], self.current_turn_index, player)
+            return(-1)
+
+        # TODO: Unwrap commands, check if all stones are causally free, and commit commands
+        self.commit_commands(commands, self.current_turn_index, player)
+
+        # For every player that didn't play their turn yet, but has no causally
+        # free stones, an empty command is added
+        """for faction in self.factions:
+            if not self.did_player_finish_turn(faction, self.current_turn_index):
+                print(f"Player {faction} is billed as not having finished turn {self.current_turn_index}")
+                currently_causally_free_stones = self.causally_free_stones_at_time_by_player(active_timeslice, faction)
+                if len(currently_causally_free_stones) == 0:
+                    print("  ...but they have no causally free stones. Inserting empty move.")
+                    self.commit_commands([], self.current_turn_index, faction)"""
+
+        while(True):
+            self.bring_board_to_turn(self.current_turn_index)
+            if not self.did_everyone_finish_turn(self.current_turn_index):
+                break
+            # Turn ended
+            for finished_player in self.factions:
+                # In case key does not exist, we go ahead and populate with empty string
+                if finished_player not in self.flags_by_turn[self.current_turn_index].keys():
+                    self.commit_commands([], self.current_turn_index, finished_player)
+            next_round, next_timeslice = self.round_from_turn(self.current_turn_index + 1)
+            if next_round > current_round:
+                # Change of round! Canonization routine!
+                self.print_heading_message("Selecting a causally-consistent scenario", 1)
+                scenario_for_next_round = self.resolve_causal_consistency(for_which_round = next_round)
+
+                # Commit to the activity map
+                if len(self.scenarios_by_round) != current_round + 1:
+                    self.print_log(f"ERROR: self.scenarios_by_round has wrong length ({len(self.scenarios_by_round)}, expected {current_round + 1})")
+                self.scenarios_by_round.append(scenario_for_next_round)
+
+                # Win condition testing
+                self.realise_scenario(scenario_for_next_round)
+                self.execute_moves(read_causality_trackers = False, max_turn_index = self.current_turn_index, precanonisation = True, save_to_output = True)
+                self.rendering_output.add_scenario(current_round, scenario_for_next_round, self.flags, self.causes_by_round[current_round], self.effects_by_round[current_round])
+                self.print_heading_message(f"Canonized board for next round, omitting reverse-causality effects added this round.", 1)
+                self.print_board_horizontally(active_turn = self.current_turn_index, highlight_active_timeslice = False)
+                current_game_winner = self.game_winner()
+                if current_game_winner is not None:
+                    self.print_heading_message(f"Player {current_game_winner} wins the game!", 0)
+                    self.outcome = (constants.Gamemaster_delim).join(["win", current_game_winner])
+                    self.prepare_for_rendering(player)
+                    return(0)
+
+                self.effects_by_round.append([])
+                self.causes_by_round.append([])
+
+
+            self.flags_by_turn.append({})
+            self.current_turn_index += 1
+            # TODO! Add testing for draw by repetition, otherwise this while loop may become infinite!
+
+        # For every player that didn't play their turn yet, but has no causally
+        # free stones, an empty command is added
+        final_current_round, final_active_timeslice = self.round_from_turn(self.current_turn_index)
+        for faction in self.factions:
+            if not self.did_player_finish_turn(faction, self.current_turn_index):
+                currently_causally_free_stones = self.causally_free_stones_at_time_by_player(final_active_timeslice, faction)
+                if len(currently_causally_free_stones) == 0:
+                    self.commit_commands([], self.current_turn_index, faction)
+
+
+    def prepare_for_rendering(self, prompted_player):
         # This method is called right before the program quits. It performs a
         # cleanup, and finalises self.rendering_output.
         #

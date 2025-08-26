@@ -17,3 +17,16 @@ bp = Blueprint('game_bp', __name__, url_prefix="/game")
 def game(game_id):
     rendered_page = PageGame(game_id)
     return(rendered_page.render_page())
+
+# API endpoints for persistent version checking, form submissions etc
+@bp.route("/<regex(\"[A-Za-z0-9]{16}\"):game_id>/moves_count")
+def moves_count(game_id):
+    client_count = request.args.get("count", type=int, default=0)
+
+    db = get_db()
+    current_count = db.execute(
+        "SELECT COUNT(*) AS cnt FROM BOC_MOVES WHERE GAME_ID = ?", (game_id,)
+    ).fetchone()["cnt"]
+
+    changed = current_count > client_count
+    return jsonify({"changed": changed, "count": current_count})

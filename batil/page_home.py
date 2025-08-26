@@ -123,41 +123,104 @@ class PageHome(Page):
 
 
         # Existing games
-        active_games_dataset = get_table_as_list_of_dicts(f"SELECT GAME_ID, PLAYER_A, PLAYER_B, D_STARTED FROM BOC_GAMES WHERE (PLAYER_A = \"{g.user["username"]}\" OR PLAYER_B = \"{g.user["username"]}\") AND STATUS = \"in_progress\"", "GAME_ID", ["PLAYER_A", "PLAYER_B", "D_STARTED"])
-        for row in active_games_dataset:
+        #active_games_dataset = get_table_as_list_of_dicts(f"SELECT GAME_ID, PLAYER_A, PLAYER_B, D_STARTED FROM BOC_GAMES WHERE (PLAYER_A = \"{g.user["username"]}\" OR PLAYER_B = \"{g.user["username"]}\") AND STATUS = \"in_progress\"", "GAME_ID", ["PLAYER_A", "PLAYER_B", "D_STARTED"])
+        active_games_not_your_turn = get_table_as_list_of_dicts(f"""
+                WITH latest AS (
+                    SELECT BOC_MOVES.GAME_ID, MAX(BOC_MOVES.TURN_INDEX) AS max_turn
+                    FROM BOC_MOVES
+                    GROUP BY BOC_MOVES.GAME_ID
+                ),
+                latest_moves AS (
+                    SELECT BOC_MOVES.GAME_ID, GROUP_CONCAT(BOC_MOVES.PLAYER) AS players_at_latest
+                    FROM BOC_MOVES
+                    JOIN latest L ON L.GAME_ID = BOC_MOVES.GAME_ID AND L.max_turn = BOC_MOVES.TURN_INDEX
+                    GROUP BY BOC_MOVES.GAME_ID
+                )
+                SELECT BOC_GAMES.GAME_ID AS GAME_ID, BOC_GAMES.PLAYER_A AS PLAYER_A, BOC_GAMES.PLAYER_B AS PLAYER_B, BOC_GAMES.D_STARTED AS D_STARTED
+                FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID
+                WHERE
+                    (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
+                    AND BOC_GAMES.STATUS = \"in_progress\"
+                    AND (
+                        (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'A')
+                        OR
+                        (BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'B')
+                    )
+                ORDER BY D_STARTED
+            """, "GAME_ID", ["PLAYER_A", "PLAYER_B", "D_STARTED"])
+        active_games_your_turn = get_table_as_list_of_dicts(f"""
+                WITH latest AS (
+                    SELECT BOC_MOVES.GAME_ID, MAX(BOC_MOVES.TURN_INDEX) AS max_turn
+                    FROM BOC_MOVES
+                    GROUP BY BOC_MOVES.GAME_ID
+                ),
+                latest_moves AS (
+                    SELECT BOC_MOVES.GAME_ID, GROUP_CONCAT(BOC_MOVES.PLAYER) AS players_at_latest
+                    FROM BOC_MOVES
+                    JOIN latest L ON L.GAME_ID = BOC_MOVES.GAME_ID AND L.max_turn = BOC_MOVES.TURN_INDEX
+                    GROUP BY BOC_MOVES.GAME_ID
+                )
+                SELECT BOC_GAMES.GAME_ID AS GAME_ID, BOC_GAMES.PLAYER_A AS PLAYER_A, BOC_GAMES.PLAYER_B AS PLAYER_B, BOC_GAMES.D_STARTED AS D_STARTED
+                FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID
+                WHERE
+                    (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
+                    AND BOC_GAMES.STATUS = \"in_progress\"
+                    AND NOT (
+                        (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'A')
+                        OR
+                        (BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'B')
+                    )
+                ORDER BY D_STARTED
+            """, "GAME_ID", ["PLAYER_A", "PLAYER_B", "D_STARTED"])
+        for row in active_games_your_turn:
             if row["PLAYER_A"] == g.user["username"]:
                 row["OPPONENT"] = row["PLAYER_B"]
             if row["PLAYER_B"] == g.user["username"]:
                 row["OPPONENT"] = row["PLAYER_A"]
             del row["PLAYER_A"]
             del row["PLAYER_B"]
-        if len(active_games_dataset) > 0:
+        for row in active_games_not_your_turn:
+            if row["PLAYER_A"] == g.user["username"]:
+                row["OPPONENT"] = row["PLAYER_B"]
+            if row["PLAYER_B"] == g.user["username"]:
+                row["OPPONENT"] = row["PLAYER_A"]
+            del row["PLAYER_A"]
+            del row["PLAYER_B"]
+
+        if len(active_games_your_turn) == 0 and len(active_games_not_your_turn) == 0:
+            self.structured_html.append("<h2 class=\"empty_form_placeholder\">No ongoing games</h2>")
+        else:
+            active_game_headers = []
+            if len(active_games_your_turn) > 0:
+                active_game_headers.append("Your turn")
+            if len(active_games_not_your_turn) > 0:
+                active_game_headers.append("Waiting for opponent")
             form_existing_games = ActionForm("existing_games", "Ongoing games")
-            form_existing_games.initialise_tabs(["Your turn", "Waiting for opponent"])
-            form_existing_games.open_section(0)
-            # Here we make a table listing this user's ACTIVE games
-
-            active_games_table = ActionTable("active_games", include_select = False)
-            active_games_table.make_head({"OPPONENT" : "Opponent", "D_STARTED" : "Start date"}, {"open" : "Open game"}, action_instructions = {
-                    "open" : {"type" : "link", "url_func" : (lambda x : url_for("game_bp.game", game_id = x))}
-                })
-            active_games_table.make_body(active_games_dataset)
-            form_existing_games.structured_html.append(active_games_table.structured_html)
-            form_existing_games.close_section()
-
-            # Now pending games
-            form_existing_games.open_section(1)
-            """pending_games_dataset = get_table_as_list_of_dicts(f"SELECT GAME_ID, PLAYER_A, PLAYER_B, D_STARTED FROM BOC_GAMES WHERE (PLAYER_A = \"{g.user["username"]}\" OR PLAYER_B = \"{g.user["username"]}\") AND STATUS = \"waiting_for_match\" OR STATUS = \"waiting_for_acceptance\"", "GAME_ID", ["PLAYER_A", "PLAYER_B", "D_STARTED"])
-            pending_games_table = ActionTable("pending_games", include_select = False)
-            pending_games_table.make_head({"PLAYER_A" : "Player A", "PLAYER_B" : "Player B", "D_STARTED" : "Start date"}, {"cancel" : "Cancel game"})
-            pending_games_table.make_body(pending_games_dataset)
-            form_existing_games.structured_html.append(pending_games_table.structured_html)"""
-
-            form_existing_games.close_section()
+            form_existing_games.initialise_tabs(active_game_headers)
+            sections_initialised = 0
+            if len(active_games_your_turn) > 0:
+                form_existing_games.open_section(sections_initialised)
+                sections_initialised += 1
+                active_games_your_turn_table = ActionTable("active_games_your_turn", include_select = False)
+                active_games_your_turn_table.make_head({"OPPONENT" : "Opponent", "D_STARTED" : "Start date"}, {"open" : "Open game"}, action_instructions = {
+                        "open" : {"type" : "link", "url_func" : (lambda x : url_for("game_bp.game", game_id = x))}
+                    })
+                active_games_your_turn_table.make_body(active_games_your_turn)
+                form_existing_games.structured_html.append(active_games_your_turn_table.structured_html)
+                form_existing_games.close_section()
+            if len(active_games_not_your_turn) > 0:
+                form_existing_games.open_section(sections_initialised)
+                sections_initialised += 1
+                active_games_not_your_turn_table = ActionTable("active_games_not_your_turn", include_select = False)
+                active_games_not_your_turn_table.make_head({"OPPONENT" : "Opponent", "D_STARTED" : "Start date"}, {"open" : "Open game"}, action_instructions = {
+                        "open" : {"type" : "link", "url_func" : (lambda x : url_for("game_bp.game", game_id = x))}
+                    })
+                active_games_not_your_turn_table.make_body(active_games_not_your_turn)
+                form_existing_games.structured_html.append(active_games_not_your_turn_table.structured_html)
+                form_existing_games.close_section()
             form_existing_games.close_form()
             self.structured_html.append(form_existing_games.structured_html)
-        else:
-            self.structured_html.append("<h2 class=\"empty_form_placeholder\">No ongoing games</h2>")
+
 
 
 

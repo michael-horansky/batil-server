@@ -39,6 +39,12 @@ class Flag():
         Flag.max_flag_ID += 1
         return(new_tag)
 
+    @staticmethod
+    def reset_counters():
+        # Call this method when all instances of Gamemaster are deleted and rebuilt
+        Flag.max_stone_ID = 0
+        Flag.max_flag_ID = 0
+
     # ----------------------------------------------------
     # ------------------ class methods -------------------
     # ----------------------------------------------------

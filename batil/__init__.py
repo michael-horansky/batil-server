@@ -13,8 +13,10 @@ class RegexConverter(BaseConverter):
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
+
     app.config.from_mapping(
         SECRET_KEY='dev',
+        SESSION_COOKIE_NAME=os.getenv("SESSION_COOKIE_NAME", "session"),
         DATABASE=os.path.join(app.instance_path, 'batil.sqlite'),
     )
 

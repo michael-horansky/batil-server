@@ -61,10 +61,8 @@ class HTMLRenderer(Renderer):
             ])
 
     def close_body(self):
-        self.commit_to_output([
-                f"  <script src=\"{ url_for('static', filename='boc_ingame.js') }\"></script>",
-                "</body>"
-            ])
+        # We actually leave the <body> tag open for possible scripts to be slapped onto the end
+        self.commit_to_output(f"  <script src=\"{ url_for('static', filename='boc_ingame.js') }\"></script>")
 
     def commit_to_output(self, html_object):
         self.structured_output.append(html_object)
@@ -644,7 +642,7 @@ class HTMLRenderer(Renderer):
             command_form.append(f"      <input type=\"hidden\" name=\"touch_order\" id=\"touch_order_input\">")
             command_form.append(f"    </fieldset>")
 
-        command_form.append(f"    <input type=\"submit\" value=\"Submit\" id=\"submit_commands_button\">")
+        command_form.append(f"    <button type=\"submit\" name=\"command_submission\" value=\"submit\" id=\"submit_commands_button\">Submit commands</button>")
         command_form.append(f"  </form>")
         command_form.append(f"</div>")
         self.commit_to_output(command_form)
