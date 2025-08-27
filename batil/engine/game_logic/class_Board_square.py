@@ -59,6 +59,7 @@ class Board_square():
 
     # ---------------------------- Base management ----------------------------
 
-    def add_base(self, initial_faction):
+    def add_base(self, base_ID, initial_faction):
         self.has_base = True
+        self.base_ID = base_ID
         self.base_allegiance = initial_faction

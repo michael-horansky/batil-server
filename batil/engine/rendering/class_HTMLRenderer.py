@@ -91,6 +91,9 @@ class HTMLRenderer(Renderer):
     def encode_stone_ID(self, stone_ID):
         return(f"stone_{stone_ID}")
 
+    def encode_base_ID(self, base_ID):
+        return(f"base_{base_ID}")
+
     # ---------------------------- Data depositing ----------------------------
 
     def deposit_datum(self, name, value):
@@ -123,6 +126,7 @@ class HTMLRenderer(Renderer):
         self.deposit_list("factions", self.render_object.factions)
         self.deposit_list("faction_armies", self.render_object.faction_armies)
         self.deposit_object("stone_properties", self.render_object.stone_properties)
+        self.deposit_list("bases", self.render_object.bases)
 
         # Command properties
         self.deposit_datum("did_player_finish_turn", self.render_object.did_player_finish_turn)
@@ -132,7 +136,9 @@ class HTMLRenderer(Renderer):
         # ----------------------- Roundwise properties ------------------------
         self.deposit_object("stone_trajectories", self.render_object.stone_trajectories)
         self.deposit_object("stone_endpoints", self.render_object.stone_endpoints)
+        self.deposit_object("base_trajectories", self.render_object.base_trajectories)
         self.deposit_list("stone_actions", self.render_object.stone_actions)
+        self.deposit_list("board_actions", self.render_object.board_actions)
 
         #self.deposit_object("reverse_causality_flags", self.render_object.reverse_causality_flags)
         self.deposit_object("reverse_causality_flag_properties", self.render_object.reverse_causality_flag_properties)
@@ -456,6 +462,15 @@ class HTMLRenderer(Renderer):
         stone_object.append("</g>")
         return(stone_object)
 
+    def create_base(self, base_ID):
+        iden = self.encode_base_ID(base_ID)
+        base_object = [
+            f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"base\" id=\"{iden}\" transform-origin=\"50px 50px\" style=\"pointer-events:none\">",
+            f"  <circle cx=\"50\" cy=\"50\" r=\"25\" class=\"base_indicator\" id=\"{iden}_indicator\" />",
+            f"</g>"
+        ]
+        return(base_object)
+
 
     def draw_stones(self):
         # These are drawn on the x=0,y=0 square with display:none, and will be
@@ -467,6 +482,11 @@ class HTMLRenderer(Renderer):
             for faction_stone_ID in self.render_object.faction_armies[faction]:
                 self.board_layer_structure[4].append(self.create_stone(self.render_object.stone_properties[faction_stone_ID]["stone_type"], faction, faction_stone_ID))
 
+    def draw_bases(self):
+        # Same principle as stones
+        for base_ID in self.render_object.bases:
+            self.board_layer_structure[2].append(self.create_base(base_ID))
+
     def draw_square_highlighter(self):
         self.board_layer_structure[3].append(f"<polyline id=\"square_highlighter\" points=\"{self.get_polygon_points([[0, 0], [100, 0], [100, 100], [0, 100], [0, 0]])}\" display=\"none\"/>")
 
@@ -476,6 +496,7 @@ class HTMLRenderer(Renderer):
         self.create_board_layer_structure(5) # every element is first added to this, where index = z-index
         self.draw_board_squares()
         self.draw_stones()
+        self.draw_bases()
         self.draw_square_highlighter()
         self.commit_board_layer_structure()
         self.draw_selection_mode_highlights()

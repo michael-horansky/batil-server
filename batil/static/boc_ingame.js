@@ -211,6 +211,7 @@ function show_canon_board_slice(round_n, timeslice){
     visible_process = "canon";
     show_stones_at_process(round_n, timeslice, "canon");
     show_time_jumps_at_time(round_n, timeslice);
+    show_bases_at_time(round_n, timeslice);
     if (inspector.selection_mode_enabled) {
         // We take care of the selection choice highlighting
         for (x = 0; x < x_dim; x++) {
@@ -271,6 +272,27 @@ function show_time_jumps_at_time(round_n, time) {
                     current_unused_time_jump_marker.style.visibility = "hidden";
                 }
             }
+        }
+    }
+}
+
+function show_bases_at_time(round_n, time) {
+    for (let base_i = 0; base_i < bases.length; base_i++) {
+        let base_ID = bases[base_i];
+        let x = base_trajectories[round_n][time][base_ID][0];
+        let y = base_trajectories[round_n][time][base_ID][1];
+        let allegiance = base_trajectories[round_n][time][base_ID][2];
+        document.getElementById(`base_${base_ID}`).style.transform = `translate(${100 * x}px,${100 * y}px)`;
+        switch(allegiance) {
+            case "neutral":
+                document.getElementById(`base_${base_ID}_indicator`).style.fill = 'yellow';
+                break;
+            case "A":
+                document.getElementById(`base_${base_ID}_indicator`).style.fill = 'green';
+                break;
+            case "B":
+                document.getElementById(`base_${base_ID}_indicator`).style.fill = 'red';
+                break;
         }
     }
 }
@@ -426,6 +448,27 @@ animation_manager.create_stone_action_marker = function(stone_action) {
             break;
     }
 }
+animation_manager.create_board_action_marker = function(board_action) {
+    // board_action = [action type, x, y]
+    switch(board_action[0]) {
+        case "explosion":
+            // a bomb explosion! The marker is a big red cross
+            new_group = make_SVG_element("g", {
+                class : "TAE_explosion",
+                id : `TAE_explosion_${board_action[1]}_${board_action[2]}`,
+                x : 0,
+                y : 0
+            });
+            document.getElementById("board_layer_2").appendChild(new_group);
+            explosion_cross = make_SVG_element("path", {
+                d : "M45,45 L45,-55 L55,-55 L55,45 L155,45 L155,55 L55,55 L55,155 L45,155 L45,55 L-55,55 L-55,45 Z",
+                "fill" : "red"
+            });
+            new_group.appendChild(explosion_cross);
+            new_group.style.transform = `translate(${100 * board_action[1]}px,${100 * board_action[2]}px)`;
+            break;
+    }
+}
 animation_manager.shift_frame_method = function(current_animation) {
     if (animation_manager.current_frame_key == animation_manager.total_frames) {
         clearInterval(animation_manager.animation_daemon);
@@ -542,9 +585,14 @@ animation_manager.change_process_preparation = function(animation_args) {
     // Create various markers for stone and board actions when s_process = "tagscreens"
     if (s_process == "tagscreens") {
         for (let stone_action_index = 0; stone_action_index < stone_actions[round_n][s_time].length; stone_action_index++) {
-            let cur_action = stone_actions[round_n][s_time][stone_action_index];
-            animation_manager.add_TAE_class(`TAE_${cur_action[0]}_${cur_action[1]}`);
-            animation_manager.create_stone_action_marker(cur_action);
+            let cur_stone_action = stone_actions[round_n][s_time][stone_action_index];
+            animation_manager.add_TAE_class(`TAE_${cur_stone_action[0]}_${cur_stone_action[1]}`);
+            animation_manager.create_stone_action_marker(cur_stone_action);
+        }
+        for (let board_action_index = 0; board_action_index < board_actions[round_n][s_time].length; board_action_index++) {
+            let cur_board_action = board_actions[round_n][s_time][board_action_index];
+            animation_manager.add_TAE_class(`TAE_${cur_board_action[0]}`);
+            animation_manager.create_board_action_marker(cur_board_action);
         }
     }
 
@@ -2220,6 +2268,9 @@ for (let inbetween_round_index = 0; inbetween_round_index <= active_round; inbet
                 // If start process is "tagscreens", then the animation shows stone and board actions. Therefore if any such actions exist, this animation is not redundant, even if no stone state changes.
                 if (start_process == "tagscreens") {
                     if (stone_actions[inbetween_round_index][inbetween_time].length > 0) {
+                        is_redundant = false;
+                    }
+                    if (board_actions[inbetween_round_index][inbetween_time].length > 0) {
                         is_redundant = false;
                     }
                 }

@@ -21,10 +21,23 @@ def index():
     rendered_page = PageHome()
     return(rendered_page.render_page())
 
-    """if is_logged_in():
-        skibidis = db.execute(
-            "SELECT USERNAME FROM BOC_USER WHERE USERNAME = ?", (g.user['USERNAME'],)
-            ).fetchone()
-        return render_template('home/index.html', logged=True, credentials=skibidis)
-    else:
-        return render_template('home/index.html', logged=False)"""
+# Endpoints for form submissions
+
+@bp.route('/action_pending_challenges', methods=['POST'])
+def action_pending_challenges():
+    rendered_page = PageHome()
+    rendered_page.resolve_action_pending_challenges()
+    return(redirect(url_for("home.index")))
+
+@bp.route('/action_existing_games', methods=['POST'])
+def action_existing_games():
+    rendered_page = PageHome()
+    rendered_page.resolve_action_existing_games()
+    return(redirect(url_for("home.index")))
+
+@bp.route('/action_new_game', methods=['POST'])
+def action_new_game():
+    rendered_page = PageHome()
+    rendered_page.resolve_action_new_game()
+    return(redirect(url_for("home.index")))
+

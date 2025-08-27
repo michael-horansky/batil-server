@@ -121,7 +121,6 @@ class Tank(Stone):
                 }
 
             # Command: move
-
             available_move_squares = []
             fwd_x, fwd_y = functions.pos_step((cur_x, cur_y), cur_a)
             bwd_x, bwd_y = functions.pos_step((cur_x, cur_y), functions.azimuth_addition(cur_a, 2))
@@ -142,6 +141,19 @@ class Tank(Stone):
                             },
                         "label" : "Move"
                     }
+
+            # Command: attack
+            available_commands["commands"].append("attack")
+            available_commands["command_properties"]["attack"] = {
+                    "command_type" : "attack",
+                    "selection_mode" : {
+                            "lock_timeslice" : None,
+                            "squares" : [{"t" : t + 1, "x" : cur_x, "y" : cur_y, "a" : [cur_a], "swap_effects" : None}],
+                            "choice_keyword" : None
+                        },
+                    "label" : "Attack"
+                }
+
         return(available_commands)
 
     # ------------------------- Stone action methods --------------------------

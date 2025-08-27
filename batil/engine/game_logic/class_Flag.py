@@ -31,6 +31,14 @@ class Flag():
         Flag.max_stone_ID += 1
         return(new_tag)
 
+    # For tracking created bases
+    max_base_ID = 0
+    @staticmethod
+    def get_base_ID_tag():
+        new_tag = Flag.max_base_ID
+        Flag.max_base_ID += 1
+        return(new_tag)
+
     # For tracking flags
     max_flag_ID = 0
     @staticmethod
@@ -43,6 +51,7 @@ class Flag():
     def reset_counters():
         # Call this method when all instances of Gamemaster are deleted and rebuilt
         Flag.max_stone_ID = 0
+        Flag.max_base_ID = 0
         Flag.max_flag_ID = 0
 
     # ----------------------------------------------------
@@ -92,6 +101,8 @@ class Flag():
         self.stone_ID = stone_ID #None for anonymous flags, a non-negative integer otherwise
         if self.flag_type in Flag.stone_generating_flag_types:
             self.stone_ID = Flag.get_stone_ID_tag()
+        if self.flag_type == "add_base":
+            self.base_ID = Flag.get_base_ID_tag()
 
         # flag_ID is generated automatically if new Flag is being created, and
         # set to a specific value if an old Flag is being loaded into a new GM

@@ -1,6 +1,10 @@
 # This is a class to make complicated html forms
 import json
 
+from flask import (
+    Blueprint, flash, g, redirect, render_template, request, url_for
+)
+
 from batil.html_object import HTMLObject
 
 class ActionForm(HTMLObject):
@@ -10,15 +14,17 @@ class ActionForm(HTMLObject):
         ActionForm.id_generator += 1
         return(ActionForm.id_generator - 1)
 
-    def __init__(self, identifier, form_title, method = "post"):
+    def __init__(self, identifier, form_title, blueprint, method = "post"):
         super().__init__()
         self.identifier = identifier
         self.form_title = form_title
+        self.blueprint = blueprint # To create the url for action
+        self.action_url = url_for(f"{self.blueprint}.action_{self.identifier}")
         self.cls = "action_form"
 
         self.number_of_tabs = 0
 
-        self.structured_html.append(f"<form id=\"action_form_{self.identifier}\" method=\"{method}\">")
+        self.structured_html.append(f"<form id=\"action_form_{self.identifier}\" method=\"{method}\" action=\"{self.action_url}\">")
 
         self.last_section_opened = None
 

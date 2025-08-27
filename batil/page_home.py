@@ -21,72 +21,65 @@ class PageHome(Page):
         super().__init__()
 
     def resolve_request(self):
-        db = get_db()
         if request.method == 'POST':
             # We check what action is happening
             for key, val in request.form.items():
                 print(f"  {key} --> {val} ({type(val)})")
 
-            # There has to exist a key which is equal to action_{identifier} of one of the elements of the page
-            # The value associated specifies which button within this element sent the request
-            if request.form.get("action_pending_challenges") is not None:
-                if request.form.get("action_pending_challenges") == "accept":
-                    print("Accept this challenge!")
-                    accept_challenge(int(request.form.get("action_table_pending_challenges_selected_row")))
+    def resolve_action_pending_challenges(self):
+        if request.form.get("action_pending_challenges") == "accept":
+            print("Accept this challenge!")
+            accept_challenge(int(request.form.get("action_table_pending_challenges_selected_row")))
 
-                elif request.form.get("action_pending_challenges") == "view_board":
-                    print("View the board!")
-                elif request.form.get("action_pending_challenges") == "decline":
-                    print("Decline this challenge!")
-                    decline_challenge(int(request.form.get("action_table_pending_challenges_selected_row")))
+        elif request.form.get("action_pending_challenges") == "view_board":
+            print("View the board!")
+        elif request.form.get("action_pending_challenges") == "decline":
+            print("Decline this challenge!")
+            decline_challenge(int(request.form.get("action_table_pending_challenges_selected_row")))
 
-            if request.form.get("action_active_games") is not None:
-                if request.form.get("action_active_games") == "open":
-                    print("Open this ongoing game!")
+    def resolve_action_existing_games(self):
+        print("Existing games action!")
 
-            if request.form.get("action_new_game") is not None:
-                if request.form.get("action_new_game") == "blind_board_blind_opponent":
-                    print("New challenge: blind board, blind opponent!")
-                    ruleset_selection = {}
-                    all_rulegroups_raw = db.execute("SELECT RULE_GROUP FROM BOC_RULEGROUPS").fetchall()
-                    all_rulegroups = []
-                    for rulegroup_row in all_rulegroups_raw:
-                        if request.form.get(rulegroup_row["RULE_GROUP"]) is None:
-                            raise Exception("Missing selection in ruleset table")
-                        else:
-                            ruleset_selection[rulegroup_row["RULE_GROUP"]] = request.form.get(rulegroup_row["RULE_GROUP"])
+    def resolve_action_new_game(self):
+        db = get_db()
+        if request.form.get("action_new_game") == "blind_board_blind_opponent":
+            print("New challenge: blind board, blind opponent!")
+            ruleset_selection = {}
+            all_rulegroups_raw = db.execute("SELECT RULE_GROUP FROM BOC_RULEGROUPS").fetchall()
+            all_rulegroups = []
+            for rulegroup_row in all_rulegroups_raw:
+                if request.form.get(rulegroup_row["RULE_GROUP"]) is None:
+                    raise Exception("Missing selection in ruleset table")
+                else:
+                    ruleset_selection[rulegroup_row["RULE_GROUP"]] = request.form.get(rulegroup_row["RULE_GROUP"])
 
-                    new_blind_challenge(None, g.user["username"], ruleset_selection)
+            new_blind_challenge(None, g.user["username"], ruleset_selection)
 
 
-                elif request.form.get("action_new_game") == "blind_opponent":
-                    print("New challenge: blind opponent!")
-                    ruleset_selection = {}
-                    all_rulegroups_raw = db.execute("SELECT RULE_GROUP FROM BOC_RULEGROUPS").fetchall()
-                    all_rulegroups = []
-                    for rulegroup_row in all_rulegroups_raw:
-                        if request.form.get(rulegroup_row["RULE_GROUP"]) is None:
-                            raise Exception("Missing selection in ruleset table")
-                        else:
-                            ruleset_selection[rulegroup_row["RULE_GROUP"]] = request.form.get(rulegroup_row["RULE_GROUP"])
+        elif request.form.get("action_new_game") == "blind_opponent":
+            print("New challenge: blind opponent!")
+            ruleset_selection = {}
+            all_rulegroups_raw = db.execute("SELECT RULE_GROUP FROM BOC_RULEGROUPS").fetchall()
+            all_rulegroups = []
+            for rulegroup_row in all_rulegroups_raw:
+                if request.form.get(rulegroup_row["RULE_GROUP"]) is None:
+                    raise Exception("Missing selection in ruleset table")
+                else:
+                    ruleset_selection[rulegroup_row["RULE_GROUP"]] = request.form.get(rulegroup_row["RULE_GROUP"])
 
-                    new_blind_challenge(int(request.form.get("action_table_select_board_for_new_game_selected_row")), g.user["username"], ruleset_selection)
-                elif request.form.get("action_new_game") == "targeted_challenge":
-                    print("New challenge: targeted!")
-                    ruleset_selection = {}
-                    all_rulegroups_raw = db.execute("SELECT RULE_GROUP FROM BOC_RULEGROUPS").fetchall()
-                    all_rulegroups = []
-                    for rulegroup_row in all_rulegroups_raw:
-                        if request.form.get(rulegroup_row["RULE_GROUP"]) is None:
-                            raise Exception("Missing selection in ruleset table")
-                        else:
-                            ruleset_selection[rulegroup_row["RULE_GROUP"]] = request.form.get(rulegroup_row["RULE_GROUP"])
+            new_blind_challenge(int(request.form.get("action_table_select_board_for_new_game_selected_row")), g.user["username"], ruleset_selection)
+        elif request.form.get("action_new_game") == "targeted_challenge":
+            print("New challenge: targeted!")
+            ruleset_selection = {}
+            all_rulegroups_raw = db.execute("SELECT RULE_GROUP FROM BOC_RULEGROUPS").fetchall()
+            all_rulegroups = []
+            for rulegroup_row in all_rulegroups_raw:
+                if request.form.get(rulegroup_row["RULE_GROUP"]) is None:
+                    raise Exception("Missing selection in ruleset table")
+                else:
+                    ruleset_selection[rulegroup_row["RULE_GROUP"]] = request.form.get(rulegroup_row["RULE_GROUP"])
 
-                    new_targeted_challenge(int(request.form.get("action_table_select_board_for_new_game_selected_row")), request.form.get("action_table_select_opponent_for_new_game_selected_row"), g.user["username"], ruleset_selection)
-
-            if request.form.get("action_select_board_for_new_game") is not None:
-                if request.form.get("action_select_board_for_new_game") == "view":
-                    print("View the board before you make a challenge outta it!")
+            new_targeted_challenge(int(request.form.get("action_table_select_board_for_new_game_selected_row")), request.form.get("action_table_select_opponent_for_new_game_selected_row"), g.user["username"], ruleset_selection)
 
     def render_content_logged_out(self):
         self.structured_html.append([
@@ -109,7 +102,7 @@ class PageHome(Page):
         #pending_challenges_dataset = get_table_as_list_of_dicts(f"SELECT BOC_GAMES.GAME_ID AS GAME_ID, BOC_GAMES.PLAYER_A AS PLAYER_A, BOC_GAMES.PLAYER_B AS PLAYER_B, BOC_BOARDS.BOARD_NAME, BOC_GAMES.D_CHALLENGE FROM BOC_GAMES INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE (BOC_GAMES.STATUS = \"waiting_for_acceptance\" AND (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])}))", ["GAME_ID"])
         pending_challenges_dataset = get_table_as_list_of_dicts(f"SELECT BOC_CHALLENGES.CHALLENGE_ID AS CHALLENGE_ID, BOC_CHALLENGES.CHALLENGER AS CHALLENGER, BOC_CHALLENGES.DATE_CREATED AS DATE_CREATED, BOC_BOARDS.BOARD_NAME AS BOARD_NAME FROM BOC_CHALLENGES LEFT JOIN BOC_BOARDS ON BOC_CHALLENGES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE BOC_CHALLENGES.STATUS = 'active' AND BOC_CHALLENGES.CHALLENGEE = {json.dumps(g.user["username"])}", "CHALLENGE_ID", ["CHALLENGER", "BOARD_NAME", "DATE_CREATED"]) # WHERE BOC_CHALLENGES.CHALLENGEE = {json.dumps(g.user["username"])}
         if len(pending_challenges_dataset) > 0:
-            form_pending_challenges = ActionForm("pending_challenges", "Challenges for you")
+            form_pending_challenges = ActionForm("pending_challenges", "Challenges for you", "home")
             form_pending_challenges.initialise_tabs(["Incoming challenges"])
             form_pending_challenges.open_section(0)
             pending_challenges_table = ActionTable("pending_challenges", include_select = False)
@@ -195,7 +188,7 @@ class PageHome(Page):
                 active_game_headers.append("Your turn")
             if len(active_games_not_your_turn) > 0:
                 active_game_headers.append("Waiting for opponent")
-            form_existing_games = ActionForm("existing_games", "Ongoing games")
+            form_existing_games = ActionForm("existing_games", "Ongoing games", "home")
             form_existing_games.initialise_tabs(active_game_headers)
             sections_initialised = 0
             if len(active_games_your_turn) > 0:
@@ -225,7 +218,7 @@ class PageHome(Page):
 
 
         # New game
-        form_new_game = ActionForm("new_game", "New game")
+        form_new_game = ActionForm("new_game", "New game", "home")
         form_new_game.initialise_tabs(["Rules", "Board", "Opponent"])
         form_new_game.open_section(0)
 

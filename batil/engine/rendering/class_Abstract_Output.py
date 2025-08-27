@@ -49,6 +49,7 @@ class Abstract_Output():
             "target_x",
             "target_y",
             "target_a",
+            "swap_effect"
         ]
 
     def shift_process(cur_process, delta_index):
@@ -63,6 +64,7 @@ class Abstract_Output():
 
         self.factions = []
         self.faction_armies = [] # ["faction"] = [stone_ID list]
+        self.bases = [] # list of IDs
         self.stone_properties = {} # ["stone_ID"] = {"allegiance", "stone_type", "orientable", "opposable"}
         self.reverse_causality_flags = {"causes" : [], "effects" : []} # List of keys of reverse_causality_flag_properties
         self.reverse_causality_flag_properties = {} # ["flag_ID"] = {"t", "x", "y", "flag_type", "stone_ID", "target_effect"} for flag_IDs important to Scenarios
@@ -78,7 +80,10 @@ class Abstract_Output():
         self.stone_trajectories = [] # [round_number][t]["process"][stone_ID] = state, where "process" specifies which part of the round this state describes
         self.stone_endpoints = [] #[round_number][stone_ID] = {"start" : desc, "end" : desc} or None
 
+        self.base_trajectories = [] # [round_number][t][base ID] = [x, y, allegiance]
+
         self.stone_actions = [] # [round_number][t][action index] = [stone_type, action_type, stone_x, stone_y, param1, param2...]
+        self.board_actions = [] # [round_number][t][action index] = [action type, x, y]
 
         self.time_jumps = [] # [round_number]["t"]["x"]["y"]["used"/"unused"] = "TJI"/"TJO"/"conflict" if present
         self.scenarios = [] # [round_number] = {{setup activity map}, {effect activity map}, {effect cause map}, {stone inheritance}, {removed setup stones}}
@@ -111,6 +116,10 @@ class Abstract_Output():
                     "orientable" : stone_object.orientable,
                     "opposable" : stone_object.opposable
                 }
+
+    def record_bases(self, bases):
+        for base_ID in bases.keys():
+            self.bases.append(base_ID)
 
     def set_current_turn(self, current_turn):
         self.current_turn = current_turn
@@ -147,6 +156,18 @@ class Abstract_Output():
             while(len(self.stone_endpoints) <= round_n):
                 self.stone_endpoints.append({})
 
+        if len(self.base_trajectories) > round_n:
+            # key exists
+            self.base_trajectories[round_n] = []
+            for t in range(self.t_dim):
+                self.base_trajectories[round_n].append({})
+        else:
+            # We keep appending empty turns until key exists
+            while(len(self.base_trajectories) <= round_n):
+                self.base_trajectories.append([])
+                for t in range(self.t_dim):
+                    self.base_trajectories[-1].append({})
+
         if len(self.stone_actions) > round_n:
             # key exists
             self.stone_actions[round_n] = []
@@ -158,6 +179,18 @@ class Abstract_Output():
                 self.stone_actions.append([])
                 for t in range(self.t_dim):
                     self.stone_actions[-1].append([])
+
+        if len(self.board_actions) > round_n:
+            # key exists
+            self.board_actions[round_n] = []
+            for t in range(self.t_dim):
+                self.board_actions[round_n].append([])
+        else:
+            # We keep appending empty turns until key exists
+            while(len(self.board_actions) <= round_n):
+                self.board_actions.append([])
+                for t in range(self.t_dim):
+                    self.board_actions[-1].append([])
 
         if len(self.time_jumps) > round_n:
             # key exists
@@ -215,6 +248,16 @@ class Abstract_Output():
 
     def add_stone_action(self, round_n, t, action_array):
         self.stone_actions[round_n][t].append(action_array.copy())
+
+    def add_board_actions(self, round_n, board_actions_raw):
+        # board_actions_raw[t][x][y][z]["action type"] = [flag 1, flag 2, flag 3...]
+        # If the list of flags is non-empty, the action happened
+        for t in range(self.t_dim):
+            for x in range(self.x_dim):
+                for y in range(self.y_dim):
+                    for action_type, action_causes in board_actions_raw[t][x][y].items():
+                        if len(action_causes) > 0:
+                            self.board_actions[round_n][t].append([action_type, x, y])
 
     def add_time_jump(self, round_n, t, x, y, is_used, time_jump_type):
         if t not in self.time_jumps[round_n].keys():

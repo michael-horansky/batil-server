@@ -24,6 +24,7 @@ from batil.engine.stones.class_Mine import Mine
 
 # Import game logic components
 from batil.engine.game_logic.class_Flag import Flag
+from batil.engine.game_logic.class_Base import Base
 from batil.engine.game_logic.class_Board_square import Board_square
 
 # Import rendering utilities
@@ -53,6 +54,9 @@ class Gamemaster():
         # Setup trackers
         self.setup_stones = {} # Tracker for stones which are added on board setup. This is used when resolving paradoxes. [stone_ID] = flag_ID
         self.removed_setup_stones = {} # [stone_ID] = flag_ID
+
+        # Base trackers
+        self.bases = {} # [ID] = Base()
 
         # Actions. These are queued by waiting flags and flushed in execute_moves.
         self.stone_actions = [] # [t][stone_ID] = flag_ID which initiated action
@@ -684,6 +688,9 @@ class Gamemaster():
         self.setup_squares[x][y].add_flag(new_flag.flag_ID, None)
         self.flags[new_flag.flag_ID] = new_flag
 
+        # Add to base tracker
+        self.bases[new_flag.base_ID] = Base(new_flag.base_ID)
+
         return([new_flag.flag_ID])
 
     def add_flag_spatial_move(self, stone_ID, t, old_x, old_y, new_x, new_y, new_a):
@@ -704,11 +711,11 @@ class Gamemaster():
         self.flags[new_flag.flag_ID] = new_flag
         return([new_flag.flag_ID])
 
-    def add_flag_timejump(self, stone_ID, old_t, old_x, old_y, new_t, new_x, new_y, new_a, adopted_stone_ID = None):
+    def add_flag_timejump(self, stone_ID, old_t, old_x, old_y, new_t, new_x, new_y, new_a, swap_ID = None):
 
         round_number, active_timeslice = self.round_from_turn(self.current_turn_index)
-        # If adopted_stone_ID specified, instead of creating a new TJI, we adopt an existing one.
-        if adopted_stone_ID == None:
+        # If swap_ID specified, instead of creating a new TJI, we adopt an existing one.
+        if swap_ID == None:
             # The TJI is placed inactive, and may be activated during causal consistency resolution
             tji_flag = Flag(STPos(new_t - 1, new_x, new_y), "time_jump_in", self.stones[stone_ID].player_faction, [self.stones[stone_ID].stone_type, new_a])
             tjo_flag = Flag(STPos(old_t, old_x, old_y), "time_jump_out", self.stones[stone_ID].player_faction, [STPos(new_t - 1, new_x, new_y)], stone_ID, effect = tji_flag.flag_ID)
@@ -740,8 +747,7 @@ class Gamemaster():
             return([tji_flag.flag_ID, tjo_flag.flag_ID])
         else:
             # First, we find the TJI which summons the stone
-            TJI_ID = self.stones[adopted_stone_ID].progenitor_flag_ID
-            tjo_flag = Flag(STPos(old_t, old_x, old_y), "time_jump_out", self.stones[stone_ID].player_faction, [STPos(new_t - 1, new_x, new_y), TJI_ID], stone_ID, effect = TJI_ID)
+            tjo_flag = Flag(STPos(old_t, old_x, old_y), "time_jump_out", self.stones[stone_ID].player_faction, [STPos(new_t - 1, new_x, new_y), swap_ID], stone_ID, effect = swap_ID)
             self.board_dynamic[old_t][old_x][old_y].add_flag(tjo_flag.flag_ID, stone_ID)
             self.flags[tjo_flag.flag_ID] = tjo_flag
             self.causes_by_round = functions.add_tail_to_list(self.causes_by_round, round_number + 1, [])
@@ -790,18 +796,18 @@ class Gamemaster():
             if self.stones[command["stone_ID"]].stone_type == "bombardier":
                 flags_added = self.add_bomb_flag(command["stone_ID"], command["t"], command["x"], command["y"], command["target_t"], command["x"], command["y"])
             else:
-                if "attack_arguments" in command.keys():
-                    flags_added = self.add_flag_attack(command["stone_ID"], command["t"], command["x"], command["y"], command["attack_arguments"])
+                if "choice_keyword" in command.keys():
+                    flags_added = self.add_flag_attack(command["stone_ID"], command["t"], command["x"], command["y"], command["choice_keyword"])
                 else:
                     flags_added = self.add_flag_attack(command["stone_ID"], command["t"], command["x"], command["y"])
         elif command["type"] == "tag":
-            flags_added = self.add_flag_tag(command["stone_ID"], command["t"], command["x"], command["y"], command["tag_type"])
+            flags_added = self.add_flag_tag(command["stone_ID"], command["t"], command["x"], command["y"], command["choice_keyword"])
         elif command["type"] == "timejump":
             # stone_ID, old_t, old_x, old_y, new_t, new_x, new_y, new_a, adopted_stone_ID
-            if "adopted_stone_ID" not in command.keys():
+            if "swap_effect" not in command.keys():
                 flags_added = self.add_flag_timejump(command["stone_ID"], command["t"], command["x"], command["y"], command["target_t"], command["target_x"], command["target_y"], command["target_a"], None)
             else:
-                flags_added = self.add_flag_timejump(command["stone_ID"], command["t"], command["x"], command["y"], command["target_t"], command["target_x"], command["target_y"], command["target_a"], command["adopted_stone_ID"])
+                flags_added = self.add_flag_timejump(command["stone_ID"], command["t"], command["x"], command["y"], command["target_t"], command["target_x"], command["target_y"], command["target_a"], command["swap_effect"])
 
         # We record the flags into the time rep
         self.flags_by_turn[self.current_turn_index][commander] += flags_added
@@ -1445,6 +1451,8 @@ class Gamemaster():
             for y in range(self.y_dim):
                 for stone_ID in self.board_dynamic[output_t][x][y].stones:
                     self.rendering_output.stone_trajectories[output_round][output_t][process_key][stone_ID] = [x, y] + self.board_dynamic[output_t][x][y].stone_properties[stone_ID]
+                if process_key == "canon" and self.board_dynamic[output_t][x][y].has_base:
+                    self.rendering_output.base_trajectories[output_round][output_t][self.board_dynamic[output_t][x][y].base_ID] = [x, y, self.board_dynamic[output_t][x][y].base_allegiance]
         if assume_destruction:
             for prev_stone_ID, prev_stone_state in self.rendering_output.stone_trajectories[output_round][output_t][Abstract_Output.shift_process(process_key, -1)].items():
                 if prev_stone_state is not None and self.rendering_output.stone_trajectories[output_round][output_t][process_key][prev_stone_ID] is None:
@@ -1556,7 +1564,7 @@ class Gamemaster():
                         # instead adds 'explosion' to self.board_actions
 
                         if cur_flag.flag_type == "add_base":
-                            self.board_dynamic[0][x][y].add_base(cur_flag.player_faction)
+                            self.board_dynamic[0][x][y].add_base(cur_flag.base_ID, cur_flag.player_faction)
                         if cur_flag.flag_type == "add_stone":
                             self.place_stone_on_board(STPos(0, x, y), cur_flag.stone_ID, [cur_flag.flag_args[1]])
                             self.stone_causal_freedom[cur_flag.stone_ID] = 0
@@ -1677,12 +1685,6 @@ class Gamemaster():
                             self.board_dynamic[t][aff_x][aff_y].remove_stones()
 
 
-            if save_to_output:
-                self.save_timeslice_to_output(rendering_round, t, "canon", assume_destruction = True)
-
-            # At this moment, the time-slice t is in its canonical state, and stone history may be recorded
-            self.record_stones_at_time(t)
-
             # Since the position of the stones in this timeslice will no longer
             # change, we can determmine changes to base allegiances and
             # propagate their positions
@@ -1695,7 +1697,13 @@ class Gamemaster():
                                 if self.stones[self.board_dynamic[t][x][y].stones[0]].player_faction in self.factions:
                                     self.board_dynamic[t][x][y].base_allegiance = self.stones[self.board_dynamic[t][x][y].stones[0]].player_faction
                         if t < self.t_dim - 1:
-                            self.board_dynamic[t+1][x][y].add_base(self.board_dynamic[t][x][y].base_allegiance)
+                            self.board_dynamic[t+1][x][y].add_base(self.board_dynamic[t][x][y].base_ID, self.board_dynamic[t][x][y].base_allegiance)
+
+            if save_to_output:
+                self.save_timeslice_to_output(rendering_round, t, "canon", assume_destruction = True)
+
+            # At this moment, the time-slice t is in its canonical state, and stone history may be recorded
+            self.record_stones_at_time(t)
 
 
             # As stones may have been removed from the board, we reset all the
@@ -1824,6 +1832,10 @@ class Gamemaster():
                         final_x, final_y, final_a = self.stones[undetermined_stones[i]].history[t]
                         self.rendering_output.add_stone_endpoint(rendering_round, undetermined_stones[i], "end", "causally_free", STPos(t, final_x, final_y))
                     undetermined_stones.pop(i)
+
+        # Save board_actions to output
+        if save_to_output:
+            self.rendering_output.add_board_actions(rendering_round, self.board_actions)
 
         return(result_causality_trackers)
 
@@ -2167,6 +2179,7 @@ class Gamemaster():
 
         # Now, we record all the finalised properties, such as stone/flag lists
         self.rendering_output.record_faction_armies(self.factions, self.faction_armies, self.stones)
+        self.rendering_output.record_bases(self.bases)
 
         # Now, we record the ongoing round, using the last round's scenario
         cur_round, active_timeslice = self.round_from_turn(self.current_turn_index)
@@ -2482,6 +2495,8 @@ class Gamemaster():
 
         # If the last turn was also the last in a round, we need to find the scenario for the next round
         final_round_number, final_active_timeslice = self.round_from_turn(self.current_turn_index)
+        self.effects_by_round = functions.add_tail_to_list(self.effects_by_round, final_round_number + 1, [])
+        self.causes_by_round = functions.add_tail_to_list(self.causes_by_round, final_round_number + 1, [])
         for round_number in range(current_round_number + 1, final_round_number + 1):
             self.print_log(f"Finding scenario for round {round_number}...", 1)
             round_canon_scenario = self.resolve_causal_consistency(for_which_round = round_number)
