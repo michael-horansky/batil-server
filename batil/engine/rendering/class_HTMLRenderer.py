@@ -21,8 +21,9 @@ from batil.engine.rendering.class_Abstract_Output import Abstract_Output
 
 class HTMLRenderer(Renderer):
 
-    def __init__(self, render_object):
+    def __init__(self, render_object, game_id):
         super().__init__(render_object)
+        self.game_id = game_id
         self.structured_output = []
 
         # ------------------------ Rendering constants ------------------------
@@ -631,7 +632,7 @@ class HTMLRenderer(Renderer):
     def draw_command_form(self):
         command_form = []
         command_form.append(f"<div id=\"command_form_div\">")
-        command_form.append(f"  <form id=\"command_form\" class=\"submission_form\" method=\"POST\">")
+        command_form.append(f"  <form id=\"command_form\" class=\"submission_form\" action=\"{url_for("game_bp.command_submission", game_id=self.game_id)}\" method=\"POST\">")
         if not self.render_object.did_player_finish_turn:
             for stone_ID in self.render_object.stones_to_be_commanded:
                 command_form.append(f"    <fieldset id=\"command_data_{stone_ID}\" class=\"command_data_field\">")

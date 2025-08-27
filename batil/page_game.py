@@ -28,30 +28,33 @@ class PageGame(Page):
         print("Resolving POST...")
         if request.method == 'POST':
             # We check what action is happening
+            pass
 
-            if request.form.get("command_submission") is not None:
-                stones_touched_in_order = [int(x) for x in request.form.get("touch_order").split(",")]
-                commands_added = []
-                for stone_ID in stones_touched_in_order:
-                    cur_cmd = {}
-                    for default_keyword in Abstract_Output.command_keywords:
-                        if default_keyword in Abstract_Output.integer_command_keywords:
-                            if request.form.get(f"cmd_{default_keyword}_{stone_ID}") != "":
-                                cur_cmd[default_keyword] = int(request.form.get(f"cmd_{default_keyword}_{stone_ID}"))
-                            else:
-                                cur_cmd[default_keyword] = None
-                        else:
-                            cur_cmd[default_keyword] = request.form.get(f"cmd_{default_keyword}_{stone_ID}")
-                    commands_added.append(cur_cmd)
-                self.gm.submit_commands(self.client_role, commands_added)
-                new_dynamic_rep = self.gm.dump_changes()
-                # We save changes to database
-                print("The following new commands will be saved:")
-                for turn_index in range(len(new_dynamic_rep)):
-                    for commander, command_rep in new_dynamic_rep[turn_index].items():
-                        print(f"{turn_index} [{commander}]: {command_rep}")
-                        db.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)", (self.game_id, turn_index, commander, command_rep))
-                db.commit()
+
+    def resolve_command_submission(self):
+        db = get_db()
+        stones_touched_in_order = [int(x) for x in request.form.get("touch_order").split(",")]
+        commands_added = []
+        for stone_ID in stones_touched_in_order:
+            cur_cmd = {}
+            for default_keyword in Abstract_Output.command_keywords:
+                if default_keyword in Abstract_Output.integer_command_keywords:
+                    if request.form.get(f"cmd_{default_keyword}_{stone_ID}") != "":
+                        cur_cmd[default_keyword] = int(request.form.get(f"cmd_{default_keyword}_{stone_ID}"))
+                    else:
+                        cur_cmd[default_keyword] = None
+                else:
+                    cur_cmd[default_keyword] = request.form.get(f"cmd_{default_keyword}_{stone_ID}")
+            commands_added.append(cur_cmd)
+        self.gm.submit_commands(self.client_role, commands_added)
+        new_dynamic_rep = self.gm.dump_changes()
+        # We save changes to database
+        print("The following new commands will be saved:")
+        for turn_index in range(len(new_dynamic_rep)):
+            for commander, command_rep in new_dynamic_rep[turn_index].items():
+                print(f"{turn_index} [{commander}]: {command_rep}")
+                db.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)", (self.game_id, turn_index, commander, command_rep))
+        db.commit()
 
 
 
@@ -107,15 +110,15 @@ class PageGame(Page):
     def prepare_renderer(self):
         # Time for telling the proprietary gamemaster to properly initialise the game with the correct access rights
         self.gm.prepare_for_rendering(self.client_role)
-        self.renderer = HTMLRenderer(self.gm.rendering_output)
+        self.renderer = HTMLRenderer(self.gm.rendering_output, self.game_id)
         self.renderer.render_game()
 
 
     def render_page(self):
         # First we load the game from database
-        self.load_game()
+        #self.load_game()
         # Then we check the POST form to see if new commands were submitted. If yes, we incorporate them into the render object, and also upload them to the db
-        self.resolve_request()
+        #self.resolve_request()
         # Finally, we prepare the rendering object
         self.prepare_renderer()
 
