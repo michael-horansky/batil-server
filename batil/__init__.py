@@ -39,17 +39,17 @@ def create_app(test_config=None):
 
     # BLUEPRINTS
     # Authentification blueprint
-    from . import auth
+    from .routes import auth
     app.register_blueprint(auth.bp)
 
     # Game blueprint and id converter
     # Register converter
     app.url_map.converters['regex'] = RegexConverter
-    from . import game
+    from .routes import game
     app.register_blueprint(game.bp)
 
     # Home blueprint
-    from . import home
+    from .routes import home
     app.register_blueprint(home.bp)
     app.add_url_rule('/', endpoint='index')
 

@@ -93,6 +93,10 @@ class Abstract_Output():
 
         self.current_turn = None
 
+        # Game status properties
+        self.game_status = None
+        self.game_outcome = None
+
 
     # -------------------------------------------------------------------------
     # ---------------------- General property management ----------------------

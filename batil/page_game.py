@@ -1,11 +1,10 @@
 import json
 
-from batil.page import Page
+from batil.html_objects.page import Page
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for
 )
 
-from batil.auth import is_logged_in
 from batil.db import get_db, get_table_as_list_of_dicts
 
 from batil.engine.game_logic.class_Gamemaster import Gamemaster
@@ -17,8 +16,9 @@ from batil.engine.rendering.class_Abstract_Output import Abstract_Output
 class PageGame(Page):
 
     def __init__(self, game_id):
-        super().__init__()
+        super().__init__("Game")
         self.game_id = game_id
+        self.game_status = None
 
         Flag.reset_counters()
         self.gm = Gamemaster(display_logs = True)
@@ -46,7 +46,10 @@ class PageGame(Page):
                 else:
                     cur_cmd[default_keyword] = request.form.get(f"cmd_{default_keyword}_{stone_ID}")
             commands_added.append(cur_cmd)
-        self.gm.submit_commands(self.client_role, commands_added)
+        output_message = self.gm.submit_commands(self.client_role, commands_added)
+        if output_message.header == "error":
+            print(output_message.msg)
+            return(-1)
         new_dynamic_rep = self.gm.dump_changes()
         # We save changes to database
         print("The following new commands will be saved:")
@@ -54,6 +57,11 @@ class PageGame(Page):
             for commander, command_rep in new_dynamic_rep[turn_index].items():
                 print(f"{turn_index} [{commander}]: {command_rep}")
                 db.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)", (self.game_id, turn_index, commander, command_rep))
+
+        if output_message.header == "concluded":
+            db.execute("UPDATE BOC_GAMES SET D_FINISHED = CURRENT_TIMESTAMP, STATUS = \"concluded\", OUTCOME = ? WHERE GAME_ID = ?", (output_message.msg, self.game_id))
+            self.game_status = "concluded"
+
         db.commit()
 
 
@@ -64,6 +72,7 @@ class PageGame(Page):
         # We need to load the static data, the dynamic data, and the ruleset
 
         boc_games_row = db.execute("SELECT PLAYER_A, PLAYER_B, BOARD_ID, STATUS, DRAW_OFFER_STATUS, OUTCOME FROM BOC_GAMES WHERE GAME_ID = ?", (self.game_id,)).fetchone()
+        self.game_status = boc_games_row["STATUS"]
         if boc_games_row is None:
             print(f"ERROR: Attempting to load a non-existing game (game-id = {self.game_id})")
             return(-1)
@@ -122,11 +131,11 @@ class PageGame(Page):
         # Finally, we prepare the rendering object
         self.prepare_renderer()
 
-        self.html_open("Game", "boc_ingame")
+        self.html_open("boc_ingame")
 
         self.structured_html.append(self.renderer.structured_output)
 
-        if self.gm.rendering_output.did_player_finish_turn:
+        if self.gm.rendering_output.did_player_finish_turn and self.game_status == "in_progress":
             # The client is waiting for his opponent; we will check the page automatically once the game has been updated
             self.clientside_reloader()
 

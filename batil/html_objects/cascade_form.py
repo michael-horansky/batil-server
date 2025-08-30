@@ -5,7 +5,7 @@ import json
 
 from batil.db import get_db, get_table_as_list_of_dicts
 
-from batil.html_object import HTMLObject
+from batil.html_objects.html_object import HTMLObject
 
 class CascadeForm(HTMLObject):
 

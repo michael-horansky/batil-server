@@ -102,6 +102,8 @@ class HTMLRenderer(Renderer):
                 self.commit_to_output(f"  const {name} = true;")
             else:
                 self.commit_to_output(f"  const {name} = false;")
+        elif isinstance(value, str):
+            self.commit_to_output(f"  const {name} = {json.dumps(value)};")
         else:
             self.commit_to_output(f"  const {name} = {value};")
 
@@ -149,6 +151,10 @@ class HTMLRenderer(Renderer):
         self.deposit_object("time_jumps", self.render_object.time_jumps)
 
         self.deposit_datum("current_turn", self.render_object.current_turn)
+
+        # ---------------------- Game status properties -----------------------
+        self.deposit_datum("game_status", self.render_object.game_status)
+        self.deposit_datum("game_outcome", self.render_object.game_outcome)
 
         self.commit_to_output("</script>")
 
@@ -669,6 +675,15 @@ class HTMLRenderer(Renderer):
         command_form.append(f"</div>")
         self.commit_to_output(command_form)
 
+    # ------------------------ Outcome message methods ------------------------
+
+    def draw_outcome_message(self):
+        self.commit_to_output([
+            "<p id=\"outcome_message_paragraph\">",
+            f"Player {self.render_object.game_outcome} won the game!",
+            "</p>"
+        ])
+
 
     # ---------------------------- Global methods -----------------------------
 
@@ -696,7 +711,10 @@ class HTMLRenderer(Renderer):
 
         self.draw_game_control_panel()
         self.draw_game_log()
-        self.draw_command_form()
+        if self.render_object.game_status == "in_progress":
+            self.draw_command_form()
+        elif self.render_object.game_status == "concluded":
+            self.draw_outcome_message()
 
         # Close gameside
         self.close_gameside()

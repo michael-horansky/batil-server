@@ -1,24 +1,23 @@
 import json
 import random
 
-from batil.page import Page
+from batil.html_objects.page import Page
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for
 )
 
-from batil.auth import is_logged_in
 from batil.db import get_db, get_table_as_list_of_dicts, new_blind_challenge, new_targeted_challenge, accept_challenge, decline_challenge
 
 from batil.aux_funcs import *
 
-from batil.action_form import ActionForm
-from batil.action_table import ActionTable
-from batil.cascade_form import CascadeForm
+from batil.html_objects.action_form import ActionForm
+from batil.html_objects.action_table import ActionTable
+from batil.html_objects.cascade_form import CascadeForm
 
 class PageHome(Page):
 
     def __init__(self):
-        super().__init__()
+        super().__init__("Home")
 
     def resolve_request(self):
         if request.method == 'POST':
@@ -81,6 +80,9 @@ class PageHome(Page):
 
             new_targeted_challenge(int(request.form.get("action_table_select_board_for_new_game_selected_row")), request.form.get("action_table_select_opponent_for_new_game_selected_row"), g.user["username"], ruleset_selection)
 
+    def resolve_action_your_boards(self):
+        print("new board??")
+
     def render_content_logged_out(self):
         self.structured_html.append([
             "<header>",
@@ -88,15 +90,52 @@ class PageHome(Page):
             "</header>"
         ])
 
-
-    def render_content_logged_in(self):
+    def render_section_play(self):
         db = get_db()
 
-        self.structured_html.append([
-            "<header>",
-            f"  <h1>Welcome back, {g.user["username"]}</h1>",
-            "</header>"
-        ])
+        self.open_container("play_forms_container")
+
+
+
+        # New game
+        form_new_game = ActionForm("new_game", "New game", "home")
+        form_new_game.initialise_tabs(["Rules", "Board", "Opponent"])
+        form_new_game.open_section(0)
+
+        select_rules_dataset = get_table_as_list_of_dicts("SELECT RULE AS ID, RULE_GROUP AS \"GROUP\", DESCRIPTION, \"ORDER\", RESTRICTION, REQUIREMENT, LABEL FROM BOC_RULES", "ID", ["ID", "GROUP", "DESCRIPTION", "ORDER", "RESTRICTION", "REQUIREMENT", "LABEL"])
+        select_rulegroups_dataset = get_table_as_list_of_dicts("SELECT RULE_GROUP AS ID, DESCRIPTION, \"ORDER\" FROM BOC_RULEGROUPS", "ID", ["ID", "DESCRIPTION", "ORDER"])
+        select_rules_form = CascadeForm("select_rules_form", select_rulegroups_dataset, select_rules_dataset)
+        form_new_game.structured_html.append(select_rules_form.structured_html)
+        form_new_game.open_section_footer()
+        form_new_game.add_button("submit", "blind_board_blind_opponent", "Create challenge on random board with random opponent")
+        form_new_game.close_section()
+
+
+        # Now: Board choices
+        select_board_dataset = get_table_as_list_of_dicts(f"SELECT BOC_BOARDS.BOARD_ID AS BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_USER_SAVED_BOARDS.D_SAVED AS D_SAVED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP FROM BOC_BOARDS INNER JOIN BOC_USER_SAVED_BOARDS ON BOC_BOARDS.BOARD_ID = BOC_USER_SAVED_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = \"{g.user["username"]}\"", "BOARD_ID", ["BOARD_NAME", "D_SAVED", "AUTHOR", "D_PUBLISHED", "HANDICAP"])
+        form_new_game.open_section(1)
+        select_board_table = ActionTable("select_board_for_new_game")
+        select_board_table.make_head({"BOARD_NAME" : "Board", "D_SAVED" : "Saved to library", "AUTHOR" : "Author", "D_PUBLISHED" : "Published", "HANDICAP" : "Handicap"}, {"view" : "View"})
+        select_board_table.make_body(select_board_dataset)
+        form_new_game.structured_html.append(select_board_table.structured_html)
+        form_new_game.open_section_footer()
+        form_new_game.add_button("submit", "blind_opponent", "Create challenge on selected board with random opponent", selection_condition = "action_table_select_board_for_new_game_selected_row_input")
+        form_new_game.close_section()
+
+        # Now: opponent choices
+        select_opponent_dataset = get_table_as_list_of_dicts(f"SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])}))", "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES"])
+        form_new_game.open_section(2)
+        select_opponent_table = ActionTable("select_opponent_for_new_game")
+        select_opponent_table.make_head({"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games played with you"})
+        select_opponent_table.make_body(select_opponent_dataset)
+        form_new_game.structured_html.append(select_opponent_table.structured_html)
+        form_new_game.open_section_footer()
+        form_new_game.add_button("submit", "targeted_challenge", "Challenge opponent on selected board", selection_condition = f"action_table_select_opponent_for_new_game_selected_row_input")
+        form_new_game.close_section(selection_condition = "action_table_select_board_for_new_game_selected_row_input")
+        form_new_game.close_form()
+        self.structured_html.append(form_new_game.structured_html)
+
+        self.open_container("play_forms_right")
 
         # Pending challenges TODO
         #pending_challenges_dataset = get_table_as_list_of_dicts(f"SELECT BOC_GAMES.GAME_ID AS GAME_ID, BOC_GAMES.PLAYER_A AS PLAYER_A, BOC_GAMES.PLAYER_B AS PLAYER_B, BOC_BOARDS.BOARD_NAME, BOC_GAMES.D_CHALLENGE FROM BOC_GAMES INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE (BOC_GAMES.STATUS = \"waiting_for_acceptance\" AND (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])}))", ["GAME_ID"])
@@ -216,61 +255,80 @@ class PageHome(Page):
 
 
 
+        self.close_container()
+        self.close_container()
 
-        # New game
-        form_new_game = ActionForm("new_game", "New game", "home")
-        form_new_game.initialise_tabs(["Rules", "Board", "Opponent"])
-        form_new_game.open_section(0)
+    def render_section_your_boards(self):
+        db = get_db()
+        # One action form with two tabs: Published boards and Workshop
+        your_published_boards_dataset = get_table_as_list_of_dicts(f"""
+            SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED
+            FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
+            WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1 GROUP BY BOC_BOARDS.BOARD_ID
+            """, "BOARD_ID", ["BOARD_NAME", "D_PUBLISHED", "GAMES_PLAYED", "HANDICAP"]
+            )
+        your_unpublished_boards_dataset = get_table_as_list_of_dicts(
+            f"SELECT BOARD_ID, BOARD_NAME, D_CREATED, D_CHANGED FROM BOC_BOARDS WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 0 ORDER BY D_CHANGED DESC",
+            "BOARD_ID", ["BOARD_NAME", "D_CHANGED", "D_CREATED"])
 
-        select_rules_dataset = get_table_as_list_of_dicts("SELECT RULE AS ID, RULE_GROUP AS \"GROUP\", DESCRIPTION, \"ORDER\", RESTRICTION, REQUIREMENT, LABEL FROM BOC_RULES", "ID", ["ID", "GROUP", "DESCRIPTION", "ORDER", "RESTRICTION", "REQUIREMENT", "LABEL"])
-        select_rulegroups_dataset = get_table_as_list_of_dicts("SELECT RULE_GROUP AS ID, DESCRIPTION, \"ORDER\" FROM BOC_RULEGROUPS", "ID", ["ID", "DESCRIPTION", "ORDER"])
-        select_rules_form = CascadeForm("select_rules_form", select_rulegroups_dataset, select_rules_dataset)
-        form_new_game.structured_html.append(select_rules_form.structured_html)
-        form_new_game.open_section_footer()
-        form_new_game.add_button("submit", "blind_board_blind_opponent", "Create challenge on random board with random opponent")
-        form_new_game.close_section()
+        form_your_boards_tabs = []
+        if len(your_published_boards_dataset) > 0:
+            form_your_boards_tabs.append("Public boards")
+        form_your_boards_tabs.append("Boards workshop")
+
+        form_your_boards = ActionForm("your_boards", "Your boards", "home")
+        form_your_boards.initialise_tabs(form_your_boards_tabs)
+        form_your_boards_number_of_sections = 0
+        if len(your_published_boards_dataset) > 0:
+            form_your_boards.open_section(form_your_boards_number_of_sections)
+            form_your_boards_number_of_sections += 1
+            your_published_boards_table = ActionTable("your_boards_published", include_select = False)
+            your_published_boards_table.make_head({"BOARD_NAME" : "Board", "D_PUBLISHED" : "Published", "GAMES_PLAYED" : "# games played", "HANDICAP" : "Handicap"}, {"view" : "View", "fork" : "Fork", "hide" : "Hide"})
+            your_published_boards_table.make_body(your_published_boards_dataset)
+            form_your_boards.structured_html.append(your_published_boards_table.structured_html)
+            form_your_boards.close_section()
+        form_your_boards.open_section(form_your_boards_number_of_sections)
+        your_unpublished_boards_table = ActionTable("your_boards_unpublished", include_select = False)
+        your_unpublished_boards_table.make_head({"BOARD_NAME" : "Board", "D_CHANGED" : "Changed", "D_CREATED" : "Created"}, {"edit" : "Edit", "publish" : "Publish", "delete" : "Delete"})
+        your_unpublished_boards_table.make_body(your_unpublished_boards_dataset)
+        form_your_boards.structured_html.append(your_unpublished_boards_table.structured_html)
+        form_your_boards.open_section_footer()
+        form_your_boards.add_button("submit", "create_new_board", "Create new board", "create_new_board_btn")
+        form_your_boards.close_section()
+        form_your_boards.close_form()
+
+        self.structured_html.append(form_your_boards.structured_html)
 
 
-        # Now: Board choices
-        select_board_dataset = get_table_as_list_of_dicts(f"SELECT BOC_BOARDS.BOARD_ID AS BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_USER_SAVED_BOARDS.D_SAVED AS D_SAVED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP FROM BOC_BOARDS INNER JOIN BOC_USER_SAVED_BOARDS ON BOC_BOARDS.BOARD_ID = BOC_USER_SAVED_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = \"{g.user["username"]}\"", "BOARD_ID", ["BOARD_NAME", "D_SAVED", "AUTHOR", "D_PUBLISHED", "HANDICAP"])
-        form_new_game.open_section(1)
-        select_board_table = ActionTable("select_board_for_new_game")
-        select_board_table.make_head({"BOARD_NAME" : "Board", "D_SAVED" : "Saved to library", "AUTHOR" : "Author", "D_PUBLISHED" : "Published", "HANDICAP" : "Handicap"}, {"view" : "View"})
-        select_board_table.make_body(select_board_dataset)
-        form_new_game.structured_html.append(select_board_table.structured_html)
-        form_new_game.open_section_footer()
-        form_new_game.add_button("submit", "blind_opponent", "Create challenge on selected board with random opponent", selection_condition = "action_table_select_board_for_new_game_selected_row_input")
-        form_new_game.close_section()
+    def render_section_public_boards(self):
+        self.structured_html.append("<h1>Board marketplace</h1>")
+        # One action form with two tabs: Your collection and Marketplace
 
-        # Now: opponent choices
-        select_opponent_dataset = get_table_as_list_of_dicts(f"SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])}))", "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES"])
-        form_new_game.open_section(2)
-        select_opponent_table = ActionTable("select_opponent_for_new_game")
-        select_opponent_table.make_head({"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games played with you"})
-        select_opponent_table.make_body(select_opponent_dataset)
-        form_new_game.structured_html.append(select_opponent_table.structured_html)
-        form_new_game.open_section_footer()
-        form_new_game.add_button("submit", "targeted_challenge", "Challenge opponent on selected board", selection_condition = f"action_table_select_opponent_for_new_game_selected_row_input")
-        form_new_game.close_section(selection_condition = "action_table_select_board_for_new_game_selected_row_input")
-        form_new_game.close_form()
-        self.structured_html.append(form_new_game.structured_html)
+
+    def render_content_logged_in(self):
+        self.initialise_sections({"play" : "Play", "your_boards" : "Your boards", "public_boards" : "Public boards"})
+        self.render_section_play()
+        self.open_next_section()
+        self.render_section_your_boards()
+        self.open_next_section()
+        self.render_section_public_boards()
+        self.close_sections()
+
 
 
     def render_page(self):
         self.resolve_request()
-        self.html_open("Home", "style")
+        self.html_open("style")
         self.html_navbar()
 
-        self.structured_html.append("<section class=\"content\">")
         # Check if logged in
         if g.user:
             self.render_content_logged_in()
         else:
+            self.structured_html.append("<section class=\"content\">")
             self.render_content_logged_out()
+            self.structured_html.append("</section>")
 
 
 
-        self.structured_html.append([
-                "</section>"
-            ])
         return(self.print_html())

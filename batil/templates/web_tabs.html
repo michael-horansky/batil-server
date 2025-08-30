@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tabbed Sidebar Layout with Navbar</title>
+  <link rel="stylesheet" href="web_tabs.css">
+</head>
+<body>
+  <!-- Top Navbar -->
+  <header class="navbar">
+    <div class="navbar-left">
+      <span class="brand">MyApp</span>
+    </div>
+    <div class="navbar-right">
+      <a href="#">Home</a>
+      <a href="#">Settings</a>
+      <a href="#">Logout</a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <h2 class="sidebar-title">Menu</h2>
+      <ul>
+        <li><a href="#" class="tab-link active" data-tab="games">Games</a></li>
+        <li><a href="#" class="tab-link" data-tab="boards">Boards</a></li>
+        <li><a href="#" class="tab-link" data-tab="profile">Profile</a></li>
+        <li><a href="#" class="tab-link" data-tab="users">Users</a></li>
+      </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div id="games" class="tab-content active">
+        <h2>Games</h2>
+        <form><!-- your forms here --></form>
+      </div>
+      <div id="boards" class="tab-content">
+        <h2>Boards</h2>
+        <form><!-- your forms here --></form>
+      </div>
+      <div id="profile" class="tab-content">
+        <h2>Profile</h2>
+        <form><!-- your forms here --></form>
+      </div>
+      <div id="users" class="tab-content">
+        <h2>Users</h2>
+        <form><!-- your forms here --></form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching logic
+    document.querySelectorAll(".tab-link").forEach(link => {
+      link.addEventListener("click", e => {
+        e.preventDefault();
+
+        // Remove active from all links + tabs
+        document.querySelectorAll(".tab-link").forEach(l => l.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+
+        // Add active to clicked link + matching content
+        link.classList.add("active");
+        document.getElementById(link.dataset.tab).classList.add("active");
+      });
+    });
+  </script>
+</body>
+</html>

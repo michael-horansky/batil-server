@@ -2371,8 +2371,10 @@ var selection_mode = false;
 cameraman.put_down_tripod();
 cameraman.reset_camera();
 
-// Set up commander
-commander.initialise_command_checklist();
+// Set up commander if game in progress
+if (game_status == "in_progress") {
+    commander.initialise_command_checklist();
+}
 
 // Set up inspector
 inspector.organise_reverse_causality_flags();

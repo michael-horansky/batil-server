@@ -5,7 +5,7 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for
 )
 
-from batil.html_object import HTMLObject
+from batil.html_objects.html_object import HTMLObject
 
 class ActionForm(HTMLObject):
 
@@ -24,7 +24,10 @@ class ActionForm(HTMLObject):
 
         self.number_of_tabs = 0
 
-        self.structured_html.append(f"<form id=\"action_form_{self.identifier}\" method=\"{method}\" action=\"{self.action_url}\">")
+        self.structured_html.append([
+            f"<div id=\"action_form_{self.identifier}_container\" class=\"action_form_container\">",
+            f"<form id=\"action_form_{self.identifier}\" method=\"{method}\" action=\"{self.action_url}\">"
+            ])
 
         self.last_section_opened = None
 
@@ -45,7 +48,10 @@ class ActionForm(HTMLObject):
                 f"    <span id=\"action_form_{self.identifier}_form_title_span\">{self.form_title}</span>",
                 f"  </div>"
             ])
-        self.structured_html.append("</div>")
+        self.structured_html.append([
+            "</div>",
+            f"<div class=\"action_form_section_container\">"
+            ])
 
     def open_section(self, ordinator):
         self.structured_html.append(f"<div id=\"action_form_{self.identifier}_section_{ordinator}\" class=\"action_form_section\">")
@@ -84,7 +90,11 @@ class ActionForm(HTMLObject):
 
 
     def close_form(self):
-        self.structured_html.append("</form>")
+        self.structured_html.append([
+            "</div>",
+            "</form>",
+            "</div>"
+            ])
         # Now for the script specific to this form
         self.structured_html.append([
                 "<script>",

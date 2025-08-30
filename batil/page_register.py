@@ -1,9 +1,9 @@
-from batil.page import Page
+from batil.html_objects.page import Page
 
 class PageRegister(Page):
 
     def __init__(self):
-        super().__init__()
+        super().__init__("Register")
 
     def html_register_form(self):
         self.structured_html.append([
@@ -19,7 +19,7 @@ class PageRegister(Page):
             ])
 
     def render_page(self):
-        self.html_open("Registration", "style")
+        self.html_open("style")
         self.html_navbar()
         self.structured_html.append([
                 "<section class=\"content\">",

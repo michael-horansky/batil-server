@@ -4,7 +4,7 @@ from flask import (
     Flask, Blueprint, flash, g, redirect, render_template, request, url_for
 )
 
-from batil.html_object import HTMLObject
+from batil.html_objects.html_object import HTMLObject
 
 class ActionTable(HTMLObject):
 

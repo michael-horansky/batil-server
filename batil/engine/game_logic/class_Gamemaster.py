@@ -659,6 +659,25 @@ class Gamemaster():
                         result = self.board_dynamic[self.t_dim - 1][x][y].base_allegiance
         return(result)
 
+    def check_game_status_at_end_of_round(self, round_n):
+        if len(self.scenarios_by_round) > round_n + 1:
+            scenario_for_next_round = self.scenarios_by_round[round_n + 1]
+        else:
+            error_msg = "ERROR: First find the scenario for the next round, so that it can be applied to this one when checking the game status."
+            print(error_msg)
+            return(Message("error", error_msg))
+        # Check if win condition satisfied
+        # NOTE: The win condition must be satisfied when board state is determined WITHOUT buffered effects! (so timejumps etc... added this round)
+        self.realise_scenario(scenario_for_next_round)
+        self.execute_moves(read_causality_trackers = False, max_turn_index = self.t_dim * (round_n + 1), precanonisation = True, save_to_output = False)
+        # TODO check if other game-end conditions have been satisfied
+        current_game_winner = self.game_winner()
+        if current_game_winner is None:
+            return(Message("in_progress"))
+        else:
+            return(Message("concluded", current_game_winner))
+
+
 
 
     # ---------------------------- Flag management ----------------------------
@@ -715,7 +734,7 @@ class Gamemaster():
 
         round_number, active_timeslice = self.round_from_turn(self.current_turn_index)
         # If swap_ID specified, instead of creating a new TJI, we adopt an existing one.
-        if swap_ID == None:
+        if swap_ID is None or swap_ID == "":
             # The TJI is placed inactive, and may be activated during causal consistency resolution
             tji_flag = Flag(STPos(new_t - 1, new_x, new_y), "time_jump_in", self.stones[stone_ID].player_faction, [self.stones[stone_ID].stone_type, new_a])
             tjo_flag = Flag(STPos(old_t, old_x, old_y), "time_jump_out", self.stones[stone_ID].player_faction, [STPos(new_t - 1, new_x, new_y)], stone_ID, effect = tji_flag.flag_ID)
@@ -797,7 +816,7 @@ class Gamemaster():
                 flags_added = self.add_bomb_flag(command["stone_ID"], command["t"], command["x"], command["y"], command["target_t"], command["x"], command["y"])
             else:
                 if "choice_keyword" in command.keys():
-                    flags_added = self.add_flag_attack(command["stone_ID"], command["t"], command["x"], command["y"], command["choice_keyword"])
+                    flags_added = self.add_flag_attack(command["stone_ID"], command["t"], command["x"], command["y"], [command["choice_keyword"]])
                 else:
                     flags_added = self.add_flag_attack(command["stone_ID"], command["t"], command["x"], command["y"])
         elif command["type"] == "tag":
@@ -1998,7 +2017,7 @@ class Gamemaster():
             current_game_winner = self.game_winner()
             if current_game_winner is not None:
                 self.print_heading_message(f"Player {current_game_winner} wins the game!", 0)
-                self.outcome = (constants.Gamemaster_delim).join(["win", current_game_winner])
+                self.outcome = current_game_winner#(constants.Gamemaster_delim).join(["win", current_game_winner])
                 self.prepare_for_rendering(None)
                 return(0)
 
@@ -2068,7 +2087,7 @@ class Gamemaster():
                 current_game_winner = self.game_winner()
                 if current_game_winner is not None:
                     self.print_heading_message(f"Player {current_game_winner} wins the game!", 0)
-                    self.outcome = (constants.Gamemaster_delim).join(["win", current_game_winner])
+                    self.outcome = current_game_winner#(constants.Gamemaster_delim).join(["win", current_game_winner])
                     self.prepare_for_rendering(player)
                     return(0)
 
@@ -2100,7 +2119,7 @@ class Gamemaster():
             if player not in self.flags_by_turn[self.current_turn_index].keys():
                 print("WARNING: Mismatch detected: Player finished his turn, but no relevant key detected in dynamical representation.")
                 self.commit_commands([], self.current_turn_index, player)
-            return(-1)
+            return(Message("error", f"ERROR: Player {player} has already finished their turn, and is waiting for their opponent."))
 
         # TODO: Unwrap commands, check if all stones are causally free, and commit commands
         self.commit_commands(commands, self.current_turn_index, player)
@@ -2134,9 +2153,11 @@ class Gamemaster():
                 if len(self.scenarios_by_round) != current_round + 1:
                     self.print_log(f"ERROR: self.scenarios_by_round has wrong length ({len(self.scenarios_by_round)}, expected {current_round + 1})")
                 self.scenarios_by_round.append(scenario_for_next_round)
+                self.execute_moves(read_causality_trackers = False, max_turn_index = self.current_turn_index, precanonisation = True, save_to_output = True)
+                self.rendering_output.add_scenario(current_round, scenario_for_next_round, self.flags, self.causes_by_round[current_round], self.effects_by_round[current_round])
 
                 # Win condition testing
-                self.realise_scenario(scenario_for_next_round)
+                """self.realise_scenario(scenario_for_next_round)
                 self.execute_moves(read_causality_trackers = False, max_turn_index = self.current_turn_index, precanonisation = True, save_to_output = True)
                 self.rendering_output.add_scenario(current_round, scenario_for_next_round, self.flags, self.causes_by_round[current_round], self.effects_by_round[current_round])
                 self.print_heading_message(f"Canonized board for next round, omitting reverse-causality effects added this round.", 1)
@@ -2146,7 +2167,13 @@ class Gamemaster():
                     self.print_heading_message(f"Player {current_game_winner} wins the game!", 0)
                     self.outcome = (constants.Gamemaster_delim).join(["win", current_game_winner])
                     self.prepare_for_rendering(player)
-                    return(0)
+                    return(Message("game_end", current_game_winner))"""
+
+                game_status = self.check_game_status_at_end_of_round(current_round)
+                if game_status.header == "concluded":
+                    self.print_heading_message(f"Player {game_status.msg} wins the game!", 0)
+                    self.outcome = game_status.msg
+                    return(Message("concluded", game_status.msg))
 
                 self.effects_by_round.append([])
                 self.causes_by_round.append([])
@@ -2160,10 +2187,12 @@ class Gamemaster():
         # free stones, an empty command is added
         final_current_round, final_active_timeslice = self.round_from_turn(self.current_turn_index)
         for faction in self.factions:
-            if not self.did_player_finish_turn(faction, self.current_turn_index):
+            #if not self.did_player_finish_turn(faction, self.current_turn_index):
+            if faction not in self.flags_by_turn[self.current_turn_index].keys():
                 currently_causally_free_stones = self.causally_free_stones_at_time_by_player(final_active_timeslice, faction)
                 if len(currently_causally_free_stones) == 0:
                     self.commit_commands([], self.current_turn_index, faction)
+        return(Message("in_progress"))
 
 
     def prepare_for_rendering(self, prompted_player):
@@ -2173,17 +2202,30 @@ class Gamemaster():
         # prompted_player is the faction of the player who requested an
         # instance of Gamemaster, and is ready to submit their next turn.
 
-        # First, we save the unfinished round in which current_turn is set
-        self.execute_moves(save_to_output = True)
-        self.rendering_output.set_current_turn(self.current_turn_index)
+
+
+        # Now, we record the game status and potential winner
+        """if active_timeslice == 0:
+            game_status = self.check_game_status_at_end_of_round(current_round)"""
+        if self.outcome is not None:
+            self.rendering_output.game_status = "concluded"
+            self.rendering_output.game_outcome = self.outcome
+            # We set "current turn" to last turn of the round on which the game finished
+            cur_round, active_timeslice = self.round_from_turn(self.current_turn_index)
+            self.rendering_output.set_current_turn(self.t_dim * cur_round)
+        else:
+            self.rendering_output.game_status = "in_progress"
+            # First, we save the unfinished round in which current_turn is set
+            self.execute_moves(save_to_output = True)
+            self.rendering_output.set_current_turn(self.current_turn_index)
+            # Now, we record the ongoing round, using the last round's scenario
+            cur_round, active_timeslice = self.round_from_turn(self.current_turn_index)
+            self.rendering_output.add_scenario(cur_round, self.scenarios_by_round[cur_round], self.flags, self.causes_by_round[cur_round], self.effects_by_round[cur_round])
+
 
         # Now, we record all the finalised properties, such as stone/flag lists
         self.rendering_output.record_faction_armies(self.factions, self.faction_armies, self.stones)
         self.rendering_output.record_bases(self.bases)
-
-        # Now, we record the ongoing round, using the last round's scenario
-        cur_round, active_timeslice = self.round_from_turn(self.current_turn_index)
-        self.rendering_output.add_scenario(cur_round, self.scenarios_by_round[cur_round], self.flags, self.causes_by_round[cur_round], self.effects_by_round[cur_round])
 
         # Now, we record the actions which the prompted player can take
         if prompted_player is not None:
@@ -2495,6 +2537,7 @@ class Gamemaster():
 
         # If the last turn was also the last in a round, we need to find the scenario for the next round
         final_round_number, final_active_timeslice = self.round_from_turn(self.current_turn_index)
+
         self.effects_by_round = functions.add_tail_to_list(self.effects_by_round, final_round_number + 1, [])
         self.causes_by_round = functions.add_tail_to_list(self.causes_by_round, final_round_number + 1, [])
         for round_number in range(current_round_number + 1, final_round_number + 1):
@@ -2508,6 +2551,13 @@ class Gamemaster():
             self.realise_scenario(self.scenarios_by_round[round_number + 1]) # We always bring the board to the next round's scenario, since this is the canonised version
             self.execute_moves(read_causality_trackers = False, max_turn_index = (round_number + 1) * self.t_dim, precanonisation = True, save_to_output = True)
             self.rendering_output.add_scenario(round_number, self.scenarios_by_round[round_number + 1], self.flags, self.causes_by_round[round_number], self.effects_by_round[round_number])
+
+        # We check if the game ended at the end of the last round
+        if final_round_number > current_round_number:
+            game_status = self.check_game_status_at_end_of_round(current_round_number)
+            if game_status.header == "concluded":
+                self.outcome = game_status.msg
+                print(f"Player {game_status.msg} wins the game!")
 
 
 
@@ -2525,6 +2575,8 @@ class Gamemaster():
         self.static_representation = static_data_representation
         self.dynamic_representation = dynamic_data_representation
         self.new_dynamic_representation = []
+
+        print(dynamic_data_representation)
 
         # We need to load the ruleset first, as it will be used in load_flags_from_rep-
         # resentation's construction of scenarios_by_round.

@@ -252,7 +252,7 @@ def accept_challenge(challenge_id):
     db.execute("UPDATE BOC_GAMES SET PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\" WHERE GAME_ID = ?", (player_a, player_b, challenge_row["BOARD_ID"], challenge_row["RESERVED_GAME_ID"]))
 
     # We also add the initial setup
-    target_board_info = cur.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) SELECT ?, 0, 'GM', SETUP_REPRESENTATION, CURRENT_TIMESTAMP FROM BOC_BOARDS WHERE BOARD_ID = ?", (challenge_row["RESERVED_GAME_ID"], challenge_row["BOARD_ID"]))
+    target_board_info = db.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) SELECT ?, 0, 'GM', SETUP_REPRESENTATION, CURRENT_TIMESTAMP FROM BOC_BOARDS WHERE BOARD_ID = ?", (challenge_row["RESERVED_GAME_ID"], challenge_row["BOARD_ID"]))
 
     # We can't delete the challenge so that the game id hash doesn't repeat. That's fine! We just set its status to 'resolved'
     db.execute("UPDATE BOC_CHALLENGES SET STATUS = 'resolved' WHERE CHALLENGE_ID = ?", (challenge_id,))
