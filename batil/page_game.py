@@ -8,7 +8,6 @@ from flask import (
 from batil.db import get_db, get_table_as_list_of_dicts
 
 from batil.engine.game_logic.class_Gamemaster import Gamemaster
-from batil.engine.game_logic.class_Flag import Flag
 from batil.engine.rendering.class_HTMLRenderer import HTMLRenderer
 from batil.engine.rendering.class_Abstract_Output import Abstract_Output
 
@@ -20,7 +19,6 @@ class PageGame(Page):
         self.game_id = game_id
         self.game_status = None
 
-        Flag.reset_counters()
         self.gm = Gamemaster(display_logs = True)
 
     def resolve_request(self):

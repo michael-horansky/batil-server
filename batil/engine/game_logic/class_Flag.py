@@ -23,37 +23,6 @@ class Flag():
     # These flags are not anonymous, but are not provided with an ID, as it doesn't exist yet.
     stone_generating_flag_types = ['add_stone', 'time_jump_in']
 
-    # For tracking created stones
-    max_stone_ID = 0
-    @staticmethod
-    def get_stone_ID_tag():
-        new_tag = Flag.max_stone_ID
-        Flag.max_stone_ID += 1
-        return(new_tag)
-
-    # For tracking created bases
-    max_base_ID = 0
-    @staticmethod
-    def get_base_ID_tag():
-        new_tag = Flag.max_base_ID
-        Flag.max_base_ID += 1
-        return(new_tag)
-
-    # For tracking flags
-    max_flag_ID = 0
-    @staticmethod
-    def get_flag_ID_tag():
-        new_tag = Flag.max_flag_ID
-        Flag.max_flag_ID += 1
-        return(new_tag)
-
-    @staticmethod
-    def reset_counters():
-        # Call this method when all instances of Gamemaster are deleted and rebuilt
-        Flag.max_stone_ID = 0
-        Flag.max_base_ID = 0
-        Flag.max_flag_ID = 0
-
     # ----------------------------------------------------
     # ------------------ class methods -------------------
     # ----------------------------------------------------
@@ -93,12 +62,18 @@ class Flag():
     # ------ constructors, destructors, descriptors ------
     # ----------------------------------------------------
 
-    def __init__(self, pos, flag_type, player_faction, flag_args, stone_ID = None, flag_ID = None, is_active = True, effect = None, initial_cause = None):
+    def __init__(self, pos, flag_type, player_faction, flag_args, flag_ID, stone_ID = None, base_ID = None, is_active = True, effect = None, initial_cause = None):
         self.pos = pos
         self.flag_type = flag_type
         self.player_faction = player_faction
         self.flag_args = flag_args.copy()
-        self.stone_ID = stone_ID #None for anonymous flags, a non-negative integer otherwise
+
+        # Identifiers
+        self.flag_ID = flag_ID
+        self.stone_ID = stone_ID
+        self.base_ID = base_ID
+
+        """self.stone_ID = stone_ID #None for anonymous flags, a non-negative integer otherwise
         if self.flag_type in Flag.stone_generating_flag_types:
             self.stone_ID = Flag.get_stone_ID_tag()
         if self.flag_type == "add_base":
@@ -110,7 +85,7 @@ class Flag():
             self.flag_ID = Flag.get_flag_ID_tag()
         else:
             self.flag_ID = flag_ID
-            Flag.max_flag_ID = max(Flag.max_flag_ID, self.flag_ID + 1)
+            Flag.max_flag_ID = max(Flag.max_flag_ID, self.flag_ID + 1)"""
 
         self.is_active = is_active
         self.effect = effect # If flag ID, the target flag requires this flag to activate to activate

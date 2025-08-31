@@ -97,7 +97,9 @@ class HTMLRenderer(Renderer):
     # ---------------------------- Data depositing ----------------------------
 
     def deposit_datum(self, name, value):
-        if isinstance(value, bool):
+        if value is None:
+            self.commit_to_output(f"  const {name} = null;")
+        elif isinstance(value, bool):
             if value:
                 self.commit_to_output(f"  const {name} = true;")
             else:

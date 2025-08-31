@@ -80,6 +80,10 @@ class Gamemaster():
         self.flags_by_turn = [] # [turn_number]["faction"] = [list of flag IDs added by that player that turn]
         # flags_by_turn is never handled by the add_flag methods, as they are turn-number-invariant. Instead,
         # it is always handled by the input prompt (loader or player input).
+        # Flag ID primary keys, for incremental values (which are specific to an instance of Gamemaster)
+        self.max_flag_tag_stone_ID = 0
+        self.max_flag_tag_base_ID = 0
+        self.max_flag_tag_flag_ID = 0
 
         # ----------------------- Game status variables -----------------------
         self.current_turn_index = None # Index of turn where some or all players need to add commands
@@ -682,12 +686,30 @@ class Gamemaster():
 
     # ---------------------------- Flag management ----------------------------
 
+    # ------------------------------- Flag tags
+    def get_flag_ID_tag(self):
+        new_tag = self.max_flag_tag_flag_ID
+        self.max_flag_tag_flag_ID += 1
+        return(new_tag)
+
+    def get_stone_ID_tag(self):
+        new_tag = self.max_flag_tag_stone_ID
+        self.max_flag_tag_stone_ID += 1
+        return(new_tag)
+
+    def get_base_ID_tag(self):
+        new_tag = self.max_flag_tag_base_ID
+        self.max_flag_tag_base_ID += 1
+        return(new_tag)
+
     # ----------------------------- Flag addition
     # Methods which add new Flags always return a list of newly added flag IDs
 
     def add_stone_on_setup(self, faction, stone_type, x, y, a0):
         # This function allows Gamemaster to describe the initial state of the board, which is reverted to for every retrace of causal events
-        new_flag = Flag(STPos(-1, x, y), 'add_stone', faction, [stone_type, a0])
+        new_flag_ID = self.get_flag_ID_tag()
+        new_stone_ID = self.get_stone_ID_tag()
+        new_flag = Flag(STPos(-1, x, y), 'add_stone', faction, [stone_type, a0], flag_ID = new_flag_ID, stone_ID = new_stone_ID)
         self.setup_squares[x][y].add_flag(new_flag.flag_ID, None)
         self.flags[new_flag.flag_ID] = new_flag
 
@@ -703,7 +725,9 @@ class Gamemaster():
 
     def add_base(self, initial_faction, x, y):
         # This function spawns a flag initially belonging to the specified faction, or neutral if "neutral"
-        new_flag = Flag(STPos(-1, x, y), "add_base", initial_faction, [])
+        new_flag_ID = self.get_flag_ID_tag()
+        new_base_ID = self.get_stone_ID_tag()
+        new_flag = Flag(STPos(-1, x, y), "add_base", initial_faction, [], flag_ID = new_flag_ID, base_ID = new_base_ID)
         self.setup_squares[x][y].add_flag(new_flag.flag_ID, None)
         self.flags[new_flag.flag_ID] = new_flag
 
@@ -713,19 +737,22 @@ class Gamemaster():
         return([new_flag.flag_ID])
 
     def add_flag_spatial_move(self, stone_ID, t, old_x, old_y, new_x, new_y, new_a):
-        new_flag = Flag(STPos(t, old_x, old_y), "spatial_move", self.stones[stone_ID].player_faction, [new_x, new_y, new_a], stone_ID)
+        new_flag_ID = self.get_flag_ID_tag()
+        new_flag = Flag(STPos(t, old_x, old_y), "spatial_move", self.stones[stone_ID].player_faction, [new_x, new_y, new_a], flag_ID = new_flag_ID, stone_ID = stone_ID)
         self.board_dynamic[t][old_x][old_y].add_flag(new_flag.flag_ID, stone_ID)
         self.flags[new_flag.flag_ID] = new_flag
         return([new_flag.flag_ID])
 
     def add_flag_attack(self, stone_ID, t, x, y, attack_arguments = []):
-        new_flag = Flag(STPos(t, x, y), "attack", self.stones[stone_ID].player_faction, attack_arguments, stone_ID)
+        new_flag_ID = self.get_flag_ID_tag()
+        new_flag = Flag(STPos(t, x, y), "attack", self.stones[stone_ID].player_faction, attack_arguments, flag_ID = new_flag_ID, stone_ID = stone_ID)
         self.board_dynamic[t][x][y].add_flag(new_flag.flag_ID, stone_ID)
         self.flags[new_flag.flag_ID] = new_flag
         return([new_flag.flag_ID])
 
     def add_flag_tag(self, stone_ID, t, x, y, tag_type):
-        new_flag = Flag(STPos(t, x, y), "tag", self.stones[stone_ID].player_faction, [tag_type], stone_ID)
+        new_flag_ID = self.get_flag_ID_tag()
+        new_flag = Flag(STPos(t, x, y), "tag", self.stones[stone_ID].player_faction, [tag_type], flag_ID = new_flag_ID, stone_ID = stone_ID)
         self.board_dynamic[t][x][y].add_flag(new_flag.flag_ID, stone_ID)
         self.flags[new_flag.flag_ID] = new_flag
         return([new_flag.flag_ID])
@@ -736,8 +763,11 @@ class Gamemaster():
         # If swap_ID specified, instead of creating a new TJI, we adopt an existing one.
         if swap_ID is None or swap_ID == "":
             # The TJI is placed inactive, and may be activated during causal consistency resolution
-            tji_flag = Flag(STPos(new_t - 1, new_x, new_y), "time_jump_in", self.stones[stone_ID].player_faction, [self.stones[stone_ID].stone_type, new_a])
-            tjo_flag = Flag(STPos(old_t, old_x, old_y), "time_jump_out", self.stones[stone_ID].player_faction, [STPos(new_t - 1, new_x, new_y)], stone_ID, effect = tji_flag.flag_ID)
+            new_TJI_flag_ID = self.get_flag_ID_tag()
+            new_TJO_flag_ID = self.get_flag_ID_tag()
+            new_stone_ID = self.get_stone_ID_tag()
+            tji_flag = Flag(STPos(new_t - 1, new_x, new_y), "time_jump_in", self.stones[stone_ID].player_faction, [self.stones[stone_ID].stone_type, new_a], flag_ID = new_TJI_flag_ID, stone_ID = new_stone_ID)
+            tjo_flag = Flag(STPos(old_t, old_x, old_y), "time_jump_out", self.stones[stone_ID].player_faction, [STPos(new_t - 1, new_x, new_y)], flag_ID = new_TJO_flag_ID, stone_ID = stone_ID, effect = tji_flag.flag_ID)
             tji_flag.initial_cause = tjo_flag.flag_ID
 
             # We place the flags.
@@ -766,7 +796,8 @@ class Gamemaster():
             return([tji_flag.flag_ID, tjo_flag.flag_ID])
         else:
             # First, we find the TJI which summons the stone
-            tjo_flag = Flag(STPos(old_t, old_x, old_y), "time_jump_out", self.stones[stone_ID].player_faction, [STPos(new_t - 1, new_x, new_y), swap_ID], stone_ID, effect = swap_ID)
+            new_TJO_flag_ID = self.get_flag_ID_tag()
+            tjo_flag = Flag(STPos(old_t, old_x, old_y), "time_jump_out", self.stones[stone_ID].player_faction, [STPos(new_t - 1, new_x, new_y), swap_ID], flag_ID = new_TJO_flag_ID, stone_ID = stone_ID, effect = swap_ID)
             self.board_dynamic[old_t][old_x][old_y].add_flag(tjo_flag.flag_ID, stone_ID)
             self.flags[tjo_flag.flag_ID] = tjo_flag
             self.causes_by_round = functions.add_tail_to_list(self.causes_by_round, round_number + 1, [])
@@ -775,8 +806,10 @@ class Gamemaster():
 
     def add_bomb_flag(self, stone_ID, old_t, old_x, old_y, new_t, new_x, new_y):
         round_number, active_timeslice = self.round_from_turn(self.current_turn_index)
-        spawn_bomb_flag = Flag(STPos(new_t - 1, new_x, new_y), "spawn_bomb", self.stones[stone_ID].player_faction, [], stone_ID = None)
-        attack_flag = Flag(STPos(old_t, old_x, old_y), "attack", self.stones[stone_ID].player_faction, [], stone_ID = stone_ID, effect = spawn_bomb_flag.flag_ID)
+        new_bomb_flag_ID = self.get_flag_ID_tag()
+        new_attack_flag_ID = self.get_flag_ID_tag()
+        spawn_bomb_flag = Flag(STPos(new_t - 1, new_x, new_y), "spawn_bomb", self.stones[stone_ID].player_faction, [], flag_ID = new_bomb_flag_ID, stone_ID = None)
+        attack_flag = Flag(STPos(old_t, old_x, old_y), "attack", self.stones[stone_ID].player_faction, [], flag_ID = new_attack_flag_ID, stone_ID = stone_ID, effect = spawn_bomb_flag.flag_ID)
         spawn_bomb_flag.initial_cause = attack_flag.flag_ID
 
         # We place the flags.
@@ -2220,6 +2253,12 @@ class Gamemaster():
             self.rendering_output.set_current_turn(self.current_turn_index)
             # Now, we record the ongoing round, using the last round's scenario
             cur_round, active_timeslice = self.round_from_turn(self.current_turn_index)
+            # We must also add the buffered effects from this round! The effects are inactive, and their cause is the initial cause
+            for effect_ID in self.effects_by_round[cur_round]:
+                self.scenarios_by_round[cur_round].effect_activity_map[effect_ID] = False
+                self.scenarios_by_round[cur_round].effect_cause_map[effect_ID] = self.flags[effect_ID].initial_cause
+                if self.flags[self.flags[effect_ID].initial_cause].flag_type == "time_jump_out":
+                    self.scenarios_by_round[cur_round].stone_inheritance[self.flags[self.flags[effect_ID].initial_cause].stone_ID] = self.flags[effect_ID].stone_ID
             self.rendering_output.add_scenario(cur_round, self.scenarios_by_round[cur_round], self.flags, self.causes_by_round[cur_round], self.effects_by_round[cur_round])
 
 
@@ -2575,8 +2614,6 @@ class Gamemaster():
         self.static_representation = static_data_representation
         self.dynamic_representation = dynamic_data_representation
         self.new_dynamic_representation = []
-
-        print(dynamic_data_representation)
 
         # We need to load the ruleset first, as it will be used in load_flags_from_rep-
         # resentation's construction of scenarios_by_round.
