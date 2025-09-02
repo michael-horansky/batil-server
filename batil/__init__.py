@@ -48,6 +48,10 @@ def create_app(test_config=None):
     from .routes import game
     app.register_blueprint(game.bp)
 
+    # Board editor blueprint
+    from .routes import board_editor
+    app.register_blueprint(board_editor.bp)
+
     # Home blueprint
     from .routes import home
     app.register_blueprint(home.bp)

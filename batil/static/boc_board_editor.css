@@ -1,0 +1,636 @@
+*{
+padding: 0;
+margin: 0;
+}
+
+.button_label {
+    pointer-events : none;
+}
+
+
+/* --------------------------------- */
+/* ---- General structure style ---- */
+/* --------------------------------- */
+
+#boardside {
+    position : absolute;
+    left : 0px;
+    top : 0px;
+    width : 950px;
+    height : 700px;
+}
+
+#gameside {
+    position : absolute;
+    left : 0px;
+    top : 700px;
+    width : 950px;
+    height : 200px;
+}
+
+
+#board_control_panel {
+    width : 150px;
+    height : 400px;
+    float : left;
+    margin-top : 150px;
+}
+
+#game_control_panel {
+    width : 550px;
+    height : 140px;
+    float : left;
+    margin-top : 30px;
+}
+
+.board_control_panel_button {
+    fill : pink;
+    fill-opacity : 0.2;
+    stroke : black;
+    stroke-width : 1;
+}
+
+.board_control_panel_button:hover {
+    fill : pink;
+    fill-opacity : 0.1;
+    stroke : black;
+    stroke-width : 2;
+}
+
+.game_control_panel_button {
+    fill : pink;
+    fill-opacity : 0.2;
+    stroke : black;
+    stroke-width : 1;
+}
+
+.game_control_panel_button:hover {
+    fill : pink;
+    fill-opacity : 0.1;
+    stroke : black;
+    stroke-width : 2;
+}
+
+.stone_command_panel_button {
+    fill : pink;
+    fill-opacity : 0.2;
+    stroke : black;
+    stroke-width : 1;
+}
+
+.stone_command_panel_button:hover {
+    fill : pink;
+    fill-opacity : 0.1;
+    stroke : black;
+    stroke-width : 2;
+}
+
+.choice_option_button {
+    fill : pink;
+    fill-opacity : 0.2;
+    stroke : black;
+    stroke-width : 1;
+}
+
+.choice_option_button:hover {
+    fill : green;
+    fill-opacity : 0.1;
+    stroke : black;
+    stroke-width : 2;
+}
+
+#board_window {
+    float : left;
+}
+
+#inspectors {
+    position : absolute;
+    top : 0;
+    left : 950px;
+}
+
+#stone_inspector {
+    width : 500px;
+    height : 300px;
+    background-color : grey;
+}
+
+#tracking_inspector {
+    width : 500px;
+    height : 100px;
+    background-color : AntiqueWhite;
+}
+
+#square_inspector {
+    width : 500px;
+    height : 300px;
+    background-color : lightblue;
+}
+
+#choice_selector {
+    width : 500px;
+    height : 100px;
+    background-color : AntiqueWhite;
+}
+
+#swap_effect_selector {
+    width : 500px;
+    height : 300px;
+    background-color : lightblue;
+}
+
+/* --------------------------------- */
+/* ------ Board window style ------- */
+/* --------------------------------- */
+
+#board_window_background {
+    fill : black;
+}
+
+/* --------- Board squares --------- */
+
+.board_square_empty {
+    position : absolute;
+    fill : #E5E5FF;
+    stroke : azure;
+}
+
+.board_square_wall {
+    position : absolute;
+    fill : black;
+    fill-opacity : 0.9;
+    stroke : azure;
+}
+
+.selection_mode_highlight {
+    fill : black;
+    fill-opacity : 0.3;
+    pointer-events : none;
+}
+
+.azimuth_indicator {
+    fill : white;
+    fill-opacity : 0.5;
+    stroke : black;
+    stroke-width : 3;
+}
+
+.azimuth_indicator:hover {
+    fill-opacity : 0.7;
+}
+
+/* ------------ Stones ------------- */
+
+
+.A_tank_body {
+    position : absolute;
+    fill : #27391C;
+    stroke : #18230F;
+    stroke-width : 5;
+}
+
+.A_tank_barrel {
+    position : absolute;
+    fill : #1F7D53;
+    stroke : #255F38;
+    stroke-width : 5;
+}
+
+.A_tank_hatch {
+    position : absolute;
+    fill : grey;
+    stroke : black;
+    stroke-width : 3;
+}
+
+.B_tank_body {
+    position : absolute;
+    fill : #B03052;
+    stroke : #3D0301;
+    stroke-width : 5;
+}
+
+.B_tank_barrel {
+    position : absolute;
+    fill : #EBE8DB;
+    stroke : #D76C82;
+    stroke-width : 5;
+}
+
+.B_tank_hatch {
+    position : absolute;
+    fill : grey;
+    stroke : black;
+    stroke-width : 3;
+}
+
+.A_bombardier_legs {
+    stroke : black;
+    stroke-width : 5;
+    fill : none;
+}
+
+.A_bombardier_left_face {
+    stroke : black;
+    stroke-width : 5;
+    fill : #1F7D53;
+}
+
+.A_bombardier_right_face {
+    stroke : black;
+    stroke-width : 5;
+    fill : #255F38;
+}
+
+.A_bombardier_welding {
+    fill : white;
+    stroke : black;
+    stroke-width : 5;
+
+}
+
+.B_bombardier_legs {
+    stroke : black;
+    stroke-width : 5;
+    fill : none;
+}
+
+.B_bombardier_left_face {
+    stroke : black;
+    stroke-width : 5;
+    fill : #D76C82;
+}
+
+.B_bombardier_right_face {
+    stroke : black;
+    stroke-width : 5;
+    fill : #B03052;
+}
+
+.B_bombardier_welding {
+    fill : white;
+    stroke : black;
+    stroke-width : 5;
+
+}
+
+.A_sniper_foot {
+    stroke : black;
+    stroke-width : 5;
+}
+
+.A_sniper_left_leg {
+    stroke : black;
+    stroke-width : 2;
+    fill : #1F7D53;
+}
+
+.A_sniper_right_leg {
+    stroke : black;
+    stroke-width : 2;
+    fill : #255F38;
+}
+
+.A_sniper_gun {
+    stroke : black;
+    stroke-width : 5;
+}
+
+.A_sniper_nest {
+    stroke : black;
+    stroke-width : 2;
+    fill : #18230F;
+}
+
+.B_sniper_foot {
+    stroke : black;
+    stroke-width : 5;
+}
+
+.B_sniper_left_leg {
+    stroke : black;
+    stroke-width : 2;
+    fill : #D76C82;
+}
+
+.B_sniper_right_leg {
+    stroke : black;
+    stroke-width : 2;
+    fill : #B03052;
+}
+
+.B_sniper_gun {
+    stroke : black;
+    stroke-width : 5;
+}
+
+.B_sniper_nest {
+    stroke : black;
+    stroke-width : 2;
+    fill : #B03052;
+}
+
+.A_tagger_top_face {
+    stroke : black;
+    stroke-width : 5;
+    fill : #1F7D53;
+    stroke-linejoin : round;
+}
+
+.A_tagger_right_face {
+    stroke : black;
+    stroke-width : 5;
+    fill : #008664;
+    stroke-linejoin : round;
+}
+
+.A_tagger_bottom_face {
+    stroke : black;
+    stroke-width : 5;
+    fill : #006cbc;
+    stroke-linejoin : round;
+}
+
+.A_tagger_left_face {
+    stroke : black;
+    stroke-width : 5;
+    fill : #cf0006;
+    stroke-linejoin : round;
+}
+
+.A_tagger_outline {
+    stroke : #255F38;
+    stroke-width : 5;
+    fill : none;
+}
+
+.B_tagger_top_face {
+    stroke : black;
+    stroke-width : 5;
+    fill : #D76C82;
+    stroke-linejoin : round;
+}
+
+.B_tagger_right_face {
+    stroke : black;
+    stroke-width : 5;
+    fill : #008664;
+    stroke-linejoin : round;
+}
+
+.B_tagger_bottom_face {
+    stroke : black;
+    stroke-width : 5;
+    fill : #006cbc;
+    stroke-linejoin : round;
+}
+
+.B_tagger_left_face {
+    stroke : black;
+    stroke-width : 5;
+    fill : #cf0006;
+    stroke-linejoin : round;
+}
+
+.B_tagger_outline {
+    stroke : #B03052;
+    stroke-width : 5;
+    fill : none;
+}
+
+.A_wildcard_body {
+    stroke : black;
+    stroke-width : 5;
+    fill : #1F7D53;
+}
+
+.A_wildcard_halo {
+    stroke : #27391C;
+    stroke-width : 10;
+    stroke-linecap : round;
+}
+
+.B_wildcard_body {
+    stroke : black;
+    stroke-width : 5;
+    fill : #D76C82;
+}
+
+.B_wildcard_halo {
+    stroke : #3D0301;
+    stroke-width : 10;
+    stroke-linecap : round;
+}
+
+.GM_box_base {
+    fill : #8a6955;
+}
+
+.GM_box_line {
+    stroke : #4b3929;
+    stroke-width : 7;
+}
+
+.GM_box_outline {
+    fill : none;
+    stroke : #25190d;
+    stroke-width : 5;
+}
+
+.GM_mine_body {
+    fill : #d13427;
+    stroke : #881e20;
+    stroke-width : 5;
+}
+
+.GM_mine_button {
+    fill : #642723;
+    stroke : #e3cca3;
+    stroke-width : 3;
+}
+
+/* - Temporary animation elements -- */
+
+.TAE_causal_freedom_marker {
+    position : absolute;
+}
+
+.TAE_tank_attack {
+    position : absolute;
+}
+
+#board_animation_overlay_text {
+    font-size : 15em;
+}
+
+.used_time_jump_marker {
+    pointer-events : none;
+}
+
+.unused_time_jump_marker {
+    pointer-events : none;
+}
+
+.command_marker {
+    stroke : red;
+    stroke-width : 5;
+    fill : none;
+    stroke-opacity : 0.5;
+}
+
+/* ------------- Bases ------------- */
+
+.base_neutral_indicator {
+    stroke-opacity : 0.5;
+    fill : yellow;
+}
+.base_A_indicator {
+    stroke-opacity : 0.5;
+    fill : green;
+}
+.base_neutral_indicator {
+    stroke-opacity : 0.5;
+    fill : red;
+}
+
+/* --------------------------------- */
+/* -------- Inspector style -------- */
+/* --------------------------------- */
+
+.inspector {
+    overflow : scroll;
+}
+
+.inspector_title {
+    width : 100%;
+    text-align : center;
+}
+
+.inspector_table {
+    width : 100%;
+    table-layout : fixed;
+}
+
+
+/*
+.inspector_table_container {
+    width : 99%;
+    margin-top : 10px;
+    position : relative;
+}
+
+.inspector_table_label {
+    width : 30%;
+    height : 100%;
+    font-weight : bold;
+    float : left;
+}
+
+.inspector_table_value {
+    width : 70%;
+    height : 100%;
+    float : left;
+}*/
+
+
+.stone_inspector_table_label {
+    width : 100px;
+    padding-top : 10px;
+    padding-left : 10px;
+    padding-right : 10px;
+    font-weight : bold;
+}
+
+.square_inspector_table_label {
+    width : 175px;
+    padding-top : 10px;
+    padding-left : 10px;
+    padding-right : 10px;
+    font-weight : bold;
+}
+
+.inspector_table_value {
+    padding-top : 10px;
+    padding-right : 10px;
+}
+
+.swap_effect_option_button {
+    width : 100px;
+    padding-top : 10px;
+    padding-bottom : 10px;
+    padding-left : 10px;
+    padding-right : 10px;
+    font-weight : bold;
+}
+
+.swap_effect_option_button:hover {
+    cursor: pointer;
+    background-color : lightgreen;
+}
+
+.swap_effect_option_description {
+    padding-top : 10px;
+    padding-right : 10px;
+}
+
+.square_highlight {
+    background-color : #af9dd4;
+}
+.square_highlight:hover {
+    cursor : pointer;
+    background-color : #b798f5;
+}
+
+.stone_highlight {
+    background-color : #b2c49b;
+}
+.stone_highlight:hover {
+    cursor : pointer;
+    background-color : #cef59d;
+}
+.inline_command {
+    background-color : #d6a99f;
+}
+.inline_command:hover {
+    cursor : pointer;
+    background-color : #fca692;
+}
+
+#stone_inspector_commands {
+    width : 480px;
+    height : 83px;
+    padding : 10px;
+}
+
+#tracking_inspector_header {
+    width : 30%;
+    height : 100%;
+    margin-top : 17px;
+    float : left;
+    display: flex;
+    align-items : center;
+    flex-direction: column;
+}
+
+
+#stone_tracking_label {
+    margin : 10px;
+    text-align: center;
+}
+
+#square_highlighter {
+    stroke : yellow;
+    stroke-width : 5;
+    fill : none;
+}
+
+
+/* --------------------------------- */
+/* ----- Board edit form style ----- */
+/* --------------------------------- */
+
+
+.board_edit_data_field {
+    display : none;
+}
+

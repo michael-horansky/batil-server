@@ -8,7 +8,7 @@ from flask import (
 from werkzeug.exceptions import abort
 
 from batil.db import get_db, get_table_as_list_of_dicts
-from batil.page_board_editor import PageGame
+from batil.page_board_editor import PageBoardEditor
 
 app = Flask(__name__)
 
@@ -18,3 +18,11 @@ bp = Blueprint('board', __name__, url_prefix="/board")
 def board(board_id):
     rendered_page = PageBoardEditor(board_id)
     return(rendered_page.render_page())
+
+@bp.route('/<board_id>/board_edit_submission', methods=['POST'])
+def board_edit_submission(board_id):
+    rendered_page = PageBoardEditor(board_id)
+    rendered_page.resolve_board_edit_submission()
+    return(redirect(url_for("board.board", board_id=board_id)))
+    #return(rendered_page.render_page())
+

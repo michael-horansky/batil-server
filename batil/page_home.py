@@ -3,7 +3,7 @@ import random
 
 from batil.html_objects.page import Page
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
+    Blueprint, flash, g, redirect, render_template, request, url_for, current_app
 )
 
 from batil.db import get_db, get_table_as_list_of_dicts, new_blind_challenge, new_targeted_challenge, accept_challenge, decline_challenge
@@ -18,6 +18,10 @@ class PageHome(Page):
 
     def __init__(self):
         super().__init__("Home")
+
+        board_template_file = current_app.open_resource("database/board_template.json")
+        self.board_template = json.load(board_template_file)
+        board_template_file.close()
 
     def resolve_request(self):
         if request.method == 'POST':
@@ -81,7 +85,19 @@ class PageHome(Page):
             new_targeted_challenge(int(request.form.get("action_table_select_board_for_new_game_selected_row")), request.form.get("action_table_select_opponent_for_new_game_selected_row"), g.user["username"], ruleset_selection)
 
     def resolve_action_your_boards(self):
-        print("new board??")
+        db = get_db()
+        for key, val in request.form.items():
+            print(f"{key} -> {val}")
+        if "action_your_boards" in request.form.keys():
+            # The form buttons were interacted with
+            if request.form.get("action_your_boards") == "create_new_board":
+                # Create a new element in BOC_BOARDS and also open the board in editor in new tab
+                # The new board is set to the default board
+                db.execute("INSERT INTO BOC_BOARDS (T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, HANDICAP, BOARD_NAME) VALUES (?, ?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.0, ?)", (self.board_template["T_DIM"], self.board_template["X_DIM"], self.board_template["Y_DIM"], self.board_template["STATIC_REPRESENTATION"], self.board_template["SETUP_REPRESENTATION"], g.user["username"], self.board_template["BOARD_NAME"]))
+                db.commit()
+
+        # Default action: return back
+        return(redirect(url_for("home.index", section=1)))
 
     def render_content_logged_out(self):
         self.structured_html.append([
@@ -271,30 +287,30 @@ class PageHome(Page):
             f"SELECT BOARD_ID, BOARD_NAME, D_CREATED, D_CHANGED FROM BOC_BOARDS WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 0 ORDER BY D_CHANGED DESC",
             "BOARD_ID", ["BOARD_NAME", "D_CHANGED", "D_CREATED"])
 
-        form_your_boards_tabs = []
+        form_your_boards_tabs = ["Boards workshop"]
         if len(your_published_boards_dataset) > 0:
             form_your_boards_tabs.append("Public boards")
-        form_your_boards_tabs.append("Boards workshop")
 
         form_your_boards = ActionForm("your_boards", "Your boards", "home")
         form_your_boards.initialise_tabs(form_your_boards_tabs)
-        form_your_boards_number_of_sections = 0
-        if len(your_published_boards_dataset) > 0:
-            form_your_boards.open_section(form_your_boards_number_of_sections)
-            form_your_boards_number_of_sections += 1
-            your_published_boards_table = ActionTable("your_boards_published", include_select = False)
-            your_published_boards_table.make_head({"BOARD_NAME" : "Board", "D_PUBLISHED" : "Published", "GAMES_PLAYED" : "# games played", "HANDICAP" : "Handicap"}, {"view" : "View", "fork" : "Fork", "hide" : "Hide"})
-            your_published_boards_table.make_body(your_published_boards_dataset)
-            form_your_boards.structured_html.append(your_published_boards_table.structured_html)
-            form_your_boards.close_section()
-        form_your_boards.open_section(form_your_boards_number_of_sections)
+        form_your_boards.open_section(0)
         your_unpublished_boards_table = ActionTable("your_boards_unpublished", include_select = False)
-        your_unpublished_boards_table.make_head({"BOARD_NAME" : "Board", "D_CHANGED" : "Changed", "D_CREATED" : "Created"}, {"edit" : "Edit", "publish" : "Publish", "delete" : "Delete"})
+        your_unpublished_boards_table.make_head({"BOARD_NAME" : "Board", "D_CHANGED" : "Changed", "D_CREATED" : "Created"}, {"edit" : "Edit", "publish" : "Publish", "delete" : "Delete"}, action_instructions = {
+                        "edit" : {"type" : "link", "url_func" : (lambda x : url_for("board.board", board_id = x))}
+                    })
         your_unpublished_boards_table.make_body(your_unpublished_boards_dataset)
         form_your_boards.structured_html.append(your_unpublished_boards_table.structured_html)
         form_your_boards.open_section_footer()
         form_your_boards.add_button("submit", "create_new_board", "Create new board", "create_new_board_btn")
         form_your_boards.close_section()
+        if len(your_published_boards_dataset) > 0:
+            form_your_boards.open_section(1)
+            your_published_boards_table = ActionTable("your_boards_published", include_select = False)
+            your_published_boards_table.make_head({"BOARD_NAME" : "Board", "D_PUBLISHED" : "Published", "GAMES_PLAYED" : "# games played", "HANDICAP" : "Handicap"}, {"view" : "View", "fork" : "Fork", "hide" : "Hide"})
+            your_published_boards_table.make_body(your_published_boards_dataset)
+            form_your_boards.structured_html.append(your_published_boards_table.structured_html)
+            form_your_boards.close_section()
+
         form_your_boards.close_form()
 
         self.structured_html.append(form_your_boards.structured_html)

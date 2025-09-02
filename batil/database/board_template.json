@@ -1,0 +1,9 @@
+{
+    "T_DIM" : 7,
+    "X_DIM" : 5,
+    "Y_DIM" : 5,
+    "STATIC_REPRESENTATION" : "XXXXXX   XX   XX   XXXXXX",
+    "SETUP_REPRESENTATION" : "[{\"type\": \"add_base\", \"faction\": \"neutral\", \"x\": 2, \"y\": 2}, {\"type\": \"add_stone\", \"faction\": \"A\", \"stone_type\": \"tank\", \"x\": 1, \"y\": 1, \"a\": 1}, {\"type\": \"add_stone\", \"faction\": \"B\", \"stone_type\": \"tank\", \"x\": 3, \"y\": 3, \"a\": 3}]",
+    "IS_PUBLIC" : 0,
+    "BOARD_NAME" : "New board"
+}

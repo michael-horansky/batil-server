@@ -124,7 +124,17 @@ class Page(HTMLObject):
 
     def render_page(self):
         self.resolve_request()
-        self.html_open("default", "style")
+        self.html_open("style")
         self.html_navbar()
 
         return(self.print_html())
+
+    # Redirects and other browser-side actions
+
+    def redirect_and_open(self, return_url, new_tab_url):
+        return(f"""
+            <script>
+                window.location.href = \"{ return_url }\";
+                window.open(\"{ new_tab_url }\", \"_blank\");
+            </script>
+        """)
