@@ -11,7 +11,7 @@ import numpy as np
 import json
 
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
+    Blueprint, flash, g, redirect, render_template, request, url_for, current_app
 )
 
 
@@ -106,7 +106,10 @@ class BoardEditorHTMLRenderer(Renderer):
         self.commit_to_output(f"  var {name} = {json.dumps(value)};")
 
     def deposit_object(self, name, value):
-        self.commit_to_output(f"  var {name} = JSON.parse('{json.dumps(value)}');")
+        #json_string_raw = json.dumps(value)
+        #json_string_sanitised = json_string_raw.replace("<", "\\u003c").replace(">", "\\u003e")
+        #self.commit_to_output(f"  var {name} = JSON.parse('{json_string_sanitised}');")
+        self.commit_to_output(f"  var {name} = {json.dumps(value)};")
 
     def deposit_contextual_data(self):
         # This method creates a <script> environment which deposits all data
@@ -121,6 +124,12 @@ class BoardEditorHTMLRenderer(Renderer):
 
         self.deposit_object("bases", self.render_object["bases"])
         self.deposit_object("stones", self.render_object["stones"])
+
+        # -------------------------- Static app data --------------------------
+        static_stone_data_file = current_app.open_resource("engine/stones/stone_properties.json")
+        static_stone_data = json.load(static_stone_data_file)
+        static_stone_data_file.close()
+        self.deposit_object("static_stone_data", static_stone_data)
 
         self.commit_to_output("</script>")
 
@@ -313,15 +322,25 @@ class BoardEditorHTMLRenderer(Renderer):
         # Stone_ID can be set to "dummy" for the selection mode dummies
         base_class = f"{stone["faction"]}_{stone["type"]}"
         stone_object = []
-        if special_id is not None:
-            stone_object.append(f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}\" id=\"{base_class}_{special_id}\" transform-origin=\"50px 50px\" style=\"display:none; pointer-events:none\">")
-            stone_object.append(f"  <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}_animation_effects\" id=\"{base_class}_{special_id}_animation_effects\" transform-origin=\"50px 50px\">")
-            stone_object.append(f"    <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}_rotation\" id=\"{base_class}_{special_id}_rotation\" transform-origin=\"50px 50px\">")
+        if "x" in stone.keys():
+            stone_x = stone["x"] * self.board_square_base_side_length
+            stone_y = stone["y"] * self.board_square_base_side_length
         else:
-            stone_object.append(f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}\" id=\"{self.encode_stone_ID(stone)}\" transform-origin=\"50px 50px\" style=\"pointer-events:none\">")
+            stone_x = 0
+            stone_y = 0
+        if "a" in stone.keys():
+            azimuth = stone["a"] * 90
+        else:
+            azimuth = 0
+        if special_id is not None:
+            stone_object.append(f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}\" id=\"{base_class}_{special_id}\" transform-origin=\"50px 50px\" style=\"display:none; pointer-events:none; transform:translate({stone_x}px,{stone_y}px)\">")
+            stone_object.append(f"  <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}_animation_effects\" id=\"{base_class}_{special_id}_animation_effects\" transform-origin=\"50px 50px\">")
+            stone_object.append(f"    <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}_rotation\" id=\"{base_class}_{special_id}_rotation\" transform-origin=\"50px 50px\" style=\"transform:rotate({azimuth}deg)\">")
+        else:
+            stone_object.append(f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}\" id=\"{self.encode_stone_ID(stone)}\" transform-origin=\"50px 50px\" style=\"pointer-events:none; transform:translate({stone_x}px,{stone_y}px)\">")
             stone_object.append(f"  <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}_animation_effects\" id=\"{self.encode_stone_ID(stone)}_animation_effects\" transform-origin=\"50px 50px\">")
             stone_object.append(f"    <polyline id=\"command_marker_{stone}\" class=\"command_marker\" points=\"{self.get_regular_polygon_points(4, 40, (50, 50))}\" display=\"none\"/>")
-            stone_object.append(f"    <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}_rotation\" id=\"{self.encode_stone_ID(stone)}_rotation\" transform-origin=\"50px 50px\">")
+            stone_object.append(f"    <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}_rotation\" id=\"{self.encode_stone_ID(stone)}_rotation\" transform-origin=\"50px 50px\" style=\"transform:rotate({azimuth}deg)\">")
         stone_object.append(f"      <rect x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"stone_pedestal\" visibility=\"hidden\" />")
 
         # Now the main body of the stone
@@ -377,9 +396,16 @@ class BoardEditorHTMLRenderer(Renderer):
 
     def create_base(self, base):
         iden = self.encode_base_ID(base)
+        if "x" in base.keys():
+            base_x = base["x"] * self.board_square_base_side_length
+            base_y = base["y"] * self.board_square_base_side_length
+        else:
+            base_x = 0
+            base_y = 0
+        base_class = f"base_{base["faction"]}"
         base_object = [
-            f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"base\" id=\"{iden}\" transform-origin=\"50px 50px\" style=\"pointer-events:none\">",
-            f"  <circle cx=\"50\" cy=\"50\" r=\"25\" class=\"base_indicator\" id=\"{iden}_indicator\" />",
+            f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}\" id=\"{iden}\" transform-origin=\"50px 50px\" style=\"pointer-events:none; transform:translate({base_x}px,{base_y}px)\">",
+            f"  <circle cx=\"50\" cy=\"50\" r=\"25\" class=\"{base_class}_indicator\" id=\"{iden}_indicator\" />",
             f"</g>"
         ]
         return(base_object)
@@ -438,7 +464,7 @@ class BoardEditorHTMLRenderer(Renderer):
         self.commit_to_output("<div id=\"stone_inspector\" class=\"inspector\">")
         self.commit_to_output("  <h1 id=\"stone_inspector_title\" class=\"inspector_title\"></h1>")
         self.commit_to_output("  <div id=\"stone_inspector_header\" class=\"stone_inspector_part\">")
-        self.draw_inspector_table("stone", {"allegiance" : "Allegiance", "stone_type" : "Stone type", "startpoint" : "Start-point", "endpoint" : "End-point"})
+        self.draw_inspector_table("stone", {"allegiance" : "Allegiance", "stone_type" : "Stone type"})
         stone_inspector_object = []
         stone_inspector_object.append("  </div>")
         stone_inspector_object.append("  <div id=\"stone_inspector_commands\" class=\"stone_inspector_part\">")
@@ -464,29 +490,13 @@ class BoardEditorHTMLRenderer(Renderer):
 
     def draw_faction_inspector(self):
         # This inspector is used for changing the faction of placed bases and stones
-        self.commit_to_output("<div id=\"tracking_inspector\" class=\"inspector\">")
-        #self.commit_to_output("  <p id=\"stone_tracking_label\"></p>")
-        self.commit_to_output("  <div id=\"tracking_inspector_header\">")
-        self.commit_to_output("    <p id=\"stone_tracking_label\"></p>")
+        self.commit_to_output("<div id=\"faction_inspector\" class=\"inspector\">")
+        self.commit_to_output("  <div id=\"faction_inspector_header\">")
+        self.commit_to_output("    <p id=\"faction_inspector_label\">No element selected</p>")
         self.commit_to_output("  </div>")
-        self.commit_to_output(f"  <svg width=\"70%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"tracking_inspector_svg\">")
+        self.commit_to_output(f"  <svg width=\"70%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"faction_inspector_svg\">")
 
 
-        # Start-point button
-        startpoint_button_points = [[130, 20], [50, 20], [50, 0], [0, 50], [50, 100], [50, 80], [130, 80]]
-        startpoint_button_polygon = f"<polygon points=\"{self.get_polygon_points(startpoint_button_points, (10, 10), 0.8)}\" class=\"game_control_panel_button\" id=\"tracking_startpoint_button\" onclick=\"tracking_startpoint()\" />"
-        startpoint_button_text = "<text x=25 y=55 class=\"button_label\" id=\"tracking_startpoint_button_label\">Start-point</text>"
-
-        # End-point button
-        endpoint_button_points = [[0, 20], [80, 20], [80, 0], [130, 50], [80, 100], [80, 80], [0, 80]]
-        endpoint_button_polygon = f"<polygon points=\"{self.get_polygon_points(endpoint_button_points, (120, 10), 0.8)}\" class=\"game_control_panel_button\" id=\"tracking_endpoint_button\" onclick=\"tracking_endpoint()\" />"
-        endpoint_button_text = "<text x=\"128\" y=\"55\" class=\"button_label\" id=\"tracking_endpoint_button_label\">End-point</text>"
-
-        # Turn off tracking button
-        turn_off_tracking_button_object = f"<rect x=\"235\" y=\"26\" width=\"88\" height=\"48\" rx=\"5\" ry=\"5\" class=\"game_control_panel_button\" id=\"turn_off_tracking_button\" onclick=\"cameraman.track_stone(null)\" />"
-        turn_off_tracking_button_text = "<text x=\"238\" y=\"27\" class=\"button_label\" id=\"turn_off_tracking_button_label\"><tspan x=\"248\" dy=\"1.2em\">Turn off</tspan><tspan x=\"248\" dy=\"1.2em\">tracking</tspan></text>"
-
-        self.commit_to_output([startpoint_button_polygon, startpoint_button_text, endpoint_button_polygon, endpoint_button_text, turn_off_tracking_button_object, turn_off_tracking_button_text])
 
         self.commit_to_output("  </svg>")
         self.commit_to_output("</div>")

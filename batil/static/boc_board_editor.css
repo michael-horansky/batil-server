@@ -115,10 +115,11 @@ margin: 0;
     background-color : grey;
 }
 
-#tracking_inspector {
+#faction_inspector {
     width : 500px;
     height : 100px;
     background-color : AntiqueWhite;
+    overflow: hidden;
 }
 
 #square_inspector {
@@ -177,6 +178,20 @@ margin: 0;
 
 .azimuth_indicator:hover {
     fill-opacity : 0.7;
+}
+
+/* ------------- Bases ------------- */
+
+.base_neutral_indicator {
+    fill : yellow;
+}
+
+.base_A_indicator {
+    fill : green;
+}
+
+.base_B_indicator {
+    fill : red;
 }
 
 /* ------------ Stones ------------- */
@@ -478,21 +493,6 @@ margin: 0;
     stroke-opacity : 0.5;
 }
 
-/* ------------- Bases ------------- */
-
-.base_neutral_indicator {
-    stroke-opacity : 0.5;
-    fill : yellow;
-}
-.base_A_indicator {
-    stroke-opacity : 0.5;
-    fill : green;
-}
-.base_neutral_indicator {
-    stroke-opacity : 0.5;
-    fill : red;
-}
-
 /* --------------------------------- */
 /* -------- Inspector style -------- */
 /* --------------------------------- */
@@ -602,9 +602,8 @@ margin: 0;
     padding : 10px;
 }
 
-#tracking_inspector_header {
+#faction_inspector_header {
     width : 30%;
-    height : 100%;
     margin-top : 17px;
     float : left;
     display: flex;
@@ -613,7 +612,7 @@ margin: 0;
 }
 
 
-#stone_tracking_label {
+#element_faction_label {
     margin : 10px;
     text-align: center;
 }

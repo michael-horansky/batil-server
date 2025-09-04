@@ -1,0 +1,47 @@
+{
+    "tank" : {
+        "opposable" : true,
+        "orientable" : true,
+        "description" : {
+            "movement" : "The tank can move forwards or backwards by 1 square and then optionally turn clockwise or anticlockwise by a quarter-revolution. Alternatively, it can stay on its square and turn to any azimuth, or remain as it is.",
+            "attacking" : "The tank attacks by firing in the direction of its azimuth, destroying the first stone in its line of sight, regardless of the stone's faction.",
+            "timejumps" : "The tank can only time-jump after reaching the final time-slice."
+        }
+    },
+    "bombardier" : {
+        "opposable" : true,
+        "orientable" : false,
+        "description" : {
+            "movement" : "The bombardier can move by 1 square in each of the 4 cardinal directions.",
+            "attacking" : "The bombardier attacks by dropping a bomb onto the same spatial position in any previous time-slice. Being an ante-effect, the consequences of the attack don't unfold until the next round. The bomb destroys any stone on the target square and all of the 4 adjanced squares.",
+            "timejumps" : "The bombardier can only time-jump after reaching the final time-slice."
+        }
+    },
+    "sniper" : {
+        "opposable" : true,
+        "orientable" : true,
+        "description" : {
+            "movement" : "The sniper cannot move on its own, and relies on being pushed by other opposable stones. However, it can turn to any azimuth or remain as it is.",
+            "attacking" : "The sniper attacks by firing in the direction of its azimuth, destroying the first stone in its line of sight except for stones in the same faction. Stones in the same faction are ignored and the attack can hit even stones obscured by them.",
+            "timejumps" : "The sniper can time-jump from any time-slice into any previous time-slice."
+        }
+    },
+    "tagger" : {
+        "opposable" : false,
+        "orientable" : false,
+        "description" : {
+            "movement" : "The tagger jumps like a horse (two squares in any cardinal direction and one square in a perpendicular direction). Being unopposable, it naturally jumps over other stones.",
+            "attacking" : "The tagger deploys a tagscreen at its position, tagging any stone on its square and all of the 4 adjanced squares. There are multiple different tagscreen types the player can choose from:<ul><li>\"Lock\" tagscreen: The tagged stones lose their ability to time-jump-out and become causally locked in the final time-slice. However, this does not disrupt time-jumps-out already placed on the tagged stones' trajectories, only prevents the players for queueing new ones.</li><li>\"Unlock\" tagscreen: counteracts the \"lock\" tagscreen, or interferes with trajectories laid out on previous rounds, making stones causally free. See Sec. \ref{sec:ruleset variations} for details.</li><li>\"Hide\" tagscreen: Removes all tagged stones from the board and places them into the next time-slice. Cannot be deployed on the second-to-last time-slice. Note that this saves stones from enemy fire, but not from explosions of pyrotechnic entities, such as mines or a moving wildcard.</li></ul>",
+            "timejumps" : "The tagger can time-jump at any time, but its time-jumps still obey the rules of its movement: either by two time-slices back and by one square in any cardinal direction, or by one time-slice back and by two squares in any cardinal direction."
+        }
+    },
+    "wildcard" : {
+        "opposable" : false,
+        "orientable" : false,
+        "description" : {
+            "movement" : "The wildcard jumps onto the neighbouring square in any of the $4$ diagonal directions.",
+            "attacking" : "The wildcard attacks on movement, destroying all stones sharing its square right before spatial conflict resolution, akin to captures in chess. Two or more wildcards can capture each other, destroying all stones present. The wildcard does not capture a stone which jumps onto its square if waiting.",
+            "timejumps" : "The wildcard can time-jump at any time. A special property of the wildcard is that it can swap the time-jump of any stone type (and is not limited by the azimuth if changing into an orientable stone)."
+        }
+    }
+}

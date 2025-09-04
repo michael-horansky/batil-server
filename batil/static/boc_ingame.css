@@ -119,6 +119,7 @@ margin: 0;
     width : 500px;
     height : 100px;
     background-color : AntiqueWhite;
+    overflow: hidden;
 }
 
 #square_inspector {
@@ -595,7 +596,6 @@ margin: 0;
 
 #tracking_inspector_header {
     width : 30%;
-    height : 100%;
     margin-top : 17px;
     float : left;
     display: flex;
