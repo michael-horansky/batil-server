@@ -36,11 +36,10 @@ margin: 0;
     margin-top : 150px;
 }
 
-#game_control_panel {
-    width : 550px;
-    height : 140px;
+#element_input_panel {
+    width : 800px;
+    height : 200px;
     float : left;
-    margin-top : 30px;
 }
 
 .board_control_panel_button {
@@ -115,12 +114,6 @@ margin: 0;
     background-color : grey;
 }
 
-#faction_inspector {
-    width : 500px;
-    height : 100px;
-    background-color : AntiqueWhite;
-    overflow: hidden;
-}
 
 #square_inspector {
     width : 500px;
@@ -128,17 +121,6 @@ margin: 0;
     background-color : lightblue;
 }
 
-#choice_selector {
-    width : 500px;
-    height : 100px;
-    background-color : AntiqueWhite;
-}
-
-#swap_effect_selector {
-    width : 500px;
-    height : 300px;
-    background-color : lightblue;
-}
 
 /* --------------------------------- */
 /* ------ Board window style ------- */
@@ -532,8 +514,23 @@ margin: 0;
     float : left;
 }*/
 
+#stone_info_table {
+    display: none;
+}
+#base_info_table {
+    display: none;
+}
+
 
 .stone_inspector_table_label {
+    width : 100px;
+    padding-top : 10px;
+    padding-left : 10px;
+    padding-right : 10px;
+    font-weight : bold;
+}
+
+.base_inspector_table_label {
     width : 100px;
     padding-top : 10px;
     padding-left : 10px;
@@ -602,14 +599,31 @@ margin: 0;
     padding : 10px;
 }
 
-#faction_inspector_header {
+#board_dimensions_inspector {
+    width : 500px;
+    height : 100px;
+    padding : 10px 25px 10px 25px;
+    box-sizing: border-box;  /* padding included in width */
+    background-color : AntiqueWhite;
+    overflow: hidden;
+}
+
+#square_inspector_buttons_svg {
+    width : 500px;
+    height : 250px;
+    padding : 10px;
+    box-sizing: border-box;
+}
+
+/*
+#board_dimensions_inspector_header {
     width : 30%;
     margin-top : 17px;
     float : left;
     display: flex;
     align-items : center;
     flex-direction: column;
-}
+}*/
 
 
 #element_faction_label {
@@ -633,3 +647,34 @@ margin: 0;
     display : none;
 }
 
+
+
+/* --------------------------------- */
+/* -------- Cursor overlay --------- */
+/* --------------------------------- */
+
+#cursor_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+}
+
+
+#cursor_overlay svg {
+    position: absolute;
+    opacity: 0.5;
+}
+
+.input_icon_shadow {
+    position: absolute;
+    pointer-events: none;
+    display: none;
+}
+
+.input_icon_shadow.active{
+    display: block;
+}

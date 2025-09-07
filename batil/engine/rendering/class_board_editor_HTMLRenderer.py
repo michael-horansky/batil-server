@@ -50,6 +50,10 @@ class BoardEditorHTMLRenderer(Renderer):
                 "A" : ["tank", "bombardier", "tagger", "sniper", "wildcard"],
                 "B" : ["tank", "bombardier", "tagger", "sniper", "wildcard"]
             }
+        board_squares_info_data_file = current_app.open_resource("engine/game_logic/board_squares_info.json")
+        self.board_squares_info_data = json.load(board_squares_info_data_file)
+        board_squares_info_data_file.close()
+
 
     # ------------------- Output file communication methods -------------------
 
@@ -130,6 +134,9 @@ class BoardEditorHTMLRenderer(Renderer):
         static_stone_data = json.load(static_stone_data_file)
         static_stone_data_file.close()
         self.deposit_object("static_stone_data", static_stone_data)
+
+        self.deposit_list("board_square_types", list(self.board_squares_info_data.keys()))
+        self.deposit_object("board_square_info", self.board_squares_info_data)
 
         self.commit_to_output("</script>")
 
@@ -296,6 +303,7 @@ class BoardEditorHTMLRenderer(Renderer):
                 templates.append(self.create_stone({"faction" : faction, "type" : stone_type}, "template"))
 
         templates.append("</g>")
+        self.commit_to_output(templates)
 
     def draw_board_square(self, x, y):
         # Draws a board square object into the active context
@@ -318,7 +326,7 @@ class BoardEditorHTMLRenderer(Renderer):
         self.board_layer_structure[0].append("</g>")
 
     # Stone type particulars
-    def create_stone(self, stone, special_id = None):
+    def create_stone(self, stone, special_id = None, special_id_display="none", special_id_onclick=None):
         # Stone_ID can be set to "dummy" for the selection mode dummies
         base_class = f"{stone["faction"]}_{stone["type"]}"
         stone_object = []
@@ -333,13 +341,15 @@ class BoardEditorHTMLRenderer(Renderer):
         else:
             azimuth = 0
         if special_id is not None:
-            stone_object.append(f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}\" id=\"{base_class}_{special_id}\" transform-origin=\"50px 50px\" style=\"display:none; pointer-events:none; transform:translate({stone_x}px,{stone_y}px)\">")
+            if special_id_onclick is None:
+                stone_object.append(f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class} {special_id}\" id=\"{base_class}_{special_id}\" transform-origin=\"50px 50px\" style=\"display:{special_id_display}; pointer-events:none; transform:translate({stone_x}px,{stone_y}px)\">")
+            else:
+                stone_object.append(f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class} {special_id}\" id=\"{base_class}_{special_id}\" transform-origin=\"50px 50px\" style=\"display:{special_id_display}; transform:translate({stone_x}px,{stone_y}px)\" onclick=\"{special_id_onclick}\">")
             stone_object.append(f"  <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}_animation_effects\" id=\"{base_class}_{special_id}_animation_effects\" transform-origin=\"50px 50px\">")
             stone_object.append(f"    <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}_rotation\" id=\"{base_class}_{special_id}_rotation\" transform-origin=\"50px 50px\" style=\"transform:rotate({azimuth}deg)\">")
         else:
             stone_object.append(f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}\" id=\"{self.encode_stone_ID(stone)}\" transform-origin=\"50px 50px\" style=\"pointer-events:none; transform:translate({stone_x}px,{stone_y}px)\">")
             stone_object.append(f"  <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}_animation_effects\" id=\"{self.encode_stone_ID(stone)}_animation_effects\" transform-origin=\"50px 50px\">")
-            stone_object.append(f"    <polyline id=\"command_marker_{stone}\" class=\"command_marker\" points=\"{self.get_regular_polygon_points(4, 40, (50, 50))}\" display=\"none\"/>")
             stone_object.append(f"    <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}_rotation\" id=\"{self.encode_stone_ID(stone)}_rotation\" transform-origin=\"50px 50px\" style=\"transform:rotate({azimuth}deg)\">")
         stone_object.append(f"      <rect x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"stone_pedestal\" visibility=\"hidden\" />")
 
@@ -394,20 +404,28 @@ class BoardEditorHTMLRenderer(Renderer):
         stone_object.append("</g>")
         return(stone_object)
 
-    def create_base(self, base):
-        iden = self.encode_base_ID(base)
+    def create_base(self, base, special_id = None, special_id_display="none", special_id_onclick=None):
+        base_class = f"base_{base["faction"]}"
         if "x" in base.keys():
             base_x = base["x"] * self.board_square_base_side_length
             base_y = base["y"] * self.board_square_base_side_length
         else:
             base_x = 0
             base_y = 0
-        base_class = f"base_{base["faction"]}"
-        base_object = [
-            f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}\" id=\"{iden}\" transform-origin=\"50px 50px\" style=\"pointer-events:none; transform:translate({base_x}px,{base_y}px)\">",
-            f"  <circle cx=\"50\" cy=\"50\" r=\"25\" class=\"{base_class}_indicator\" id=\"{iden}_indicator\" />",
-            f"</g>"
-        ]
+        base_object = []
+
+        if special_id is not None:
+            iden = f"{base_class}_{special_id}"
+            if special_id_onclick is None:
+                base_object.append(f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class} {special_id}\" id=\"{base_class}_{special_id}\" transform-origin=\"50px 50px\" style=\"display:{special_id_display}; pointer-events:none; transform:translate({base_x}px,{base_y}px)\">")
+            else:
+                base_object.append(f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class} {special_id}\" id=\"{base_class}_{special_id}\" transform-origin=\"50px 50px\" style=\"display:{special_id_display}; transform:translate({base_x}px,{base_y}px)\" onclick=\"{special_id_onclick}\">")
+        else:
+            iden = self.encode_base_ID(base)
+            base_object.append(f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class}\" id=\"{iden}\" transform-origin=\"50px 50px\" style=\"pointer-events:none; transform:translate({base_x}px,{base_y}px)\">")
+
+        base_object.append(f"  <circle cx=\"50\" cy=\"50\" r=\"25\" class=\"{base_class}_indicator\" id=\"{iden}_indicator\" />")
+        base_object.append(f"</g>")
         return(base_object)
 
 
@@ -465,40 +483,60 @@ class BoardEditorHTMLRenderer(Renderer):
         self.commit_to_output("  <h1 id=\"stone_inspector_title\" class=\"inspector_title\"></h1>")
         self.commit_to_output("  <div id=\"stone_inspector_header\" class=\"stone_inspector_part\">")
         self.draw_inspector_table("stone", {"allegiance" : "Allegiance", "stone_type" : "Stone type"})
+        self.draw_inspector_table("base", {"allegiance" : "Allegiance"})
         stone_inspector_object = []
         stone_inspector_object.append("  </div>")
         stone_inspector_object.append("  <div id=\"stone_inspector_commands\" class=\"stone_inspector_part\">")
-        stone_inspector_object.append("    <svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"base_inspector_buttons_svg\">")
-        stone_inspector_object.append("      <g id=\"remove_base_button\" display=\"none\">")
+        stone_inspector_object.append("    <svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"base_inspector_buttons_svg\" display=\"none\">")
+        stone_inspector_object.append("      <g id=\"remove_base_button\">")
         stone_inspector_object.append("        <rect x=\"0\" y=\"0\" width=\"100\" height=\"83\" class=\"stone_command_panel_button\" id=\"remove_base_button_polygon\" onclick=\"inspector.remove_base()\" />")
         stone_inspector_object.append("        <text x=\"50\" y=\"42\" text-anchor=\"middle\" id=\"remove_base_button_label\" class=\"button_label\">Remove</text>")
         stone_inspector_object.append("      </g>")
         stone_inspector_object.append("    </svg>")
-        stone_inspector_object.append("    <svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"stone_inspector_buttons_svg\">")
-        stone_inspector_object.append("      <g id=\"remove_stone_button\" display=\"none\">")
+        stone_inspector_object.append("    <svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"stone_inspector_buttons_svg\" display=\"none\">")
+        stone_inspector_object.append("      <g id=\"remove_stone_button\">")
         stone_inspector_object.append("        <rect x=\"0\" y=\"0\" width=\"100\" height=\"83\" class=\"stone_command_panel_button\" id=\"remove_stone_button_polygon\" onclick=\"inspector.remove_stone()\" />")
         stone_inspector_object.append("        <text x=\"50\" y=\"42\" text-anchor=\"middle\" id=\"remove_stone_button_label\" class=\"button_label\">Remove</text>")
         stone_inspector_object.append("      </g>")
-        stone_inspector_object.append("      <g id=\"rotate_button\" display=\"none\">")
+        stone_inspector_object.append("      <g id=\"rotate_button\">")
         stone_inspector_object.append("        <rect x=\"110\" y=\"0\" width=\"100\" height=\"83\" class=\"stone_command_panel_button\" id=\"rotate_button_polygon\" onclick=\"inspector.rotate_stone()\" />")
         stone_inspector_object.append("        <text x=\"160\" y=\"42\" text-anchor=\"middle\" class=\"button_label\">Rotate</text>")
+        stone_inspector_object.append("      </g>")
+        stone_inspector_object.append("    </svg>")
+        stone_inspector_object.append("    <svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"selection_mode_abort_svg\" display=\"none\">")
+        stone_inspector_object.append("      <g id=\"selection_mode_abort_button\">")
+        stone_inspector_object.append("        <rect x=\"0\" y=\"0\" width=\"100\" height=\"83\" class=\"stone_command_panel_button\" id=\"selection_mode_abort_button_polygon\" onclick=\"inspector.turn_off_selection_mode()\" />")
+        stone_inspector_object.append("        <text x=\"50\" y=\"42\" text-anchor=\"middle\" id=\"selection_mode_abort_button_label\" class=\"button_label\">Abort</text>")
         stone_inspector_object.append("      </g>")
         stone_inspector_object.append("    </svg>")
         stone_inspector_object.append("  </div>")
         stone_inspector_object.append("</div>")
         self.commit_to_output(stone_inspector_object)
 
-    def draw_faction_inspector(self):
-        # This inspector is used for changing the faction of placed bases and stones
-        self.commit_to_output("<div id=\"faction_inspector\" class=\"inspector\">")
-        self.commit_to_output("  <div id=\"faction_inspector_header\">")
-        self.commit_to_output("    <p id=\"faction_inspector_label\">No element selected</p>")
-        self.commit_to_output("  </div>")
-        self.commit_to_output(f"  <svg width=\"70%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"faction_inspector_svg\">")
+    def draw_board_dimensions_inspector(self):
+        # This inspector is used for changing the static board dimensions
+        self.commit_to_output("<div id=\"board_dimensions_inspector\" class=\"inspector\">")
+        #self.commit_to_output("  <div id=\"board_dimensions_inspector_header\">")
+        #self.commit_to_output("    <p id=\"board_dimensions_inspector_label\">No element selected</p>")
+        #self.commit_to_output("  </div>")
+        #self.commit_to_output(f"  <svg width=\"70%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"faction_inspector_svg\">")
 
+        # Now the form for changing board dimensions (not a submit one, everything is handled clientside until board save)
+        board_dimensions_edit_form = [
+            f"<form id=\"board_dimensions_inspector_form\">",
+            f"  <label for=\"board_dimensions_t_input\">Timeslices in round:</label>",
+            f"  <input type=\"number\" id=\"board_dimensions_t_input\" name=\"board_dimensions_t_input\" value=\"{self.render_object["t_dim"]}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
+            f"  <label for=\"board_dimensions_x_input\">Squares horizontally:</label>",
+            f"  <input type=\"number\" id=\"board_dimensions_x_input\" name=\"board_dimensions_x_input\" value=\"{self.render_object["x_dim"]}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
+            f"  <label for=\"board_dimensions_y_input\">Squares vertically:</label>",
+            f"  <input type=\"number\" id=\"board_dimensions_y_input\" name=\"board_dimensions_y_input\" value=\"{self.render_object["y_dim"]}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
+            f"  <input type=\"button\" id=\"board_dimensions_update_btn\" value=\"Update\" onclick=\"inspector.update_board_dimensions()\" hidden>",
+            f"  <input type=\"button\" id=\"board_dimensions_reset_btn\" value=\"Reset\" onclick=\"reset_board_dimensions_form()\" hidden>",
+            f"</form>"
+            ]
+        self.commit_to_output(board_dimensions_edit_form)
 
-
-        self.commit_to_output("  </svg>")
+        #self.commit_to_output("  </svg>")
         self.commit_to_output("</div>")
 
 
@@ -507,38 +545,52 @@ class BoardEditorHTMLRenderer(Renderer):
         square_inspector_object = []
         self.commit_to_output("<div id=\"square_inspector\" class=\"inspector\">")
         self.commit_to_output("  <h1 id=\"square_inspector_title\" class=\"inspector_title\"></h1>")
+
+        square_inspector_object.append("    <svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"square_inspector_buttons_svg\">")
+        x_offset = 0
+        button_width = 150
+        for board_square_symbol, board_square_label in self.board_squares_info_data.items():
+            square_inspector_object.append(f"      <g id=\"change_square_to_{board_square_label}\" display=\"none\">")
+            square_inspector_object.append(f"        <rect x=\"{x_offset}\" y=\"0\" width=\"{button_width}\" height=\"83\" class=\"stone_command_panel_button\" id=\"change_square_to_{board_square_label}_polygon\" onclick=\"inspector.change_square_type(\'{board_square_symbol}\')\" />")
+            square_inspector_object.append(f"        <text x=\"{int(x_offset + button_width / 2)}\" y=\"42\" text-anchor=\"middle\" id=\"change_square_to_{board_square_label}_label\" class=\"button_label\">Change to {board_square_label}</text>")
+            square_inspector_object.append(f"      </g>")
+        square_inspector_object.append("    </svg>")
+
+        self.commit_to_output(square_inspector_object)
+
         self.commit_to_output("</div>")
 
     def draw_inspectors(self):
         self.open_inspectors()
         self.draw_stone_inspector()
-        self.draw_faction_inspector()
+        self.draw_board_dimensions_inspector()
         self.draw_square_inspector()
         self.close_inspectors()
 
     # ---------------------- Game control panel methods -----------------------
 
-    def draw_game_control_panel(self):
-        # game control panel allows one to traverse rounds, as well as change the game status (resign, offer draw, submit commands, request paradox viewing...).
-        enclosing_div = "<div id=\"game_control_panel\">"
-        enclosing_svg = "<svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"board_control_panel_svg\">"
+    def draw_element_input_panel(self):
+        # game control panel allows one to place new elements onto the boards. Each element is represented by an icon.
+        enclosing_div = "<div id=\"element_input_panel\">"
+        enclosing_svg = "<svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"element_input_svg\">"
         self.commit_to_output([enclosing_div, enclosing_svg])
 
-        # Previous round button
-        prev_round_button_points = [[130, 20], [50, 20], [50, 0], [0, 50], [50, 100], [50, 80], [130, 80]]
-        prev_round_button_polygon = f"<polygon points=\"{self.get_polygon_points(prev_round_button_points, (10, 0))}\" class=\"game_control_panel_button\" id=\"prev_round_button\" onclick=\"show_prev_round()\" />"
-        prev_round_button_text = "<text x=40 y=55 class=\"button_label\" id=\"prev_round_button_label\">Prev round</text>"
+        def get_pos_from_i(i):
+            w = 8
+            x = i % w
+            y = i // w
+            return(x,y)
 
-        # Active round button
-        active_round_button_object = f"<rect x=\"150\" y=\"20\" width=\"110\" height=\"60\" rx=\"5\" ry=\"5\" class=\"game_control_panel_button\" id=\"active_round_button\" onclick=\"show_active_round()\" />"
-        active_round_button_text = "<text x=\"170\" y=\"27\" class=\"button_label\" id=\"active_round_button_label\"><tspan x=\"182\" dy=\"1.2em\">Active</tspan><tspan x=\"182\" dy=\"1.2em\">round</tspan></text>"
-
-        # Next round button
-        next_round_button_points = [[0, 20], [80, 20], [80, 0], [130, 50], [80, 100], [80, 80], [0, 80]]
-        next_round_button_polygon = f"<polygon points=\"{self.get_polygon_points(next_round_button_points, (270, 0))}\" class=\"game_control_panel_button\" id=\"next_round_button\" onclick=\"show_next_round()\" />"
-        next_round_button_text = "<text x=\"287\" y=\"55\" class=\"button_label\" id=\"next_round_button_label\">Next round</text>"
-
-        self.commit_to_output([prev_round_button_polygon, prev_round_button_text, active_round_button_object, active_round_button_text, next_round_button_polygon, next_round_button_text])
+        input_icon_index = 0
+        for allegiance in self.required_stone_types.keys():
+            x, y = get_pos_from_i(input_icon_index)
+            self.commit_to_output(self.create_base({"faction" : allegiance, "x" : x, "y" : y}, "input_icon", "block", f"inspector.select_input_element(\'base\', \'{allegiance}\', null)"))
+            input_icon_index += 1
+        for allegiance in self.required_stone_types.keys():
+            for stone_type in self.required_stone_types[allegiance]:
+                x, y = get_pos_from_i(input_icon_index)
+                self.commit_to_output(self.create_stone({"faction" : allegiance, "type" : stone_type, "x" : x, "y" : y}, "input_icon", "block", f"inspector.select_input_element(\'stone\', \'{allegiance}\', \'{stone_type}\')"))
+                input_icon_index += 1
         self.commit_to_output("</svg>\n</div>")
 
     # --------------------------- Game log methods ----------------------------
@@ -554,6 +606,7 @@ class BoardEditorHTMLRenderer(Renderer):
         board_edit_form = []
         board_edit_form.append(f"<div id=\"board_edit_form_div\">")
         board_edit_form.append(f"  <form id=\"board_edit_form\" class=\"submission_form\" action=\"{url_for("board.board_edit_submission", board_id=self.board_id)}\" method=\"POST\">")
+        # ------------------------ Invisible elements -------------------------
         # Fieldset Header: t_dim, x_dim, y_dim, total number of bases/stones
         board_edit_form.append(f"    <fieldset id=\"header_data\" class=\"board_edit_data_field\">")
         board_edit_form.append(f"      <input type=\"hidden\" name=\"h_t_dim\" id=\"h_t_dim\" value=\"{self.render_object["t_dim"]}\">")
@@ -579,10 +632,30 @@ class BoardEditorHTMLRenderer(Renderer):
             board_edit_form.append(f"      <input type=\"hidden\" name=\"stone_{stone_i}\" id=\"stone_{stone_i}\" >")
         board_edit_form.append(f"    </fieldset>")
 
-        board_edit_form.append(f"    <button type=\"submit\" name=\"command_submission\" value=\"submit\" id=\"submit_commands_button\">Submit commands</button>")
+        # ------------------------- Visible elements --------------------------
+        board_edit_form.append(f"    <input type=\"text\" name=\"board_name\" id=\"board_name\" value=\"{self.render_object["board_name"]}\" >")
+
+
+        board_edit_form.append(f"    <button type=\"submit\" name=\"board_submission\" value=\"submit\" id=\"save_board_button\">Save board</button>")
         board_edit_form.append(f"  </form>")
         board_edit_form.append(f"</div>")
         self.commit_to_output(board_edit_form)
+
+    # ---------------------------- Cursor overlay -----------------------------
+
+    def create_cursor_overlay(self):
+        self.commit_to_output("<div id=\"cursor_overlay\">")
+        self.commit_to_output("  <svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"cursor_overlay_svg\">")
+
+
+        for allegiance in self.required_stone_types.keys():
+            self.commit_to_output(self.create_base({"faction" : allegiance}, "input_icon_shadow", ""))
+        for allegiance in self.required_stone_types.keys():
+            for stone_type in self.required_stone_types[allegiance]:
+                self.commit_to_output(self.create_stone({"faction" : allegiance, "type" : stone_type}, "input_icon_shadow", ""))
+
+        self.commit_to_output("  </svg>")
+        self.commit_to_output("</div>")
 
 
     # ---------------------------- Global methods -----------------------------
@@ -606,12 +679,15 @@ class BoardEditorHTMLRenderer(Renderer):
         # Open gameside
         self.open_gameside()
 
-        self.draw_game_control_panel()
+        self.draw_element_input_panel()
         if self.render_object["client_action"] == "edit":
             self.draw_board_edit_form() # Don't draw this if board is just for viewing!
 
         # Close gameside
         self.close_gameside()
+
+        # cursor overlay
+        self.create_cursor_overlay()
 
         self.close_body()
 

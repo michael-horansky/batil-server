@@ -5,7 +5,7 @@
 const board_window_width = 800;
 const board_window_height = 700;
 
-const stone_command_btn_width = 100;
+const stone_command_btn_width = 140;
 const stone_command_btn_height = 83;
 
 const choice_option_btn_width = 120;
@@ -114,6 +114,7 @@ function render_board(){
     render_board_static();
     render_bases();
     render_stones();
+    reset_board_dimensions_form();
     if (inspector.selection_mode_enabled) {
         // We take care of the selection choice highlighting
         for (x = 0; x < x_dim; x++) {
@@ -121,10 +122,8 @@ function render_board(){
                 document.getElementById(`selection_mode_highlight_${x}_${y}`).style.fill = "grey";
             }
         }
-        for (i = 0; i < inspector.selection_mode_options["squares"].length; i++) {
-            if (inspector.selection_mode_options["squares"][i]["t"] == visible_timeslice) {
-                document.getElementById(`selection_mode_highlight_${inspector.selection_mode_options["squares"][i]["x"]}_${inspector.selection_mode_options["squares"][i]["y"]}`).style.fill = "green";
-            }
+        for (i = 0; i < inspector.selection_mode_squares.length; i++) {
+            document.getElementById(`selection_mode_highlight_${inspector.selection_mode_squares[i]["x"]}_${inspector.selection_mode_squares[i]["y"]}`).style.fill = "green";
         }
         // If a choice has been made, we place the selection mode dummy at its appropriate place
         selection_mode_dummies = document.getElementsByClassName("selection_mode_dummy");
@@ -132,7 +131,7 @@ function render_board(){
             selection_mode_dummies[i].style.display = "none";
         }
         if (inspector.selection_mode_information_level["square"] == false && inspector.selection_mode_information_level["azimuth"] == false) {
-            let selected_square = inspector.selection_mode_options["squares"][inspector.selection["square"]];
+            let selected_square = inspector.selection_mode_squares[inspector.selection["square"]];
             let dummy_label = `${stone_properties[inspector.selection_mode_stone_ID]["allegiance"]}_${stone_properties[inspector.selection_mode_stone_ID]["stone_type"]}_dummy`;
             document.getElementById(dummy_label).style.transform = `translate(${100 * selected_square["x"]}px,${100 * selected_square["y"]}px)`;
             if (stone_properties[inspector.selection_mode_stone_ID]["orientable"]) {
@@ -148,6 +147,27 @@ function purify_board() {
     document.getElementById('group_stones').replaceChildren();
     document.getElementById('group_bases').replaceChildren();
     document.getElementById('group_squares').replaceChildren();
+}
+
+function reset_board_dimensions_form() {
+    document.getElementById("board_dimensions_t_input").value = t_dim;
+    document.getElementById("board_dimensions_x_input").value = x_dim;
+    document.getElementById("board_dimensions_y_input").value = y_dim;
+
+    document.getElementById("board_dimensions_update_btn").hidden = true;
+    document.getElementById("board_dimensions_reset_btn").hidden = true;
+}
+
+function toggle_board_dimensions_buttons() {
+    if (Number(document.getElementById("board_dimensions_t_input").value) != t_dim
+        || Number(document.getElementById("board_dimensions_x_input").value) != x_dim
+        || Number(document.getElementById("board_dimensions_y_input").value) != y_dim) {
+        document.getElementById("board_dimensions_update_btn").hidden = false;
+        document.getElementById("board_dimensions_reset_btn").hidden = false;
+    } else {
+        document.getElementById("board_dimensions_update_btn").hidden = true;
+        document.getElementById("board_dimensions_reset_btn").hidden = true;
+    }
 }
 
 // Square rendering
@@ -187,7 +207,9 @@ function make_square(x, y, square_type) {
         onclick : `inspector.board_square_click(${x},${y})`
     });*/
     let new_square = clone_square(encode_board_square_class(square_type), x, y);
-    new_square.onclick = `inspector.board_square_click(${x},${y})`;
+    new_square.setAttribute('x', x * 100);
+    new_square.setAttribute('y', y * 100);
+    new_square.setAttribute("onclick", `inspector.board_square_click(${x},${y})`);
     document.getElementById("group_squares").appendChild(new_square);
 }
 
@@ -246,7 +268,7 @@ function clone_stone(stone_allegiance, stone_type, x, y) {
             node.id = node.id.replace(`${stone_allegiance}_${stone_type}_template`, `stone_${x}_${y}`);
         }
         // Recurse into children
-        for (let child of node.basechildren) {
+        for (let child of node.children) {
             updateIds(child);
         }
     }
@@ -256,6 +278,7 @@ function clone_stone(stone_allegiance, stone_type, x, y) {
 }
 
 function render_stones(){
+    let parent_node = document.getElementById('group_stones');
     for (let stone_i = 0; stone_i < stones.length; stone_i++) {
         let x = stones[stone_i]["x"];
         let y = stones[stone_i]["y"];
@@ -435,6 +458,13 @@ function square_highlight(x, y) {
 
 function parse_keydown_event(event) {
     //alert(event.key);
+    // If the focus is on a textbox, we ignore keypresses
+    if (event.target.tagName === "INPUT" ||
+        event.target.tagName === "TEXTAREA" ||
+        event.target.isContentEditable) {
+        return;
+    }
+
     switch(event.key) {
         case "ArrowRight":
             if (inspector.selection_mode_enabled) {
@@ -570,7 +600,7 @@ const commander = new Object();
 const inspector = new Object();
 inspector.inspector_elements = {
     "stone" : {"title" : null, "containers" : new Object(), "values" : new Object()},
-    "square" : {"title" : null, "containers" : new Object(), "values" : new Object()}
+    "base" : {"title" : null, "containers" : new Object(), "values" : new Object()}
 }
 inspector.record_inspector_elements = function(which_inspector, element_name_list) {
     element_name_list.forEach(function(element_name, element_index) {
@@ -594,7 +624,7 @@ inspector.display_value_list = function(which_inspector, element_name, value_lis
 
 
 inspector.record_inspector_elements("stone", ["allegiance", "stone_type"]);
-//inspector.record_inspector_elements("square", []);
+inspector.record_inspector_elements("base", ["allegiance"]);
 
 // ----------------------- Human readable text methods ------------------------
 
@@ -617,15 +647,15 @@ inspector.square_type_description = function(board_static_val) {
 // Information level: for every "true", the user needs to specify the value of
 // the corresponding arg key before submitting the command and exiting sel. m.
 inspector.selection_mode_enabled = false;
-inspector.selection_mode_stone_ID = null;
-inspector.selection_mode_information_level = {"square" : false, "azimuth" : false, "choice_option" : false};
-inspector.selection = {"square" : "NOT_SELECTED", "azimuth" : "NOT_SELECTED", "choice_option" : "NOT_SELECTED"};
+inspector.selection_mode_element = null;
+inspector.selection_mode_information_level = {"square" : false, "azimuth" : false};
+inspector.selection = {"square" : "NOT_SELECTED", "azimuth" : "NOT_SELECTED"};
 inspector.selection_submission = null;
 
-inspector.selection_mode_options = new Object();
+inspector.selection_mode_squares = null;
 
 inspector.selection_keywords = [
-            "object",  // base or stone
+            "element",  // base or stone
             "faction", // GM, A, B
             "type",    // [stones only]
             "x",
@@ -633,48 +663,90 @@ inspector.selection_keywords = [
             "a"        // [orientable stones only]
         ];
 
-inspector.turn_on_selection_mode = function(placing_object, selection_mode_props) {
+// inspector methods for inputting elements
+
+inspector.place_shadow_on_cursor = function(e) {
+    if (inspector.selection_mode_element["element"] == "base") {
+        let el = document.getElementById(`base_${inspector.selection_mode_element["faction"]}_input_icon_shadow`);
+        el.style.transform = `translate(${e.clientX - 50}px, ${e.clientY - 50}px)`;
+    } else if (inspector.selection_mode_element["element"] == "stone") {
+        let el = document.getElementById(`${inspector.selection_mode_element["faction"]}_${inspector.selection_mode_element["type"]}_input_icon_shadow`);
+        el.style.transform = `translate(${e.clientX - 50}px, ${e.clientY - 50}px)`;
+    }
+}
+
+inspector.start_input_mode = function(cur_selection_mode_squares = null) {
+    if (inspector.selection_mode_element["element"] == "base") {
+        document.getElementById(`base_${inspector.selection_mode_element["faction"]}_input_icon_shadow`).classList.toggle("active");
+    } else if (inspector.selection_mode_element["element"] == "stone") {
+        document.getElementById(`${inspector.selection_mode_element["faction"]}_${inspector.selection_mode_element["type"]}_input_icon_shadow`).classList.toggle("active");
+    }
+    document.addEventListener("mousemove", inspector.place_shadow_on_cursor);
+
     inspector.selection_mode_enabled = true;
-    // Commit current selection options to cache
-    inspector.selection_mode_options = selection_mode_props;
 
     inspector.selection_mode_information_level["square"] = true;
     inspector.selection_mode_information_level["azimuth"] = true;
-    inspector.selection_mode_information_level["choice_option"] = true;
     inspector.selection_mode_information_level["square"] = "NOT_SELECTED";
     inspector.selection_mode_information_level["azimuth"] = "NOT_SELECTED";
-    inspector.selection_mode_information_level["choice_option"] = "NOT_SELECTED";
 
     // Show selection highlights
     inspector.set_square_highlight(null);
     document.getElementById("selection_mode_highlights").style.visibility = "visible";
 
-    if (inspector.selection_mode_options["choice_keyword"] == null) {
-        inspector.select_choice_option(null);
+    // Prepare selection mode options
+    let azimuth_options = null;
+    if (inspector.selection_mode_element["element"] == "stone") {
+        if (static_stone_data[inspector.selection_mode_element["type"]]["orientable"]) {
+            azimuth_options = [0, 1, 2, 3];
+        }
+    }
+    if (cur_selection_mode_squares == null) {
+        inspector.selection_mode_squares = [];
+        for (x = 1; x < x_dim - 1; x++) {
+            for (y = 1; y < y_dim - 1; y++) {
+                inspector.selection_mode_squares.push({"x" : x, "y" : y, "a" : azimuth_options});
+            }
+        }
     } else {
-        // Create choice buttons in choice selector
-        inspector.prepare_choice_selection();
+        inspector.selection_mode_squares = cur_selection_mode_squares;
     }
 
-    if (inspector.selection_mode_options["squares"].length == 1) {
+    if (inspector.selection_mode_squares.length == 1) {
         // The square is chosen automatically
-        inspector.select_square(inspector.selection_mode_options["squares"][0]["x"], inspector.selection_mode_options["squares"][0]["y"]);
+        inspector.select_square(inspector.selection_mode_squares[0]["x"], inspector.selection_mode_squares[0]["y"]);
     }
 
     // Remove command buttons, create abort button
-    let stone_inspector_commands_svg = document.getElementById("stone_inspector_commands_svg");
-    while (stone_inspector_commands_svg.firstChild) {
-        stone_inspector_commands_svg.removeChild(stone_inspector_commands_svg.lastChild);
-    }
-    document.getElementById("stone_inspector_commands_svg").style.display = "none";
-    document.getElementById("abort_selection_button").style.display = "block";
-
+    document.getElementById("base_inspector_buttons_svg").style.display = "none";
+    document.getElementById("stone_inspector_buttons_svg").style.display = "none";
+    document.getElementById("selection_mode_abort_svg").style.display = "block";
 
     render_board();
 
 }
 
+inspector.select_input_element = function(element, allegiance, stone_type) {
+    // if input mode is off, select the clicked element and turn on input mode
+    if (inspector.selection_mode_enabled == false) {
+        inspector.selection_mode_element = {"element" : element, "faction" : allegiance, "type" : stone_type};
+        inspector.start_input_mode();
+    } else {
+        inspector.turn_off_selection_mode();
+    }
+}
+
 inspector.turn_off_selection_mode = function() {
+
+    let x = inspector.selection_mode_squares[inspector.selection["square"]]["x"];
+    let y = inspector.selection_mode_squares[inspector.selection["square"]]["y"];
+
+    // Remove cursor shadow
+    document.querySelectorAll('.input_icon_shadow').forEach(el => {
+        el.classList.remove('active');
+    });
+    inspector.selection_mode_element = null;
+    document.removeEventListener("mousemove", inspector.place_shadow_on_cursor);
 
     // Hide highlights and dummies and azimuth indicators
     document.getElementById("selection_mode_highlights").style.visibility = "hidden";
@@ -687,129 +759,40 @@ inspector.turn_off_selection_mode = function() {
     }
 
     // Hide selection mode buttons
-    document.getElementById("abort_selection_button").style.display = "none";
-    document.getElementById("submit_selection_button").style.display = "none";
-    document.getElementById("stone_inspector_commands_svg").style.display = "block";
-
-    // Remove choice selector buttons
-    let choice_selector_svg = document.getElementById("choice_selector_buttons_svg");
-    while (choice_selector_svg.firstChild) {
-        choice_selector_svg.removeChild(choice_selector_svg.lastChild);
-    }
-
-    // Remove swap effect selection options
-    inspector.unselect_swap_effect();
+    document.getElementById("selection_mode_abort_svg").style.display = "none";
 
     // Replace selectors with trackers
     //document.getElementById("choice_selector").style.display = "none";
     //document.getElementById("swap_effect_selector").style.display = "none";
-    document.getElementById("faction_inspector").style.display = "block";
-    document.getElementById("square_inspector").style.display = "block";
+    //document.getElementById("faction_inspector").style.display = "block";
+    //document.getElementById("square_inspector").style.display = "block";
 
 
     inspector.selection_mode_enabled = false;
 
     render_board();
 
-    inspector.board_square_click(stone_trajectories[active_round][active_timeslice]["canon"][inspector.selection_mode_stone_ID][0], stone_trajectories[active_round][active_timeslice]["canon"][inspector.selection_mode_stone_ID][1]);
-
     // Clear cache
-    inspector.selection_mode_options = null;
+    inspector.selection_mode_squares = null;
     inspector.selection_submission = null;
-    inspector.selection_mode_stone_ID = null;
+    inspector.selection_mode_element = null;
+
+    inspector.board_square_click(x, y);
 
 }
 
-inspector.prepare_choice_selection = function() {
-    let choice_selector_svg = document.getElementById("choice_selector_buttons_svg");
-    offset_x = 10;
-    offset_y = 8;
-    for (let i = 0; i < inspector.selection_mode_options["choice_options"].length; i++) {
-        let new_button = make_SVG_element("rect", {
-            class : "choice_option_button",
-            id : `choice_option_${inspector.selection_mode_options["choice_options"][i]}`,
-            onclick : `inspector.select_choice_option(\"${inspector.selection_mode_options["choice_options"][i]}\")`,
-            x : offset_x,
-            y : offset_y,
-            width : choice_option_btn_width,
-            height : choice_option_btn_height
-        });
-        let new_button_label = make_SVG_element("text", {
-            class : "button_label",
-            id : `choice_option_${inspector.selection_mode_options["choice_options"][i]}_label`,
-            x : offset_x + choice_option_btn_width / 2,
-            y : offset_y + choice_option_btn_height / 2,
-            "text-anchor" : "middle"
-        });
-        new_button_label.textContent = inspector.selection_mode_options["choice_labels"][i];
-        choice_selector_svg.appendChild(new_button);
-        choice_selector_svg.appendChild(new_button_label);
-        offset_x += choice_option_btn_width + 10;
-
+inspector.submit_if_complete = function() {
+    if (inspector.selection_mode_enabled && inspector.selection_mode_information_level["square"] == false && inspector.selection_mode_information_level["azimuth"] == false) {
+        inspector.submit_selection();
     }
-}
-
-inspector.toggle_submit_button = function() {
-    if (inspector.selection_mode_information_level["square"] == false && inspector.selection_mode_information_level["azimuth"] == false && inspector.selection_mode_information_level["swap_effect"] == false && inspector.selection_mode_information_level["choice_option"] == false) {
-        document.getElementById("submit_selection_button").style.display = "inline";
-    } else {
-        document.getElementById("submit_selection_button").style.display = "none";
-    }
-}
-
-inspector.add_swap_effect_option = function(effect_ID) {
-    let swap_effect_table = document.getElementById("swap_effect_selector_table");
-    let option_id;
-    let option_onclick;
-    let option_button;
-    let option_desc;
-    if (effect_ID == null) {
-        option_id = "swap_effect_option_null";
-        option_onclick = "inspector.select_swap_effect(null)";
-        option_button = "No swap";
-        option_desc = "";
-    } else {
-        option_id = `swap_effect_option_${effect_ID}`;
-        option_onclick = `inspector.select_swap_effect(${effect_ID})`;
-        option_button = "Swap";
-        option_desc = "unknown effect";
-        // Check if active or inactive
-
-        // Active effects
-        for (let effect_i = 0; effect_i < inspector.reverse_causality_flags[selected_round]["effects"]["active"].length; effect_i++) {
-            if (inspector.reverse_causality_flags[selected_round]["effects"]["active"][effect_i] == effect_ID) {
-                // Is active
-                option_desc = inspector.flag_description("effect", "active", effect_ID)
-            }
-        }
-        // Inactive effects
-        for (let effect_i = 0; effect_i < inspector.reverse_causality_flags[selected_round]["effects"]["inactive"].length; effect_i++) {
-            if (inspector.reverse_causality_flags[selected_round]["effects"]["active"][effect_i] == effect_ID) {
-                // Is inactive
-                option_desc = inspector.flag_description("effect", "inactive", effect_ID)
-            }
-        }
-    }
-    let option_row = swap_effect_table.insertRow(-1);
-    option_row.setAttribute("id", option_id);
-    option_row.setAttribute("class", "swap_effect_option");
-    let option_button_element = option_row.insertCell(0);
-    option_button_element.setAttribute("id", `${option_id}_button`);
-    option_button_element.setAttribute("class", "swap_effect_option_button");
-    option_button_element.setAttribute("onclick", option_onclick);
-    option_button_element.innerHTML = option_button;
-    let option_desc_element = option_row.insertCell(1);
-    option_desc_element.setAttribute("id", `${option_id}_description`);
-    option_desc_element.setAttribute("class", "swap_effect_option_description");
-    option_desc_element.innerHTML = option_desc;
 }
 
 inspector.select_square = function(x, y) {
     // We find the correct element of squares
-    for (let i = 0; i < inspector.selection_mode_options["squares"].length; i++) {
-        if (inspector.selection_mode_options["squares"][i]["t"] == selected_timeslice && inspector.selection_mode_options["squares"][i]["x"] == x && inspector.selection_mode_options["squares"][i]["y"] == y) {
+    for (let i = 0; i < inspector.selection_mode_squares.length; i++) {
+        if (inspector.selection_mode_squares[i]["x"] == x && inspector.selection_mode_squares[i]["y"] == y) {
             render_board();
-            let cur_square = inspector.selection_mode_options["squares"][i];
+            let cur_square = inspector.selection_mode_squares[i];
             inspector.selection["square"] = i;
             inspector.selection_mode_information_level["square"] = false;
             inspector.set_square_highlight([x, y]);
@@ -824,27 +807,10 @@ inspector.select_square = function(x, y) {
                 inspector.select_azimuth(null);
             }
 
-            inspector.unselect_swap_effect();
-            if (cur_square["swap_effects"] != null) {
-                for (ind_swap = 0; ind_swap < cur_square["swap_effects"].length; ind_swap++) {
-                    inspector.add_swap_effect_option(cur_square["swap_effects"][ind_swap]);
-                }
-
-                if (cur_square["swap_effects"].length == 1) {
-                    inspector.select_swap_effect(cur_square["swap_effects"][0]);
-                } else {
-                    inspector.selection["swap_effect"] = "NOT_SELECTED";
-                    inspector.selection_mode_information_level["swap_effect"] = true;
-                }
-            } else {
-                inspector.selection["swap_effect"] = null;
-                inspector.selection_mode_information_level["swap_effect"] = false;
-            }
-
-            inspector.toggle_submit_button();
+            //inspector.submit_if_complete();
             render_board();
 
-            // Now, based on what we know and what is yet to be inputted, we show and hide the azimuth and swap_effect dialogues
+            // Now, based on what we know and what is yet to be inputted, we show and hide the azimuth dialogue
             if (inspector.selection_mode_information_level["azimuth"]) {
                 for (ind_a = 0; ind_a < 4; ind_a++) {
                     if (cur_square["a"].includes(ind_a)) {
@@ -859,6 +825,9 @@ inspector.select_square = function(x, y) {
                 }
             }
         }
+        if (inspector.selection_mode_enabled == false) {
+            break;
+        }
     }
 }
 
@@ -866,100 +835,89 @@ inspector.unselect_square = function() {
     inspector.selection["square"] = "NOT_SELECTED";
     inspector.selection_mode_information_level["square"] = true;
     inspector.set_square_highlight(null);
-    inspector.unselect_swap_effect();
     let selection_mode_dummies = document.getElementsByClassName("selection_mode_dummy");
     for (i = 0; i < selection_mode_dummies.length; i++) {
         selection_mode_dummies[i].style.display = "none";
     }
     inspector.selection["azimuth"] = "NOT_SELECTED";
     inspector.selection_mode_information_level["azimuth"] = true;
-    inspector.selection["swap_effect"] = "NOT_SELECTED";
-    inspector.selection_mode_information_level["swap_effect"] = true;
-    inspector.toggle_submit_button();
-}
-
-inspector.unselect_swap_effect = function() {
-    // Clears cache, resets swap_effect selector
-    inspector.selection["swap_effect"] = "NOT_SELECTED";
-    inspector.selection_mode_information_level["swap_effect"] = true;
-    let swap_effect_table = document.getElementById("swap_effect_selector_table");
-    while (swap_effect_table.firstChild) {
-        swap_effect_table.removeChild(swap_effect_table.lastChild);
-    }
+    inspector.submit_if_complete();
 }
 
 inspector.select_azimuth = function(target_azimuth) {
-    if (inspector.selection_mode_options["squares"][inspector.selection["square"]]["a"] == null) {
+    if (inspector.selection_mode_squares[inspector.selection["square"]]["a"] == null) {
         target_azimuth = null;
     }
-    if (target_azimuth == null || inspector.selection_mode_options["squares"][inspector.selection["square"]]["a"].includes(target_azimuth)) {
+    if (target_azimuth == null || inspector.selection_mode_squares[inspector.selection["square"]]["a"].includes(target_azimuth)) {
         inspector.selection["azimuth"] = target_azimuth;
         inspector.selection_mode_information_level["azimuth"] = false;
-        inspector.toggle_submit_button();
-        console.log(`azimuth is known to be ${inspector.selection["azimuth"]}.`);
+        inspector.submit_if_complete();
         render_board();
     }
 }
 
-inspector.select_swap_effect = function(target_swap_effect) {
-    if (target_swap_effect == null || inspector.selection_mode_options["squares"][inspector.selection["square"]]["swap_effects"].includes(target_swap_effect)) {
-        inspector.selection["swap_effect"] = target_swap_effect;
-        inspector.selection_mode_information_level["swap_effect"] = false;
+// Methods for editing element trackers
 
-        // Reset color of all elements, then color the selected element
-        let swap_effect_option_buttons = document.getElementsByClassName("swap_effect_option_button");
-        for (i = 0; i < swap_effect_option_buttons.length; i++) {
-            swap_effect_option_buttons[i].style["background-color"] = "transparent";
-        }
-        document.getElementById(`swap_effect_option_${target_swap_effect}_button`).style["background-color"] = "lightgreen";
-
-        inspector.toggle_submit_button();
-        console.log(`swap effect is known to be ${inspector.selection["swap_effect"]}.`);
+inspector.add_element = function(new_element) {
+    // Firstly, if board_static is a wall, we force it to be empty
+    if (board_static[new_element["x"]][new_element["y"]] == "X") {
+        board_static[new_element["x"]][new_element["y"]] = " ";
     }
+
+    // Then, if there already is an element of the same type on this square, we remove it, too
+
+    let was_element_replaced = false;
+    switch (new_element["element"]) {
+        case "base":
+            for (i = 0; i < bases.length; i++) {
+                if (bases[i]["x"] == new_element["x"] && bases[i]["y"] == new_element["y"]) {
+                    bases[i]["faction"] = new_element["faction"];
+                    was_element_replaced = true;
+                }
+            }
+            break;
+        case "stone":
+            for (i = 0; i < stones.length; i++) {
+                if (stones[i]["x"] == new_element["x"] && stones[i]["y"] == new_element["y"]) {
+                    stones[i]["faction"] = new_element["faction"];
+                    stones[i]["type"] = new_element["type"];
+                    stones[i]["a"] = new_element["a"];
+                    was_element_replaced = true;
+                }
+            }
+            break;
+    }
+
+    // Then, we add the relevant element to the tracker
+    if (was_element_replaced == false) {
+        switch (new_element["element"]) {
+            case "base":
+                bases.push({"faction" : new_element["faction"], "x" : new_element["x"], "y" : new_element["y"]});
+                break;
+            case "stone":
+                stones.push({"faction" : new_element["faction"], "type" : new_element["type"], "x" : new_element["x"], "y" : new_element["y"], "a" : new_element["a"]});
+                break;
+        }
+    }
+    inspector.update_submission_form();
 }
 
-inspector.select_choice_option = function(selected_choice_option) {
-    inspector.selection["choice_option"] = selected_choice_option;
-    inspector.selection_mode_information_level["choice_option"] = false;
-    // Reset highlight of option button
-    if (inspector.selection_mode_options["choice_keyword"] != null) {
-        for (let i = 0; i < inspector.selection_mode_options["choice_options"].length; i++) {
-            document.getElementById(`choice_option_${inspector.selection_mode_options["choice_options"][i]}`).style.fill = "pink";
-            document.getElementById(`choice_option_${inspector.selection_mode_options["choice_options"][i]}`).style["fill-opacity"] = "0.2";
-        }
-        if (selected_choice_option != null) {
-            document.getElementById(`choice_option_${selected_choice_option}`).style.fill = "green";
-            document.getElementById(`choice_option_${selected_choice_option}`).style["fill-opacity"] = "0.5";
-            inspector.toggle_submit_button();
-        }
-    }
+inspector.update_submission_form = function() {
+    // This function updates the hidden form so that it accurately represents the static board, the bases, and the stones as they are.
+    return null;
 }
 
 inspector.submit_selection = function() {
-    // onclick of the submit selection button
-    // stores the command object in a hidden HTML dataform
-    inspector.selection_submission["target_t"] = inspector.selection_mode_options["squares"][inspector.selection["square"]]["t"];
-    inspector.selection_submission["target_x"] = inspector.selection_mode_options["squares"][inspector.selection["square"]]["x"];
-    inspector.selection_submission["target_y"] = inspector.selection_mode_options["squares"][inspector.selection["square"]]["y"];
-    inspector.selection_submission["target_a"] = inspector.selection["azimuth"];
-    inspector.selection_submission["swap_effect"] = inspector.selection["swap_effect"];
-    inspector.selection_submission["choice_option"] = inspector.selection["choice_option"];
+    // edits the board by adding element as specified
+    //inspector.selection_submission["target_x"] = inspector.selection_mode_squares[inspector.selection["square"]]["x"];
+    //inspector.selection_submission["target_y"] = inspector.selection_mode_squares[inspector.selection["square"]]["y"];
+    //inspector.selection_submission["target_a"] = inspector.selection["azimuth"];
 
-    for (i = 0; i < inspector.selection_keywords.length; i++) {
-        document.getElementById(`cmd_${inspector.selection_keywords[i]}_${inspector.selection_mode_stone_ID}`).value = inspector.selection_submission[inspector.selection_keywords[i]];
-    }
-    if (inspector.selection_mode_options["choice_keyword"] != null) {
-        document.getElementById(`cmd_choice_keyword_${inspector.selection_mode_stone_ID}`).name = inspector.selection_mode_options["choice_keyword"];
-        document.getElementById(`cmd_choice_keyword_${inspector.selection_mode_stone_ID}`).value = inspector.selection_submission["choice_option"];
-    }
+    let x = inspector.selection_mode_squares[inspector.selection["square"]]["x"];
+    let y = inspector.selection_mode_squares[inspector.selection["square"]]["y"];
+    let a = inspector.selection["azimuth"];
 
-    if (inspector.selection_mode_options["squares"][inspector.selection["square"]]["override_cmd_type"] != undefined) {
-        if (inspector.selection_mode_options["squares"][inspector.selection["square"]]["override_cmd_type"] != null) {
-            document.getElementById(`cmd_type_${inspector.selection_mode_stone_ID}`).value = inspector.selection_mode_options["squares"][inspector.selection["square"]]["override_cmd_type"];
-        }
-    }
-
-    commander.mark_as_checked(inspector.selection_mode_stone_ID);
+    inspector.add_element({"element" : inspector.selection_mode_element["element"], "faction" : inspector.selection_mode_element["faction"], "type" : inspector.selection_mode_element["type"], "x" : x, "y" : y, "a" : a});
 
     inspector.turn_off_selection_mode();
 
@@ -980,55 +938,99 @@ inspector.undo_command = function() {
     inspector.display_element_info(inspector.highlighted_square[0], inspector.highlighted_square[1]);
 }
 
-// Stone commands
+// Element commands
 
-inspector.prepare_command = function(stone_ID, command_key) {
+inspector.execute_command = function(element, element_ID, command) {
     // Prompts user further to specify the arguments for the command
-    console.log(`stone ${stone_ID} performs ${command_key}`);
-    let cur_cmd_props = available_commands[stone_ID]["command_properties"][command_key];
+    let x = null;
+    let y = null;
 
-    inspector.selection_submission = new Object();
+    //TODO for different command contexts, the selection mode options will be different (and for removal, we won't even start it)
+    switch(element) {
+        case "base":
+            x = bases[element_ID]["x"];
+            y = bases[element_ID]["y"];
+            switch(command) {
+                case "remove":
+                    bases.splice(element_ID, 1);
+                    inspector.update_submission_form();
+                    render_board();
+                    inspector.board_square_click(x, y);
+                    break;
+            }
+            break;
 
-    inspector.selection_submission["stone_ID"] = stone_ID;
-    inspector.selection_submission["type"] = cur_cmd_props["command_type"];
-    inspector.selection_submission["t"] = active_timeslice;
-    inspector.selection_submission["x"] = stone_trajectories[selected_round][selected_timeslice]["canon"][stone_ID][0];
-    inspector.selection_submission["y"] = stone_trajectories[selected_round][selected_timeslice]["canon"][stone_ID][1];
-    inspector.selection_submission["a"] = stone_trajectories[selected_round][selected_timeslice]["canon"][stone_ID][2];
-
-    inspector.turn_on_selection_mode(stone_ID, cur_cmd_props["selection_mode"]);
-
-}
-
-inspector.get_available_commands = function(stone_ID) {
-    // Depends purely on static stone data
-    stone_faction = stones[stone_ID]["faction"];
-    stone_type = stones[stone_ID]["type"];
-    let available_commands = [["remove", "Remove stone"]];
-    if (static_stone_data[stone_type]["orientable"]) {
-        available_commands.push(["rotate", "Change azimuth"]);
+        case "stone":
+            x = stones[element_ID]["x"];
+            y = stones[element_ID]["y"];
+            switch(command) {
+                case "remove":
+                    stones.splice(element_ID, 1);
+                    inspector.update_submission_form();
+                    render_board();
+                    inspector.board_square_click(x, y);
+                    break;
+                case "rotate":
+                    let faction = stones[element_ID]["faction"];
+                    let stone_type = stones[element_ID]["type"];
+                    /*stones.splice(element_ID, 1);
+                    inspector.update_submission_form();
+                    render_board();*/
+                    inspector.selection_mode_element = {"element" : "stone", "faction" : faction, "type" : stone_type};
+                    inspector.start_input_mode([{"x" : x, "y" : y, "a" : [0, 1, 2, 3]}]);
+                    break;
+            }
+            break;
     }
-    return available_commands;
+
 }
 
-inspector.display_stone_commands = function(stone_ID) {
-    // If select square has a stone, we display the relevant buttons
+inspector.get_available_commands = function(element, element_ID) {
+    // Depends purely on static data
+    switch(element) {
+        case "base":
+            return [["remove", "Remove base"]];
+            break;
+        case "stone":
+            stone_faction = stones[element_ID]["faction"];
+            stone_type = stones[element_ID]["type"];
+            let available_commands = [["remove", "Remove stone"]];
+            if (static_stone_data[stone_type]["orientable"]) {
+                available_commands.push(["rotate", "Change azimuth"]);
+            }
+            return available_commands;
+            break;
+    }
+}
 
+inspector.display_element_commands = function(element, element_ID) {
+    // If select square has an element, we display the relevant buttons
 
-    //document.getElementById("base_inspector_buttons_svg").style.display = "none";
-    document.getElementById("stone_inspector_buttons_svg").style.display = "block";
-    // if stone_ID = null, hides stone commands
-    let stone_inspector_buttons_svg = document.getElementById("stone_inspector_buttons_svg");
-    if (stone_ID == null) {
-        while (stone_inspector_buttons_svg.firstChild) {
-            stone_inspector_buttons_svg.removeChild(stone_inspector_buttons_svg.lastChild);
+    switch(element) {
+        case "base":
+            document.getElementById("base_inspector_buttons_svg").style.display = "block";
+            document.getElementById("stone_inspector_buttons_svg").style.display = "none";
+            document.getElementById("base_info_table").style.display = "inline";
+            document.getElementById("stone_info_table").style.display = "none";
+            break;
+        case "stone":
+            document.getElementById("base_inspector_buttons_svg").style.display = "none";
+            document.getElementById("stone_inspector_buttons_svg").style.display = "block";
+            document.getElementById("base_info_table").style.display = "none";
+            document.getElementById("stone_info_table").style.display = "inline";
+            break;
+    }
+    let element_inspector_buttons_svg = document.getElementById(`${element}_inspector_buttons_svg`);
+    if (element_ID == null) {
+        while (element_inspector_buttons_svg.firstChild) {
+            element_inspector_buttons_svg.removeChild(element_inspector_buttons_svg.lastChild);
         }
     } else {
         // First, we delete everything
-        inspector.display_stone_commands(null);
+        inspector.display_element_commands(element, null);
 
         // Now, we find the list of commands
-        let list_of_commands = inspector.get_available_commands(stone_ID);
+        let list_of_commands = inspector.get_available_commands(element, element_ID);
 
         // We draw every button
         offset_x = 0;
@@ -1036,8 +1038,8 @@ inspector.display_stone_commands = function(stone_ID) {
         for (let i = 0; i < list_of_commands.length; i++) {
             let new_button = make_SVG_element("rect", {
                 class : "stone_command_panel_button",
-                id : `stone_command_${list_of_commands[i][0]}`,
-                onclick : `inspector.prepare_command(${stone_ID}, \"${list_of_commands[i][0]}\")`,
+                id : `${element}_command_${list_of_commands[i][0]}`,
+                onclick : `inspector.execute_command(\'${element}\', ${element_ID}, \"${list_of_commands[i][0]}\")`,
                 x : offset_x,
                 y : 0,
                 width : stone_command_btn_width,
@@ -1045,15 +1047,15 @@ inspector.display_stone_commands = function(stone_ID) {
             });
             let new_button_label = make_SVG_element("text", {
                 class : "button_label",
-                id : `stone_command_${list_of_commands[i][0]}_label`,
+                id : `${element}_command_${list_of_commands[i][0]}_label`,
                 x : offset_x + stone_command_btn_width / 2,
                 y : stone_command_btn_height / 2,
                 "text-anchor" : "middle"
             });
             new_button_label.textContent = list_of_commands[i][1];
-            stone_inspector_buttons_svg.appendChild(new_button);
-            stone_inspector_buttons_svg.appendChild(new_button_label);
-            offset_x += 110;
+            element_inspector_buttons_svg.appendChild(new_button);
+            element_inspector_buttons_svg.appendChild(new_button_label);
+            offset_x += stone_command_btn_width + 10;
 
         }
     }
@@ -1072,27 +1074,125 @@ inspector.display_element_info = function(x, y) {
     // Is there even an element present?
     let base_ID = find_base_at_pos(x, y);
     let stone_ID = find_stone_at_pos(x, y);
-    inspector.inspector_elements["stone"]["title"].innerHTML = (stone_ID == null ? "No stone selected" : `A ${stone_highlight(stone_ID)} selected`);
 
     if (stone_ID != null) {
+        inspector.inspector_elements["stone"]["title"].innerHTML = `A ${stone_highlight(stone_ID)} selected`;
         inspector.display_value_list("stone", "allegiance", [stones[stone_ID]["faction"]]);
         inspector.display_value_list("stone", "stone_type", [stones[stone_ID]["type"].toUpperCase()]);
 
-        inspector.display_stone_commands(stone_ID);
+        inspector.display_element_commands("stone", stone_ID);
+
+    } else if (base_ID != null) {
+        inspector.inspector_elements["stone"]["title"].innerHTML = `A ${base_highlight(base_ID)} selected`;
+        inspector.display_value_list("base", "allegiance", [bases[base_ID]["faction"]]);
+
+        inspector.display_element_commands("base", base_ID);
 
     } else {
+        inspector.inspector_elements["stone"]["title"].innerHTML = "No element selected";
         inspector.display_value_list("stone", "allegiance", []);
         inspector.display_value_list("stone", "stone_type", []);
-        inspector.display_stone_commands(null);
+        inspector.display_element_commands("stone", null);
     }
 
     return stone_ID;
 }
 
 inspector.hide_stone_info = function() {
-    inspector.inspector_elements["stone"]["title"].innerHTML = "No stone selected";
+    inspector.inspector_elements["stone"]["title"].innerHTML = "No element selected";
     inspector.display_value_list("stone", "allegiance", []);
     inspector.display_value_list("stone", "stone_type", []);
+}
+
+// ------------------------- Board dimensions methods -------------------------
+
+inspector.get_added_board_symbol = function(new_width, new_height, x, y) {
+    if (x == 0 || x == new_width - 1 || y == 0 || y == new_height - 1) {
+        return "X";
+    } else {
+        return " ";
+    }
+}
+
+inspector.update_board_dimensions = function() {
+    inspector.unselect_all(); // safety
+
+    new_t_dim = Number(document.getElementById("board_dimensions_t_input").value);
+    new_x_dim = Number(document.getElementById("board_dimensions_x_input").value);
+    new_y_dim = Number(document.getElementById("board_dimensions_y_input").value);
+
+    t_dim = new_t_dim;
+    // if the width decreased, we delete rightmost columns except for the border column. Analogously for bottom rows on decreased height
+    if (new_x_dim < x_dim) {
+        board_static.splice(new_x_dim - 1, x_dim - new_x_dim);
+    } else {
+        for (i_x = 0; i_x < new_x_dim - x_dim; i_x++) {
+            board_static.splice(x_dim - 1, 0, []);
+            for (i_x_y = 0; i_x_y < y_dim; i_x_y++) {
+                board_static[x_dim - 1].push(inspector.get_added_board_symbol(new_x_dim, y_dim, x_dim - 2, i_x_y));
+            }
+        }
+    }
+
+    if (new_y_dim < y_dim) {
+        for (i_y_x = 0; i_y_x < new_x_dim; i_y_x++) {
+            board_static[i_y_x].splice(new_y_dim - 1, y_dim - new_y_dim);
+        }
+    } else {
+        for (i_y_x = 0; i_y_x < new_x_dim; i_y_x++) {
+            for (i_y = 0; i_y < new_y_dim - y_dim; i_y++) {
+                board_static[i_y_x].splice(y_dim - 1, 0, inspector.get_added_board_symbol(new_x_dim, new_y_dim, i_y_x, y_dim - 2));
+            }
+        }
+    }
+
+    x_dim = new_x_dim;
+    y_dim = new_y_dim;
+
+    // We delete all the sussy elements
+    new_bases = []
+    new_stones = []
+    for (i_base = 0; i_base < bases.length; i_base++) {
+        if (bases[i_base]["x"] < x_dim - 1 && bases[i_base]["y"] < y_dim - 1) {
+            new_bases.push(bases[i_base]);
+        }
+    }
+    for (i_stone = 0; i_stone < stones.length; i_stone++) {
+        if (stones[i_stone]["x"] < x_dim - 1 && stones[i_stone]["y"] < y_dim - 1) {
+            new_stones.push(stones[i_stone]);
+        }
+    }
+    stones = new_stones;
+    bases = new_bases;
+
+    // Update selection mode highlighters
+    selection_mode_highlights = document.getElementById("selection_mode_highlights");
+    while (selection_mode_highlights.firstChild) {
+        selection_mode_highlights.removeChild(selection_mode_highlights.firstChild);
+    }
+    for (cur_x = 0; cur_x < x_dim; cur_x++) {
+        for (cur_y = 0; cur_y < y_dim; cur_y++) {
+            new_highlight = make_SVG_element("rect", {
+                "width" : 100,
+                "height" : 100,
+                "x" : 100 * cur_x,
+                "y" : 100 * cur_y,
+                "class" : "selection_mode_highlight",
+                "id" : `selection_mode_highlight_${cur_x}_${cur_y}`
+            });
+            selection_mode_highlights.appendChild(new_highlight);
+        }
+    }
+
+    // Reset camera
+    cameraman.put_down_tripod();
+    cameraman.reset_camera();
+
+    inspector.update_submission_form();
+    render_board();
+
+
+
 }
 
 // --------------------------- Square info methods ----------------------------
@@ -1121,6 +1221,22 @@ inspector.display_square_info = function(x, y) {
     inspector.set_square_highlight([x, y]);
     document.getElementById("square_inspector_title").innerHTML = `${inspector.square_type_description(board_static[x][y])} selected`;
     set_stone_highlight(null);
+
+    // Update visibility of square type changing buttons
+    // Note that the bordering squares don't have any buttons, since they are fixed as walls
+    if (x == 0 || x == x_dim - 1 || y == 0 || y == y_dim - 1) {
+        for (i = 0; i < board_square_types.length; i++) {
+            document.getElementById(`change_square_to_${board_square_info[board_square_types[i]]}`).style.display = "none";
+        }
+    } else {
+        for (i = 0; i < board_square_types.length; i++) {
+            if (board_static[x][y] == board_square_types[i]) {
+                document.getElementById(`change_square_to_${board_square_info[board_square_types[i]]}`).style.display = "none";
+            } else {
+                document.getElementById(`change_square_to_${board_square_info[board_square_types[i]]}`).style.display = "block";
+            }
+        }
+    }
 }
 
 
@@ -1129,15 +1245,47 @@ inspector.hide_square_info = function() {
     // Highligh square, reset stone highlight
     inspector.set_square_highlight(null);
     document.getElementById("square_inspector_title").innerHTML = `No square selected`;
+    for (i = 0; i < board_square_types.length; i++) {
+        document.getElementById(`change_square_to_${board_square_info[board_square_types[i]]}`).style.display = "none";
+    }
+}
+
+inspector.change_square_type = function(new_type_symbol) {
+    if (inspector.highlighted_square == null) {
+        return null;
+    }
+    // If changing to wall, we delete every element on this square
+    let x = inspector.highlighted_square[0];
+    let y = inspector.highlighted_square[1];
+    if (new_type_symbol == "X") {
+        for (base_i = 0; base_i < bases.length; base_i++) {
+            if (bases[base_i]["x"] == x && bases[base_i]["y"] == y) {
+                bases.splice(base_i, 1);
+                break;
+            }
+        }
+        for (stone_i = 0; stone_i < stones.length; stone_i++) {
+            if (stones[stone_i]["x"] == x && stones[stone_i]["y"] == y) {
+                stones.splice(stone_i, 1);
+                break;
+            }
+        }
+    }
+
+    board_static[x][y] = new_type_symbol;
+    inspector.update_submission_form();
+    render_board();
+    inspector.board_square_click(x, y);
 }
 
 inspector.board_square_click = function(x, y){
     if (inspector.selection_mode_enabled) {
-        for (let i = 0; i < inspector.selection_mode_options["squares"].length; i++) {
-            if (inspector.selection_mode_options["squares"][i]["t"] == selected_timeslice && inspector.selection_mode_options["squares"][i]["x"] == x && inspector.selection_mode_options["squares"][i]["y"] == y) {
+        /*for (let i = 0; i < inspector.selection_mode_squares.length; i++) {
+            if (inspector.selection_mode_squares[i]["x"] == x && inspector.selection_mode_squares[i]["y"] == y) {
                 inspector.select_square(x, y);
             }
-        }
+        }*/
+        inspector.select_square(x, y);
     } else {
         // We get information about the stone
         inspector.display_element_info(x, y);
@@ -1165,6 +1313,8 @@ function go_to_square(x, y) {
     }
 }
 
+
+
 // ----------------------------------------------------------------------------
 // ------------------------------ Document setup ------------------------------
 // ----------------------------------------------------------------------------
@@ -1184,3 +1334,4 @@ cameraman.reset_camera();
 inspector.hide_stone_info();
 inspector.hide_square_info();
 
+reset_board_dimensions_form();

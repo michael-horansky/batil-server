@@ -43,5 +43,23 @@
             "attacking" : "The wildcard attacks on movement, destroying all stones sharing its square right before spatial conflict resolution, akin to captures in chess. Two or more wildcards can capture each other, destroying all stones present. The wildcard does not capture a stone which jumps onto its square if waiting.",
             "timejumps" : "The wildcard can time-jump at any time. A special property of the wildcard is that it can swap the time-jump of any stone type (and is not limited by the azimuth if changing into an orientable stone)."
         }
+    },
+    "box" : {
+        "opposable" : true,
+        "orientable" : false,
+        "description" : {
+            "movement" : "The box remains idly in place.",
+            "attacking" : "The box has no offensive capability.",
+            "timejumps" : "The box does not jump back in time."
+        }
+    },
+    "mine" : {
+        "opposable" : true,
+        "orientable" : false,
+        "description" : {
+            "movement" : "The mine remains idly in place.",
+            "attacking" : "If at least one stone stands on the mine, the mine explodes, destroying itself and all the stones on its square.",
+            "timejumps" : "The mine does not jump back in time."
+        }
     }
 }
