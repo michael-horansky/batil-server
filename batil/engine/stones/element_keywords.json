@@ -1,0 +1,6 @@
+{
+    "bases" : ["faction", "x", "y"],
+    "bases_types" : ["str", "int", "int"],
+    "stones" : ["faction", "stone_type", "x", "y", "a"],
+    "stones_types" : ["str", "str", "int", "int", "int"]
+}

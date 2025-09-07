@@ -24,7 +24,7 @@ margin: 0;
     position : absolute;
     left : 0px;
     top : 700px;
-    width : 950px;
+    width : 1450px;
     height : 200px;
 }
 
@@ -578,12 +578,11 @@ margin: 0;
     background-color : #b798f5;
 }
 
-.stone_highlight {
+.base_highlight {
     background-color : #b2c49b;
 }
-.stone_highlight:hover {
-    cursor : pointer;
-    background-color : #cef59d;
+.stone_highlight {
+    background-color : #b2c49b;
 }
 .inline_command {
     background-color : #d6a99f;
@@ -606,6 +605,42 @@ margin: 0;
     box-sizing: border-box;  /* padding included in width */
     background-color : AntiqueWhite;
     overflow: hidden;
+}
+
+#board_dimensions_inspector_form {
+    display: grid;
+    grid-template-columns: max-content 1fr auto; /* labels | inputs | buttons */
+    grid-auto-rows: min-content; /* each row fits content height */
+    gap: 0.5rem 1rem; /* row gap | column gap */
+    align-items: center;
+}
+
+#board_dimensions_left_col {
+    display: contents; /* lets children participate directly in parent grid */
+}
+
+#board_dimensions_left_col label {
+    text-align: right;   /* align label text to the right */
+    grid-column: 1; /* force labels into column 1 */
+}
+
+#board_dimensions_left_col input[type="number"] {
+    grid-column: 2;
+    width: 5rem;
+}
+
+#board_dimensions_right_col {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+    display: flex;
+    align-items: stretch; /* make buttons fill available width */
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+#board_dimensions_right_col input {
+    width : 80px;
+    height : 35px;
 }
 
 #square_inspector_buttons_svg {
@@ -643,9 +678,39 @@ margin: 0;
 /* --------------------------------- */
 
 
+
+#board_edit_form_div {
+    width : 500px;
+    height : 100px;
+    margin-left : 950px;
+    padding : 20px;
+    box-sizing : border-box;
+}
+
+#board_edit_form {
+    display: flex;
+    align-items: stretch; /* make items the same height */
+    gap: 0.5rem;          /* optional spacing */
+}
+
+#board_name {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.2rem;
+  flex: 1; /* take up remaining space */
+}
+
+#save_board_button {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.2rem;
+  flex: 0 0 auto;   /* auto width by default */
+}
+
 .board_edit_data_field {
     display : none;
 }
+
 
 
 

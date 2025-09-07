@@ -283,7 +283,7 @@ function render_stones(){
         let x = stones[stone_i]["x"];
         let y = stones[stone_i]["y"];
         let stone_allegiance = stones[stone_i]["faction"];
-        let stone_type = stones[stone_i]["type"];
+        let stone_type = stones[stone_i]["stone_type"];
 
         let new_stone = clone_stone(stone_allegiance, stone_type, x, y);
         parent_node.appendChild(new_stone);
@@ -427,25 +427,13 @@ cameraman.zoom_key_up = function(zoom_key) {
     }
 }
 
-var highlighted_stone = null;
-function set_stone_highlight(stone_ID) {
-    if (stone_ID != highlighted_stone && highlighted_stone != null) {
-        // Change of the guard
-        document.getElementById(`stone_${highlighted_stone}`).style.filter = "";
-    }
-    highlighted_stone = stone_ID
-    if (stone_ID != null) {
-        document.getElementById(`stone_${stone_ID}`).style.filter = "url(#spotlight)";
-    }
-}
-
 
 function base_highlight(base_ID) {
-    return `<span class=\"base_highlight\" onmouseenter=\"set_base_highlight(${base_ID})\" onmouseleave=\"set_base_highlight(null)\" \">BASE [P. ${bases[base_ID]["faction"]}]</span>`;
+    return `<span class=\"base_highlight\" >BASE [P. ${bases[base_ID]["faction"]}]</span>`;
 }
 
 function stone_highlight(stone_ID) {
-    return `<span class=\"stone_highlight\" onmouseenter=\"set_stone_highlight(${stone_ID})\" onmouseleave=\"set_stone_highlight(null)\" \">${stones[stone_ID]["type"].toUpperCase()} [P. ${stones[stone_ID]["faction"]}]</span>`;
+    return `<span class=\"stone_highlight\" >${stones[stone_ID]["stone_type"].toUpperCase()} [P. ${stones[stone_ID]["faction"]}]</span>`;
 }
 
 function square_highlight(x, y) {
@@ -471,25 +459,25 @@ function parse_keydown_event(event) {
                 inspector.select_azimuth(1);
                 document.getElementById(`azimuth_indicator_1`).style["fill-opacity"] = 0.7;
             }
-            break
+            break;
         case "ArrowLeft":
             if (inspector.selection_mode_enabled) {
                 inspector.select_azimuth(3);
                 document.getElementById(`azimuth_indicator_3`).style["fill-opacity"] = 0.7;
             }
-            break
+            break;
         case "ArrowUp":
             if (inspector.selection_mode_enabled) {
                 inspector.select_azimuth(0);
                 document.getElementById(`azimuth_indicator_0`).style["fill-opacity"] = 0.7;
             }
-            break
+            break;
         case "ArrowDown":
             if (inspector.selection_mode_enabled) {
                 inspector.select_azimuth(2);
                 document.getElementById(`azimuth_indicator_2`).style["fill-opacity"] = 0.7;
             }
-            break
+            break;
         case "q":
             cameraman.zoom_key_down("in");
             break;
@@ -657,7 +645,7 @@ inspector.selection_mode_squares = null;
 inspector.selection_keywords = [
             "element",  // base or stone
             "faction", // GM, A, B
-            "type",    // [stones only]
+            "stone_type",    // [stones only]
             "x",
             "y",
             "a"        // [orientable stones only]
@@ -670,7 +658,7 @@ inspector.place_shadow_on_cursor = function(e) {
         let el = document.getElementById(`base_${inspector.selection_mode_element["faction"]}_input_icon_shadow`);
         el.style.transform = `translate(${e.clientX - 50}px, ${e.clientY - 50}px)`;
     } else if (inspector.selection_mode_element["element"] == "stone") {
-        let el = document.getElementById(`${inspector.selection_mode_element["faction"]}_${inspector.selection_mode_element["type"]}_input_icon_shadow`);
+        let el = document.getElementById(`${inspector.selection_mode_element["faction"]}_${inspector.selection_mode_element["stone_type"]}_input_icon_shadow`);
         el.style.transform = `translate(${e.clientX - 50}px, ${e.clientY - 50}px)`;
     }
 }
@@ -679,7 +667,7 @@ inspector.start_input_mode = function(cur_selection_mode_squares = null) {
     if (inspector.selection_mode_element["element"] == "base") {
         document.getElementById(`base_${inspector.selection_mode_element["faction"]}_input_icon_shadow`).classList.toggle("active");
     } else if (inspector.selection_mode_element["element"] == "stone") {
-        document.getElementById(`${inspector.selection_mode_element["faction"]}_${inspector.selection_mode_element["type"]}_input_icon_shadow`).classList.toggle("active");
+        document.getElementById(`${inspector.selection_mode_element["faction"]}_${inspector.selection_mode_element["stone_type"]}_input_icon_shadow`).classList.toggle("active");
     }
     document.addEventListener("mousemove", inspector.place_shadow_on_cursor);
 
@@ -697,7 +685,7 @@ inspector.start_input_mode = function(cur_selection_mode_squares = null) {
     // Prepare selection mode options
     let azimuth_options = null;
     if (inspector.selection_mode_element["element"] == "stone") {
-        if (static_stone_data[inspector.selection_mode_element["type"]]["orientable"]) {
+        if (static_stone_data[inspector.selection_mode_element["stone_type"]]["orientable"]) {
             azimuth_options = [0, 1, 2, 3];
         }
     }
@@ -729,7 +717,7 @@ inspector.start_input_mode = function(cur_selection_mode_squares = null) {
 inspector.select_input_element = function(element, allegiance, stone_type) {
     // if input mode is off, select the clicked element and turn on input mode
     if (inspector.selection_mode_enabled == false) {
-        inspector.selection_mode_element = {"element" : element, "faction" : allegiance, "type" : stone_type};
+        inspector.selection_mode_element = {"element" : element, "faction" : allegiance, "stone_type" : stone_type};
         inspector.start_input_mode();
     } else {
         inspector.turn_off_selection_mode();
@@ -880,7 +868,7 @@ inspector.add_element = function(new_element) {
             for (i = 0; i < stones.length; i++) {
                 if (stones[i]["x"] == new_element["x"] && stones[i]["y"] == new_element["y"]) {
                     stones[i]["faction"] = new_element["faction"];
-                    stones[i]["type"] = new_element["type"];
+                    stones[i]["stone_type"] = new_element["stone_type"];
                     stones[i]["a"] = new_element["a"];
                     was_element_replaced = true;
                 }
@@ -895,7 +883,7 @@ inspector.add_element = function(new_element) {
                 bases.push({"faction" : new_element["faction"], "x" : new_element["x"], "y" : new_element["y"]});
                 break;
             case "stone":
-                stones.push({"faction" : new_element["faction"], "type" : new_element["type"], "x" : new_element["x"], "y" : new_element["y"], "a" : new_element["a"]});
+                stones.push({"faction" : new_element["faction"], "stone_type" : new_element["stone_type"], "x" : new_element["x"], "y" : new_element["y"], "a" : new_element["a"]});
                 break;
         }
     }
@@ -904,7 +892,62 @@ inspector.add_element = function(new_element) {
 
 inspector.update_submission_form = function() {
     // This function updates the hidden form so that it accurately represents the static board, the bases, and the stones as they are.
-    return null;
+
+    // Update global data
+    document.getElementById("h_t_dim").value = t_dim;
+    document.getElementById("h_x_dim").value = x_dim;
+    document.getElementById("h_y_dim").value = y_dim;
+    document.getElementById("h_number_of_bases").value = bases.length;
+    document.getElementById("h_number_of_stones").value = stones.length;
+
+    // For the remaining fieldsets, we purge the children nodes and rebuild them
+    fs_squares_data = document.getElementById("squares_data");
+    fs_bases_data = document.getElementById("bases_data");
+    fs_stones_data = document.getElementById("stones_data");
+
+    while (fs_squares_data.firstChild) {
+        fs_squares_data.removeChild(fs_squares_data.lastChild);
+    }
+    for (y = 0; y < y_dim; y++) {
+        for (x = 0; x < x_dim; x++) {
+            const new_square_input = document.createElement("input");
+            new_square_input.type = "hidden";
+            new_square_input.name = `square_${x}_${y}`;
+            new_square_input.id = `square_${x}_${y}`;
+            new_square_input.value = board_static[x][y];
+            fs_squares_data.appendChild(new_square_input);
+        }
+    }
+
+    while (fs_bases_data.firstChild) {
+        fs_bases_data.removeChild(fs_bases_data.lastChild);
+    }
+    for (base_i = 0; base_i < bases.length; base_i++) {
+        for (base_kw_i = 0; base_kw_i < bases_keywords.length; base_kw_i++) {
+            const new_base_input = document.createElement("input");
+            new_base_input.type = "hidden";
+            new_base_input.name = `base_${base_i}_${bases_keywords[base_kw_i]}`;
+            new_base_input.id = `base_${base_i}_${bases_keywords[base_kw_i]}`;
+            new_base_input.value = bases[base_i][bases_keywords[base_kw_i]];
+            fs_bases_data.appendChild(new_base_input);
+        }
+    }
+
+    while (fs_stones_data.firstChild) {
+        fs_stones_data.removeChild(fs_stones_data.lastChild);
+    }
+    for (stone_i = 0; stone_i < stones.length; stone_i++) {
+        for (stone_kw_i = 0; stone_kw_i < stones_keywords.length; stone_kw_i++) {
+            const new_stone_input = document.createElement("input");
+            new_stone_input.type = "hidden";
+            new_stone_input.name = `stone_${stone_i}_${stones_keywords[stone_kw_i]}`;
+            new_stone_input.id = `stone_${stone_i}_${stones_keywords[stone_kw_i]}`;
+            new_stone_input.value = stones[stone_i][stones_keywords[stone_kw_i]];
+            fs_stones_data.appendChild(new_stone_input);
+        }
+    }
+
+
 }
 
 inspector.submit_selection = function() {
@@ -917,7 +960,7 @@ inspector.submit_selection = function() {
     let y = inspector.selection_mode_squares[inspector.selection["square"]]["y"];
     let a = inspector.selection["azimuth"];
 
-    inspector.add_element({"element" : inspector.selection_mode_element["element"], "faction" : inspector.selection_mode_element["faction"], "type" : inspector.selection_mode_element["type"], "x" : x, "y" : y, "a" : a});
+    inspector.add_element({"element" : inspector.selection_mode_element["element"], "faction" : inspector.selection_mode_element["faction"], "stone_type" : inspector.selection_mode_element["stone_type"], "x" : x, "y" : y, "a" : a});
 
     inspector.turn_off_selection_mode();
 
@@ -945,7 +988,6 @@ inspector.execute_command = function(element, element_ID, command) {
     let x = null;
     let y = null;
 
-    //TODO for different command contexts, the selection mode options will be different (and for removal, we won't even start it)
     switch(element) {
         case "base":
             x = bases[element_ID]["x"];
@@ -972,11 +1014,11 @@ inspector.execute_command = function(element, element_ID, command) {
                     break;
                 case "rotate":
                     let faction = stones[element_ID]["faction"];
-                    let stone_type = stones[element_ID]["type"];
+                    let stone_type = stones[element_ID]["stone_type"];
                     /*stones.splice(element_ID, 1);
                     inspector.update_submission_form();
                     render_board();*/
-                    inspector.selection_mode_element = {"element" : "stone", "faction" : faction, "type" : stone_type};
+                    inspector.selection_mode_element = {"element" : "stone", "faction" : faction, "stone_type" : stone_type};
                     inspector.start_input_mode([{"x" : x, "y" : y, "a" : [0, 1, 2, 3]}]);
                     break;
             }
@@ -993,7 +1035,7 @@ inspector.get_available_commands = function(element, element_ID) {
             break;
         case "stone":
             stone_faction = stones[element_ID]["faction"];
-            stone_type = stones[element_ID]["type"];
+            stone_type = stones[element_ID]["stone_type"];
             let available_commands = [["remove", "Remove stone"]];
             if (static_stone_data[stone_type]["orientable"]) {
                 available_commands.push(["rotate", "Change azimuth"]);
@@ -1078,7 +1120,7 @@ inspector.display_element_info = function(x, y) {
     if (stone_ID != null) {
         inspector.inspector_elements["stone"]["title"].innerHTML = `A ${stone_highlight(stone_ID)} selected`;
         inspector.display_value_list("stone", "allegiance", [stones[stone_ID]["faction"]]);
-        inspector.display_value_list("stone", "stone_type", [stones[stone_ID]["type"].toUpperCase()]);
+        inspector.display_value_list("stone", "stone_type", [stones[stone_ID]["stone_type"].toUpperCase()]);
 
         inspector.display_element_commands("stone", stone_ID);
 
@@ -1100,8 +1142,12 @@ inspector.display_element_info = function(x, y) {
 
 inspector.hide_stone_info = function() {
     inspector.inspector_elements["stone"]["title"].innerHTML = "No element selected";
-    inspector.display_value_list("stone", "allegiance", []);
-    inspector.display_value_list("stone", "stone_type", []);
+    //inspector.display_value_list("stone", "allegiance", []);
+    //inspector.display_value_list("stone", "stone_type", []);
+    document.getElementById("base_inspector_buttons_svg").style.display = "none";
+    document.getElementById("stone_inspector_buttons_svg").style.display = "none";
+    document.getElementById("base_info_table").style.display = "none";
+    document.getElementById("stone_info_table").style.display = "none";
 }
 
 // ------------------------- Board dimensions methods -------------------------
@@ -1220,7 +1266,6 @@ inspector.display_square_info = function(x, y) {
     // Highligh square, reset stone highlight
     inspector.set_square_highlight([x, y]);
     document.getElementById("square_inspector_title").innerHTML = `${inspector.square_type_description(board_static[x][y])} selected`;
-    set_stone_highlight(null);
 
     // Update visibility of square type changing buttons
     // Note that the bordering squares don't have any buttons, since they are fixed as walls

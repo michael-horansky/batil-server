@@ -54,6 +54,10 @@ class BoardEditorHTMLRenderer(Renderer):
         self.board_squares_info_data = json.load(board_squares_info_data_file)
         board_squares_info_data_file.close()
 
+        element_keywords_data_file = current_app.open_resource("engine/stones/element_keywords.json")
+        self.element_keywords = json.load(element_keywords_data_file)
+        element_keywords_data_file.close()
+
 
     # ------------------- Output file communication methods -------------------
 
@@ -64,7 +68,10 @@ class BoardEditorHTMLRenderer(Renderer):
 
     def close_body(self):
         # We actually leave the <body> tag open for possible scripts to be slapped onto the end
-        self.commit_to_output(f"  <script src=\"{ url_for('static', filename='boc_board_editor.js') }\"></script>")
+        if self.render_object["client_action"] == "edit":
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='boc_board_editor.js') }\"></script>")
+        else:
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='boc_board_editor_read_only.js') }\"></script>")
 
     def commit_to_output(self, html_object):
         self.structured_output.append(html_object)
@@ -137,6 +144,11 @@ class BoardEditorHTMLRenderer(Renderer):
 
         self.deposit_list("board_square_types", list(self.board_squares_info_data.keys()))
         self.deposit_object("board_square_info", self.board_squares_info_data)
+
+        self.deposit_list("bases_keywords", self.element_keywords["bases"])
+        self.deposit_list("stones_keywords", self.element_keywords["stones"])
+
+        self.deposit_datum("client_action", self.render_object["client_action"])
 
         self.commit_to_output("</script>")
 
@@ -242,7 +254,7 @@ class BoardEditorHTMLRenderer(Renderer):
         # We draw one dummy of each type
         for allegiance in self.required_stone_types.keys():
             for stone_type in self.required_stone_types[allegiance]:
-                self.commit_to_output(self.create_stone({"faction" : allegiance, "type" : stone_type}, "dummy"))
+                self.commit_to_output(self.create_stone({"faction" : allegiance, "stone_type" : stone_type}, "dummy"))
 
 
     def draw_selection_mode_azimuth_indicators(self):
@@ -300,7 +312,7 @@ class BoardEditorHTMLRenderer(Renderer):
         # stones templates
         for faction in self.required_stone_types.keys():
             for stone_type in self.required_stone_types[faction]:
-                templates.append(self.create_stone({"faction" : faction, "type" : stone_type}, "template"))
+                templates.append(self.create_stone({"faction" : faction, "stone_type" : stone_type}, "template"))
 
         templates.append("</g>")
         self.commit_to_output(templates)
@@ -328,7 +340,7 @@ class BoardEditorHTMLRenderer(Renderer):
     # Stone type particulars
     def create_stone(self, stone, special_id = None, special_id_display="none", special_id_onclick=None):
         # Stone_ID can be set to "dummy" for the selection mode dummies
-        base_class = f"{stone["faction"]}_{stone["type"]}"
+        base_class = f"{stone["faction"]}_{stone["stone_type"]}"
         stone_object = []
         if "x" in stone.keys():
             stone_x = stone["x"] * self.board_square_base_side_length
@@ -336,10 +348,10 @@ class BoardEditorHTMLRenderer(Renderer):
         else:
             stone_x = 0
             stone_y = 0
+        azimuth = 0
         if "a" in stone.keys():
-            azimuth = stone["a"] * 90
-        else:
-            azimuth = 0
+            if stone["a"] is not None:
+                azimuth = stone["a"] * 90
         if special_id is not None:
             if special_id_onclick is None:
                 stone_object.append(f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"{base_class} {special_id}\" id=\"{base_class}_{special_id}\" transform-origin=\"50px 50px\" style=\"display:{special_id_display}; pointer-events:none; transform:translate({stone_x}px,{stone_y}px)\">")
@@ -355,16 +367,16 @@ class BoardEditorHTMLRenderer(Renderer):
 
         # Now the main body of the stone
         # Playable stone types
-        if stone["type"] == "tank":
+        if stone["stone_type"] == "tank":
             stone_object.append(f"      <polygon points=\"{self.get_regular_polygon_points(6, 30, (50, 50), "s")}\" class=\"{base_class}_body\" />")
             stone_object.append(f"      <rect x=\"45\" y=\"10\" width=\"10\" height=\"45\" class=\"{base_class}_barrel\" />")
             stone_object.append(f"      <circle cx=\"50\" cy=\"50\" r=\"12\" class=\"{base_class}_hatch\" />")
-        if stone["type"] == "bombardier":
+        if stone["stone_type"] == "bombardier":
             stone_object.append(f"      <polyline points=\"{self.get_polygon_points([[25, 65], [50, 30], [75, 65]])}\" class=\"{base_class}_legs\" />")
             stone_object.append(f"      <polygon points=\"{self.get_polygon_points([[20, 25], [45, 25], [45, 70]])}\" class=\"{base_class}_left_face\" />")
             stone_object.append(f"      <polygon points=\"{self.get_polygon_points([[80, 25], [55, 25], [55, 70]])}\" class=\"{base_class}_right_face\" />")
             stone_object.append(f"      <rect x=\"45\" y=\"15\" width=\"10\" height=\"50\" class=\"{base_class}_welding\" />")
-        if stone["type"] == "sniper":
+        if stone["stone_type"] == "sniper":
             r = 32
             l = 7
             stone_object.append(f"      <line x1=\"{r+l}\" y1=\"{r-l}\" x2=\"{r-l}\" y2=\"{r+l}\" class=\"{base_class}_foot\" />")
@@ -375,26 +387,26 @@ class BoardEditorHTMLRenderer(Renderer):
             stone_object.append(f"      <polygon points=\"{self.get_polygon_points([[75, 25], [70, 25], [25, 70], [25, 75], [30, 75], [75, 30]])}\" class=\"{base_class}_right_leg\" />")
             stone_object.append(f"      <line x1=\"50\" y1=\"50\" x2=\"50\" y2=\"20\" class=\"{base_class}_gun\" />")
             stone_object.append(f"      <rect x=\"40\" y=\"40\" width=\"20\" height=\"20\" class=\"{base_class}_nest\" />")
-        if stone["type"] == "tagger":
+        if stone["stone_type"] == "tagger":
             pentagon = self.get_regular_polygon_points(5, 30, convert_to_svg = False)
             stone_object.append(f"      <polygon points=\"{self.get_polygon_points([pentagon[4], pentagon[0], pentagon[1], [0, 0]], (50, 50))}\" class=\"{base_class}_top_face\" />")
             stone_object.append(f"      <polygon points=\"{self.get_polygon_points([pentagon[1], pentagon[2], [0, 0]], (50, 50))}\" class=\"{base_class}_right_face\" />")
             stone_object.append(f"      <polygon points=\"{self.get_polygon_points([pentagon[2], pentagon[3], [0, 0]], (50, 50))}\" class=\"{base_class}_bottom_face\" />")
             stone_object.append(f"      <polygon points=\"{self.get_polygon_points([pentagon[3], pentagon[4], [0, 0]], (50, 50))}\" class=\"{base_class}_left_face\" />")
             stone_object.append(f"      <polyline points=\"{self.get_polygon_points(pentagon, [50, 50])}\" class=\"{base_class}_outline\" />")
-        if stone["type"] == "wildcard":
+        if stone["stone_type"] == "wildcard":
             r = 30
             k = 0.8
             stone_object.append(f"      <circle cx=\"50\" cy=\"50\" r=\"{r}\" class=\"{base_class}_body\" />")
             stone_object.append(f"      <line x1=\"{50-k*r}\" y1=\"{50-k*r}\" x2=\"{50+k*r}\" y2=\"{50+k*r}\" class=\"{base_class}_halo\" />")
             stone_object.append(f"      <line x1=\"{50-k*r}\" y1=\"{50+k*r}\" x2=\"{50+k*r}\" y2=\"{50-k*r}\" class=\"{base_class}_halo\" />")
         # Neutral stone types
-        if stone["type"] == "box":
+        if stone["stone_type"] == "box":
             stone_object.append(f"      <rect x=\"15\" y=\"15\" width=\"70\" height=\"70\" class=\"{base_class}_base\" />")
             stone_object.append(f"      <line x1=\"15\" y1=\"15\" x2=\"85\" y2=\"85\" class=\"{base_class}_line\" />")
             stone_object.append(f"      <line x1=\"15\" y1=\"85\" x2=\"85\" y2=\"15\" class=\"{base_class}_line\" />")
             stone_object.append(f"      <rect x=\"15\" y=\"15\" width=\"70\" height=\"70\" class=\"{base_class}_outline\" />")
-        if stone["type"] == "mine":
+        if stone["stone_type"] == "mine":
             stone_object.append(f"      <path d=\"M45,15 L45,25 A20,20,90,0,1,25,45 L15,45 A40,40,0,0,0,15,55 L25,55 A20,20,90,0,1,45,75 L45,85 A40,40,0,0,0,55,85 L55,75 A20,20,90,0,1,75,55 L85,55 A40,40,0,0,0,85,45 L75,45 A20,20,90,0,1,55,25 L55,15 A40,40,0,0,0, 45,15 Z\" class=\"{base_class}_body\" /> ")
             stone_object.append(f"      <circle cx=\"50\" cy=\"50\" r=\"8\" class=\"{base_class}_button\" />")
 
@@ -484,8 +496,8 @@ class BoardEditorHTMLRenderer(Renderer):
         self.commit_to_output("  <div id=\"stone_inspector_header\" class=\"stone_inspector_part\">")
         self.draw_inspector_table("stone", {"allegiance" : "Allegiance", "stone_type" : "Stone type"})
         self.draw_inspector_table("base", {"allegiance" : "Allegiance"})
+        self.commit_to_output("  </div>")
         stone_inspector_object = []
-        stone_inspector_object.append("  </div>")
         stone_inspector_object.append("  <div id=\"stone_inspector_commands\" class=\"stone_inspector_part\">")
         stone_inspector_object.append("    <svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"base_inspector_buttons_svg\" display=\"none\">")
         stone_inspector_object.append("      <g id=\"remove_base_button\">")
@@ -510,11 +522,13 @@ class BoardEditorHTMLRenderer(Renderer):
         stone_inspector_object.append("      </g>")
         stone_inspector_object.append("    </svg>")
         stone_inspector_object.append("  </div>")
-        stone_inspector_object.append("</div>")
-        self.commit_to_output(stone_inspector_object)
+        if self.render_object["client_action"] == "edit":
+            self.commit_to_output(stone_inspector_object)
+        self.commit_to_output("</div>")
 
     def draw_board_dimensions_inspector(self):
         # This inspector is used for changing the static board dimensions
+
         self.commit_to_output("<div id=\"board_dimensions_inspector\" class=\"inspector\">")
         #self.commit_to_output("  <div id=\"board_dimensions_inspector_header\">")
         #self.commit_to_output("    <p id=\"board_dimensions_inspector_label\">No element selected</p>")
@@ -524,17 +538,22 @@ class BoardEditorHTMLRenderer(Renderer):
         # Now the form for changing board dimensions (not a submit one, everything is handled clientside until board save)
         board_dimensions_edit_form = [
             f"<form id=\"board_dimensions_inspector_form\">",
-            f"  <label for=\"board_dimensions_t_input\">Timeslices in round:</label>",
-            f"  <input type=\"number\" id=\"board_dimensions_t_input\" name=\"board_dimensions_t_input\" value=\"{self.render_object["t_dim"]}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
-            f"  <label for=\"board_dimensions_x_input\">Squares horizontally:</label>",
-            f"  <input type=\"number\" id=\"board_dimensions_x_input\" name=\"board_dimensions_x_input\" value=\"{self.render_object["x_dim"]}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
-            f"  <label for=\"board_dimensions_y_input\">Squares vertically:</label>",
-            f"  <input type=\"number\" id=\"board_dimensions_y_input\" name=\"board_dimensions_y_input\" value=\"{self.render_object["y_dim"]}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
-            f"  <input type=\"button\" id=\"board_dimensions_update_btn\" value=\"Update\" onclick=\"inspector.update_board_dimensions()\" hidden>",
-            f"  <input type=\"button\" id=\"board_dimensions_reset_btn\" value=\"Reset\" onclick=\"reset_board_dimensions_form()\" hidden>",
+            f"  <div id=\"board_dimensions_left_col\">",
+            f"    <label for=\"board_dimensions_t_input\">Timeslices in round:</label>",
+            f"    <input type=\"number\" id=\"board_dimensions_t_input\" name=\"board_dimensions_t_input\" value=\"{self.render_object["t_dim"]}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
+            f"    <label for=\"board_dimensions_x_input\">Squares horizontally:</label>",
+            f"    <input type=\"number\" id=\"board_dimensions_x_input\" name=\"board_dimensions_x_input\" value=\"{self.render_object["x_dim"]}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
+            f"    <label for=\"board_dimensions_y_input\">Squares vertically:</label>",
+            f"    <input type=\"number\" id=\"board_dimensions_y_input\" name=\"board_dimensions_y_input\" value=\"{self.render_object["y_dim"]}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
+            f"  </div>",
+            f"  <div id=\"board_dimensions_right_col\">",
+            f"    <input type=\"button\" id=\"board_dimensions_update_btn\" value=\"Update\" onclick=\"inspector.update_board_dimensions()\" hidden>",
+            f"    <input type=\"button\" id=\"board_dimensions_reset_btn\" value=\"Reset\" onclick=\"reset_board_dimensions_form()\" hidden>",
+            f"  </div>",
             f"</form>"
             ]
-        self.commit_to_output(board_dimensions_edit_form)
+        if self.render_object["client_action"] == "edit":
+            self.commit_to_output(board_dimensions_edit_form)
 
         #self.commit_to_output("  </svg>")
         self.commit_to_output("</div>")
@@ -556,7 +575,8 @@ class BoardEditorHTMLRenderer(Renderer):
             square_inspector_object.append(f"      </g>")
         square_inspector_object.append("    </svg>")
 
-        self.commit_to_output(square_inspector_object)
+        if self.render_object["client_action"] == "edit":
+            self.commit_to_output(square_inspector_object)
 
         self.commit_to_output("</div>")
 
@@ -589,7 +609,7 @@ class BoardEditorHTMLRenderer(Renderer):
         for allegiance in self.required_stone_types.keys():
             for stone_type in self.required_stone_types[allegiance]:
                 x, y = get_pos_from_i(input_icon_index)
-                self.commit_to_output(self.create_stone({"faction" : allegiance, "type" : stone_type, "x" : x, "y" : y}, "input_icon", "block", f"inspector.select_input_element(\'stone\', \'{allegiance}\', \'{stone_type}\')"))
+                self.commit_to_output(self.create_stone({"faction" : allegiance, "stone_type" : stone_type, "x" : x, "y" : y}, "input_icon", "block", f"inspector.select_input_element(\'stone\', \'{allegiance}\', \'{stone_type}\')"))
                 input_icon_index += 1
         self.commit_to_output("</svg>\n</div>")
 
@@ -624,16 +644,18 @@ class BoardEditorHTMLRenderer(Renderer):
         # Fieldset Bases: For each base its position and allegiance
         board_edit_form.append(f"    <fieldset id=\"bases_data\" class=\"board_edit_data_field\">")
         for base_i in range(len(self.render_object["bases"])):
-            board_edit_form.append(f"      <input type=\"hidden\" name=\"base_{base_i}\" id=\"base_{base_i}\" >")
+            for kw in self.element_keywords["bases"]:
+                board_edit_form.append(f"      <input type=\"hidden\" name=\"base_{base_i}_{kw}\" id=\"base_{base_i}_{kw}\" value=\"{self.render_object["bases"][base_i][kw]}\" >")
         board_edit_form.append(f"    </fieldset>")
         # Fieldset Stones: For each stone its allegiance, type, position, and azimuth
         board_edit_form.append(f"    <fieldset id=\"stones_data\" class=\"board_edit_data_field\">")
         for stone_i in range(len(self.render_object["stones"])):
-            board_edit_form.append(f"      <input type=\"hidden\" name=\"stone_{stone_i}\" id=\"stone_{stone_i}\" >")
+            for kw in self.element_keywords["stones"]:
+                board_edit_form.append(f"      <input type=\"hidden\" name=\"stone_{stone_i}_{kw}\" id=\"stone_{stone_i}_{kw}\" value=\"{self.render_object["stones"][stone_i][kw]}\" >")
         board_edit_form.append(f"    </fieldset>")
 
         # ------------------------- Visible elements --------------------------
-        board_edit_form.append(f"    <input type=\"text\" name=\"board_name\" id=\"board_name\" value=\"{self.render_object["board_name"]}\" >")
+        board_edit_form.append(f"    <input type=\"text\" name=\"board_name\" id=\"board_name\" required value=\"{self.render_object["board_name"]}\" >")
 
 
         board_edit_form.append(f"    <button type=\"submit\" name=\"board_submission\" value=\"submit\" id=\"save_board_button\">Save board</button>")
@@ -652,7 +674,7 @@ class BoardEditorHTMLRenderer(Renderer):
             self.commit_to_output(self.create_base({"faction" : allegiance}, "input_icon_shadow", ""))
         for allegiance in self.required_stone_types.keys():
             for stone_type in self.required_stone_types[allegiance]:
-                self.commit_to_output(self.create_stone({"faction" : allegiance, "type" : stone_type}, "input_icon_shadow", ""))
+                self.commit_to_output(self.create_stone({"faction" : allegiance, "stone_type" : stone_type}, "input_icon_shadow", ""))
 
         self.commit_to_output("  </svg>")
         self.commit_to_output("</div>")
@@ -679,8 +701,8 @@ class BoardEditorHTMLRenderer(Renderer):
         # Open gameside
         self.open_gameside()
 
-        self.draw_element_input_panel()
         if self.render_object["client_action"] == "edit":
+            self.draw_element_input_panel()
             self.draw_board_edit_form() # Don't draw this if board is just for viewing!
 
         # Close gameside

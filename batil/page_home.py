@@ -95,6 +95,24 @@ class PageHome(Page):
                 # The new board is set to the default board
                 db.execute("INSERT INTO BOC_BOARDS (T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, HANDICAP, BOARD_NAME) VALUES (?, ?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.0, ?)", (self.board_template["T_DIM"], self.board_template["X_DIM"], self.board_template["Y_DIM"], self.board_template["STATIC_REPRESENTATION"], self.board_template["SETUP_REPRESENTATION"], g.user["username"], self.board_template["BOARD_NAME"]))
                 db.commit()
+        elif "action_your_boards_unpublished" in request.form.keys():
+            # row action on an unpublished board
+            action_board_id = int(request.form.get("action_table_your_boards_unpublished_selected_row"))
+            if request.form.get("action_your_boards_unpublished") == "delete":
+                db.execute("DELETE FROM BOC_BOARDS WHERE BOARD_ID = ?", (action_board_id,))
+                db.commit()
+            elif request.form.get("action_your_boards_unpublished") == "publish":
+                db.execute("UPDATE BOC_BOARDS SET IS_PUBLIC = 1, D_PUBLISHED = CURRENT_TIMESTAMP WHERE BOARD_ID = ?", (action_board_id,))
+                db.commit()
+        elif "action_your_boards_published" in request.form.keys():
+            action_board_id = int(request.form.get("action_table_your_boards_published_selected_row"))
+            if request.form.get("action_your_boards_published") == "hide":
+                # published baords are always shown from BOC_USER_SAVED_BAORDS, this just deletes the relational line
+                pass
+            elif request.form.get("action_your_boards_published") == "fork":
+                db.execute("INSERT INTO BOC_BOARDS (T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, HANDICAP, BOARD_NAME) SELECT T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.0, BOARD_NAME || \" (Fork)\" FROM BOC_BOARDS WHERE BOARD_ID = ?", (g.user["username"], action_board_id))
+                db.commit()
+
 
         # Default action: return back
         return(redirect(url_for("home.index", section=1)))
@@ -306,7 +324,7 @@ class PageHome(Page):
         if len(your_published_boards_dataset) > 0:
             form_your_boards.open_section(1)
             your_published_boards_table = ActionTable("your_boards_published", include_select = False)
-            your_published_boards_table.make_head({"BOARD_NAME" : "Board", "D_PUBLISHED" : "Published", "GAMES_PLAYED" : "# games played", "HANDICAP" : "Handicap"}, {"view" : "View", "fork" : "Fork", "hide" : "Hide"})
+            your_published_boards_table.make_head({"BOARD_NAME" : "Board", "D_PUBLISHED" : "Published", "GAMES_PLAYED" : "# games played", "HANDICAP" : "Handicap"}, {"view" : "View", "fork" : "Fork", "hide" : "Hide"}, action_instructions = {"view" : {"type" : "link", "url_func" : (lambda x : url_for("board.board", board_id = x))}})
             your_published_boards_table.make_body(your_published_boards_dataset)
             form_your_boards.structured_html.append(your_published_boards_table.structured_html)
             form_your_boards.close_section()
