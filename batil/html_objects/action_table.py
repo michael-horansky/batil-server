@@ -8,6 +8,44 @@ from batil.html_objects.html_object import HTMLObject
 
 class ActionTable(HTMLObject):
 
+    # static methods
+
+    def get_navigation_keywords(table_id, list_of_filters):
+        nav_keywords = {}
+        if f"{table_id}_order" in request.form:
+            table_order_val = request.form.get(f"{table_id}_order")
+            table_dir_val = request.form.get(f"{table_id}_dir")
+            try:
+                table_page_val = int(request.form.get(f"{table_id}_page"))
+            except:
+                table_page_val = 0
+            if f"action_{table_id}_order" in request.form:
+                table_order_val = request.form.get(f"action_{table_id}_order")
+            if f"action_{table_id}_dir" in request.form:
+                table_dir_val = request.form.get(f"action_{table_id}_dir")
+            if f"action_{table_id}_page" in request.form:
+                page_action = request.form.get(f"action_{table_id}_page")
+                if page_action == "top":
+                    table_page_val = 0
+                if page_action == "prev":
+                    table_page_val -= 1
+                if page_action == "next":
+                    table_page_val += 1
+
+            nav_keywords[f"{table_id}_order"] = table_order_val
+            nav_keywords[f"{table_id}_dir"] = table_dir_val
+            nav_keywords[f"{table_id}_page"] = table_page_val
+
+            # filters
+            for filter_kw in list_of_filters:
+                cur_filter_val = request.form.get(f"filter_{table_id}_{filter_kw}")
+                if cur_filter_val is None:
+                    cur_filter_val = ""
+                nav_keywords[f"filter_{table_id}_{filter_kw}"] = cur_filter_val
+        return(nav_keywords)
+
+    # instance methods
+
     def __init__(self, identifier, include_select = True):
         super().__init__()
         self.identifier = identifier
@@ -36,10 +74,15 @@ class ActionTable(HTMLObject):
                 "  </thead>",
             ])
 
-    def make_body(self, data):
+    def make_body(self, data, include_filters = False, filter_values = None):
         # data is a list of dictionaries, where each dictionary is in the form {header_id : row_value}.
         # Also, each row has to have a key called "IDENTIFIER", the value of which is a string which is a
         # valid partial SQL query, namely the WHERE condition for a SELECT query which selects this row.
+
+        # include_filters = True (all columns), False (no filters), or list of column ids
+        # filter_values = None or {col id : filter value}
+        if filter_values is None:
+            filter_values = {}
         self.structured_html.append("  <tbody>")
         for datum in data:
             self.structured_html.append(f"    <tr data-rowid=\"{datum["IDENTIFIER"]}\">")
@@ -75,6 +118,33 @@ class ActionTable(HTMLObject):
                             ])
             self.structured_html.append("    </tr>")
         self.structured_html.append("  </tbody>")
+
+        if isinstance(include_filters, bool):
+            if include_filters:
+                # We include filters for every column
+                self.structured_html.append("  <tfoot>")
+                self.structured_html.append("    <tr>")
+                for column_id, column_label in self.headers.items():
+                    if column_id in filter_values.keys():
+                        self.structured_html.append(f"      <td><input type=\"text\" name=\"filter_{self.identifier}_{column_id}\" id=\"filter_{self.identifier}_{column_id}\" placeholder=\"Filter for: {column_label}\" value=\"{filter_values[column_id]}\"></td>")
+                    else:
+                        self.structured_html.append(f"      <td><input type=\"text\" name=\"filter_{self.identifier}_{column_id}\" id=\"filter_{self.identifier}_{column_id}\" placeholder=\"Filter for: {column_label}\"></td>")
+                self.structured_html.append("    </tr>")
+                self.structured_html.append("  </tfoot>")
+        elif include_filters is not None:
+            # include_filters is a list of column ids which permit a filter
+            self.structured_html.append("  <tfoot>")
+            self.structured_html.append("    <tr>")
+            for column_id, column_label in self.headers.items():
+                if column_id in include_filters:
+                    if column_id in filter_values.keys():
+                        self.structured_html.append(f"      <td><input type=\"text\" name=\"filter_{self.identifier}_{column_id}\" id=\"filter_{self.identifier}_{column_id}\" placeholder=\"Filter for: {column_label}\" value=\"{filter_values[column_id]}\"></td>")
+                    else:
+                        self.structured_html.append(f"      <td><input type=\"text\" name=\"filter_{self.identifier}_{column_id}\" id=\"filter_{self.identifier}_{column_id}\" placeholder=\"Filter for: {column_label}\"></td>")
+                else:
+                    self.structured_html.append(f"      <td></td>")
+            self.structured_html.append("    </tr>")
+            self.structured_html.append("  </tfoot>")
 
         self.close_table() # automatic finalisation
 

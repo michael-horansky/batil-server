@@ -331,6 +331,15 @@ input, textarea, select { width: 100%; padding: 8px; }
 }
 
 
+#action_form_public_boards_container {
+  flex: 1;
+}
+
+#action_form_public_boards {
+  display: flex;
+  flex-direction: column;
+}
+
 
 
 

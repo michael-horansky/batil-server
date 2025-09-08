@@ -6,6 +6,9 @@ from flask import (
 )
 
 from batil.html_objects.html_object import HTMLObject
+from batil.html_objects.action_table import ActionTable
+
+from batil.db import get_db, get_table_as_list_of_dicts
 
 class ActionForm(HTMLObject):
 
@@ -26,7 +29,8 @@ class ActionForm(HTMLObject):
 
         self.structured_html.append([
             f"<div id=\"action_form_{self.identifier}_container\" class=\"action_form_container\">",
-            f"<form id=\"action_form_{self.identifier}\" method=\"{method}\" action=\"{self.action_url}\">"
+            f"<form id=\"action_form_{self.identifier}\" method=\"{method}\" action=\"{self.action_url}\">",
+            f"  <button type=\"submit\" name=\"action_{self.identifier}\" value=\"refresh\" hidden></button>" # automatic refresh on Enter press
             ])
 
         self.last_section_opened = None
@@ -136,6 +140,136 @@ class ActionForm(HTMLObject):
                     "</script>"
                 ])
 
+    def add_ordered_table(self, table_id, table_query, data_identifier, data_cols, include_select, headers, order_options, actions = None, filters = None, action_instructions = {}, rows_per_view = 10):
+        # Call this after open_section. This also opens section footer, so there can only be this table in the content of this section
+        # The ordering and navigation are done through the GET form!
+
+        # order_options = [["QUERY FRAGMENT", "label"], ...]
+
+        main_table = ActionTable(table_id, include_select)
+        main_table.make_head(headers, actions, action_instructions)
+
+        if f"{table_id}_order" in request.args:
+            try:
+                main_table_order_value = request.args.get(f"{table_id}_order")
+                main_table_order = order_options[int(request.args.get(f"{table_id}_order"))][0]
+            except:
+                main_table_order_value = "0"
+                main_table_order = order_options[0][0]
+        else:
+            main_table_order_value = "0"
+            main_table_order = order_options[0][0]
+
+        if f"{table_id}_dir" in request.args:
+            if request.args.get(f"{table_id}_dir") == "A":
+                main_table_dir_value = "A"
+                main_table_dir = "ASC"
+            else:
+                main_table_dir_value = "D"
+                main_table_dir = "DESC"
+        else:
+            main_table_dir_value = "D"
+            main_table_dir = "DESC"
+
+        if f"{table_id}_page" in request.args:
+            try:
+                main_table_page_value = request.args.get(f"{table_id}_page")
+                main_table_page = int(request.args.get(f"{table_id}_page"))
+            except:
+                main_table_page_value = "0"
+                main_table_page = 0
+        else:
+            main_table_page_value = "0"
+            main_table_page = 0
+
+        filter_clause = ""
+        filter_subclauses = []
+        if isinstance(filters, bool):
+            if filters:
+                if "GROUP BY" in table_query:
+                    filter_clause = " HAVING ("
+                else:
+                    if "WHERE" in table_query:
+                        filter_clause = " AND ("
+                    else:
+                        filter_clause = " WHERE ("
+                for col_id in headers.keys():
+                    filter_value = request.args.get(f"filter_{table_id}_{col_id}")
+                    if filter_value != "":
+                        filter_subclauses.append(f"{col_id} LIKE %{filter_value}%")
+                filter_clause += " AND ".join(filter_subclauses)
+                filter_clause += ")"
+        elif filters is not None:
+            if "GROUP BY" in table_query:
+                filter_clause = " HAVING ("
+            else:
+                if "WHERE" in table_query:
+                    filter_clause = " AND ("
+                else:
+                    filter_clause = " WHERE ("
+            for col_id in filters:
+                filter_value = request.args.get(f"filter_{table_id}_{col_id}")
+                if filter_value != "":
+                    filter_subclauses.append(f"{col_id} LIKE \'%{filter_value}%\'")
+            filter_clause += " AND ".join(filter_subclauses)
+            filter_clause += ")"
+
+        if len(filter_subclauses) == 0:
+            filter_clause = ""
+
+        main_table_data = get_table_as_list_of_dicts(f"{table_query}{filter_clause} ORDER BY {main_table_order} {main_table_dir} LIMIT {rows_per_view} OFFSET {main_table_page * rows_per_view}", data_identifier, data_cols)
+        main_table_next_page_data = get_table_as_list_of_dicts(f"{table_query}{filter_clause} ORDER BY {main_table_order} {main_table_dir} LIMIT 1 OFFSET {(main_table_page + 1) * rows_per_view}", data_identifier, data_cols)
+        main_table_next_page = (len(main_table_next_page_data) > 0)
+
+        current_filter_values = {}
+        for col_id in filters:
+            if f"filter_{table_id}_{col_id}" in request.args:
+                current_filter_values[col_id] = request.args.get(f"filter_{table_id}_{col_id}")
+
+        main_table.make_body(main_table_data, filters, current_filter_values)
+
+        self.structured_html.append(main_table.structured_html)
+
+        self.open_section_footer()
+
+        order_form = []
+        order_form.append(f"  <input type=\"hidden\" name=\"{table_id}_order\" value=\"{main_table_order_value}\">")
+        order_form.append(f"  <input type=\"hidden\" name=\"{table_id}_dir\" value=\"{main_table_dir_value}\">")
+        order_form.append(f"  <input type=\"hidden\" name=\"{table_id}_page\" value=\"{main_table_page_value}\">")
+
+        # Now for the buttons. Non-relevant buttons are still rendered, but disabled
+
+        # order options
+        for order_i in range(len(order_options)):
+            if str(order_i) == main_table_order_value:
+                order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_order\" value=\"{order_i}\" id=\"{table_id}_order_{order_options[order_i][0]}\" class=\"action_form_button\" disabled>{order_options[order_i][1]}</button>")
+            else:
+                order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_order\" value=\"{order_i}\" id=\"{table_id}_order_{order_options[order_i][0]}\" class=\"action_form_button\">{order_options[order_i][1]}</button>")
+
+        # ordering direction options
+        if main_table_dir_value == "A":
+            order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_dir\" value=\"D\" id=\"{table_id}_dir_D\" class=\"action_form_button\">Desc.</button>")
+            order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_dir\" value=\"A\" id=\"{table_id}_dir_A\" class=\"action_form_button\" disabled>Asc.</button>")
+        else:
+            order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_dir\" value=\"D\" id=\"{table_id}_dir_D\" class=\"action_form_button\" disabled>Desc.</button>")
+            order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_dir\" value=\"A\" id=\"{table_id}_dir_A\" class=\"action_form_button\">Asc.</button>")
+
+        # page navigation options (top, prev., next)
+        if main_table_page_value == "0":
+            order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_page\" value=\"top\" id=\"{table_id}_page_top\" class=\"action_form_button\" disabled>Top</button>")
+            order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_page\" value=\"prev\" id=\"{table_id}_page_prev\" class=\"action_form_button\" disabled>Prev</button>")
+        else:
+            order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_page\" value=\"top\" id=\"{table_id}_page_top\" class=\"action_form_button\">Top</button>")
+            order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_page\" value=\"prev\" id=\"{table_id}_page_prev\" class=\"action_form_button\">Prev</button>")
+
+        if main_table_next_page:
+            order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_page\" value=\"next\" id=\"{table_id}_page_next\" class=\"action_form_button\">Next</button>")
+        else:
+            order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_page\" value=\"next\" id=\"{table_id}_page_next\" class=\"action_form_button\" disabled>Next</button>")
+
+        order_form.append(f"<button type=\"submit\" name=\"action_{table_id}_refresh\" value=\"refresh\" id=\"{table_id}_refresh\" class=\"action_form_button\">Refresh</button>")
+
+        self.structured_html.append(order_form)
 
 
 
