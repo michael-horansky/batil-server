@@ -5,6 +5,9 @@ from batil.html_objects.page import Page
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, current_app
 )
+from PIL import Image
+import os
+
 
 from batil.db import get_db, get_table_as_list_of_dicts, new_blind_challenge, new_targeted_challenge, accept_challenge, decline_challenge, send_friend_request
 
@@ -198,11 +201,25 @@ class PageHome(Page):
 
     def resolve_action_your_profile(self):
         db = get_db()
-
+        for k, v in request.form.items():
+            print(f" {k} -> {v}")
+        #user_row = db.execute("SELECT USERNAME, D_CREATED, RATING, PROFILE_PICTURE_EXTENSION FROM BOC_USER WHERE USERNAME = ?", (g.user["username"],)).fetchone()
         # Database manipulation
         if "action_your_profile" in request.form:
             if request.form.get("action_your_profile") == "save_changes":
-                print("User profile settings changed!")
+
+                # First, we check if profile picture was uploaded
+                if "new_profile_picture" in request.files:
+                    pfp_file = request.files.get("new_profile_picture")
+                    pfp_ext = get_file_extension(pfp_file)
+                    if pfp_ext is not None:
+                        save_path = os.path.join(current_app.root_path, "static", "user_content", "profile_pictures", f"{g.user["username"]}_pfp{PFP_EXTENSIONS[pfp_ext]}")
+                        pfp_img = Image.open(pfp_file)
+                        pfp_img.thumbnail((256, 256))
+                        pfp_img.save(save_path, quality=85)
+                        db.execute("UPDATE BOC_USER SET PROFILE_PICTURE_EXTENSION = ? WHERE USERNAME = ?", (pfp_ext, g.user["username"]))
+                        db.commit()
+
         if "action_your_friends" in request.form:
             if request.form.get("action_your_friends") == "unfriend":
                 print("User unfriended!")
@@ -595,12 +612,13 @@ class PageHome(Page):
             form_pending_friend_requests.realise_form()
             self.structured_html.append(form_pending_friend_requests.structured_html)
 
-        form_your_profile = ActionForm("your_profile", "Profile", "home")
+        form_your_profile = ActionForm("your_profile", "Profile", "home", allow_file_encoding = True)
         form_your_profile.initialise_tabs(["Personal settings", "Archive", "Friends", "Blocked"])
         # Personal settings: change pfp, change password, set language etc
         personal_settings_form = [
             f"  <h2>Profile picture</h2>",
-            f"  <button type=\"button\" name=\"upload_profile_picture\">Upload new picture</button>",
+            f"  <label for=\"new_profile_picture\">Upload profile picture:</label>",
+            f"  <input type=\"file\" id=\"new_profile_picture\" name=\"new_profile_picture\" accept=\"image/*\">",
             f"  <h2>Language</h2>",
             f"  <label for=\"user_language_select\">Select language:</label>",
             f"  <select name=\"user_language_select\" id=\"user_language_select\">",

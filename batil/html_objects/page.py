@@ -4,7 +4,9 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for
 )
 
+from batil.db import get_db
 from batil.html_objects.html_object import HTMLObject
+from batil.aux_funcs import *
 
 class Page(HTMLObject):
 
@@ -63,22 +65,40 @@ class Page(HTMLObject):
 
     def initialise_sections(self, section_names):
         # section names = {"id" : "human-readable label"}
+        db = get_db()
         self.section_names = []
         self.structured_html.append([
             "<div class=\"container\">",
             "  <nav class=\"sidebar\">",
-            "    <h2 class=\"sidebar_title\">Menu</h2>",
-            "    <ul>"])
+            "    <div class=\"sidebar_nav\">",
+            "      <h2 class=\"sidebar_title\">Menu</h2>",
+            "      <ul>"])
         self.number_of_sections = 0
         for iden, label in section_names.items():
             if self.number_of_sections == self.default_section:
-                self.structured_html.append(f"      <li><a href=\"#\" class=\"tab_link active\" data-tab=\"{iden}\">{label}</a></li>")
+                self.structured_html.append(f"        <li><a href=\"#\" class=\"tab_link active\" data-tab=\"{iden}\">{label}</a></li>")
             else:
-                self.structured_html.append(f"      <li><a href=\"#\" class=\"tab_link\" data-tab=\"{iden}\">{label}</a></li>")
+                self.structured_html.append(f"        <li><a href=\"#\" class=\"tab_link\" data-tab=\"{iden}\">{label}</a></li>")
             self.section_names.append([iden, label])
             self.number_of_sections += 1
         self.structured_html.append([
-            "    </ul>",
+            "      </ul>",
+            "    </div>"
+            ])
+        # if logged in, we display the pfp here
+        if g.user:
+            user_row = db.execute("SELECT USERNAME, D_CREATED, RATING, PROFILE_PICTURE_EXTENSION FROM BOC_USER WHERE USERNAME = ?", (g.user["username"],)).fetchone()
+            if user_row["PROFILE_PICTURE_EXTENSION"] is not None:
+                pfp_ext_ind = int(user_row["PROFILE_PICTURE_EXTENSION"])
+                pfp_url = url_for('static', filename=f"user_content/profile_pictures/{g.user["username"]}_pfp{PFP_EXTENSIONS[pfp_ext_ind]}")
+                self.structured_html.append([
+                    "  <div class=\"sidebar_pfp\">",
+                    f"    <div class=\"sidebar_pfp_username\">{ g.user['username'] }</div>",
+                    f"    <img src=\"{pfp_url}\" alt=\"{g.user["username"]} profile picture\">",
+                    "  </div>"
+                    ])
+
+        self.structured_html.append([
             "  </nav>",
             "  <div class=\"main_content\">",
             f"    <div id=\"{self.section_names[0][0]}\" class=\"{self.get_initial_tab_class(0)}\">"

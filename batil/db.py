@@ -42,8 +42,8 @@ def init_db():
     with current_app.open_resource('database/boc_db_static_data.sql') as f:
         cur.executescript(f.read().decode('utf8'))
     # Default admin user
-    cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS) VALUES( 'batil', 'dvojka@110zbor.sk', '{generate_password_hash('loopinsohard')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE' )")
-    cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS) VALUES( 'dvojka110', 'dvojka@110zbor.sk', '{generate_password_hash('Allegro4Ever')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE' )")
+    cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS, PROFILE_PICTURE_EXTENSION) VALUES( 'batil', 'dvojka@110zbor.sk', '{generate_password_hash('loopinsohard')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE', 0 )")
+    cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS, PROFILE_PICTURE_EXTENSION) VALUES( 'dvojka110', 'dvojka@110zbor.sk', '{generate_password_hash('Allegro4Ever')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE', 1 )")
     #cur.execute("INSERT INTO BOC_USER_RELATIONSHIPS (USER_1, USER_2, STATUS, D_STATUS) VALUES('batil', 'dvojka110', 'friends', CURRENT_TIMESTAMP)")
 
     # Add default boards

@@ -1,14 +1,11 @@
-html {
-  font-family: sans-serif;
-  background: #eee;
-  padding: 0;
-}
 
-body {
+html, body {
   height: 100%;
   width: 100%;
   margin: 0;
   background: white;
+  display: flex;
+  flex-direction: column;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -61,115 +58,62 @@ hr {
   min-height: 0;
 }
 
-/* Sidebar */
-.sidebar {
-  width: 220px;
-  min-width: 220px;        /* ensures it doesn’t shrink */
-  max-width: 220px;        /* ensures it doesn’t expand */
-  box-sizing: border-box;  /* padding included in width */
-  justify-content: space-between;
-  background: #2c3e50;
-  color: #ecf0f1;
-  padding-top: 20px;
-  padding-bottom: 20px;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar_title {
-  margin: 0 0 20px 20px;
-  font-size: 18px;
-  color: #bdc3c7;
-}
-
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar ul li {
-  margin-bottom: 10px;
-}
-
-.sidebar ul li a {
-  display: block;
-  padding: 12px 20px;
-  color: #ecf0f1;
-  text-decoration: none;
-  border-left: 3px solid transparent;
-  transition: background 0.2s, border-color 0.2s;
-}
-
-.sidebar ul li a:hover,
-.sidebar ul li a.active {
-  background: #34495e;
-  border-left-color: #1abc9c;
-}
-
-.sidebar_pfp {
-  text-align: center; /* centers horizontally */
-  margin-top: 1em;
-}
-
-.sidebar_pfp_username {
-  font-size: 25px;
-  margin-bottom: 12px;
-}
-
-.sidebar_pfp img {
-  width: 200px;       /* scale as needed */
-  height: 200px;
-  object-fit: cover;
-  border-radius: 50%;  /* makes it round */
-  border: 2px solid #bbb;
-  background-color: white;
-}
-
 /* Main Content */
-.main_content {
+#main_content {
+  flex: 1 1 auto;
   display: flex;
-  flex-direction: column;
-  flex: 1; /* height: calc(100vh - 60px); */
-  padding: 30px;
-  box-sizing: border-box;
-  background: #fff;
-  min-height: 0;
+  justify-content: center; /* horizontal centering */
+  align-items: stretch;    /* let inner fill height */
+  background: #f8f8f8;     /* just to see boundaries */
+  overflow: hidden;        /* prevent scrollbars if content fits */
 }
 
-.main_content > header {
+#main_content > header {
   border-bottom: 1px solid lightgray;
   display: flex;
   align-items: flex-end;
 }
 
-.main_content > header h1 {
+#main_content > header h1 {
   flex: auto;
   margin: 1rem 0 0.25rem 0;
 }
 
-.main_content:last-child {
+#main_content:last-child {
   margin-bottom: 0;
 }
 
-.main_content form {
+#main_content form {
   height: 100%;
   box-sizing: border-box;
 }
 
-.main_content label {
+#main_content label {
   font-weight: bold;
   margin-bottom: 0.5em;
 }
 
-.main_content input, .main_content textarea {
+#main_content input, #main_content textarea {
   margin-bottom: 1em;
 }
 
-.main_content textarea {
+#main_content textarea {
   min-height: 12em;
   resize: vertical;
+}
+
+#main_column {
+  flex: 1 1 auto;           /* let it grow/shrink vertically */
+  max-width: 1280px;        /* constrain width */
+  width: 100%;              /* take full width up to max */
+  background: white;        /* just demo */
+  overflow-y: auto;         /* scroll vertically if content too tall */
+}
+
+.main_column_section {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /* Tab Content */

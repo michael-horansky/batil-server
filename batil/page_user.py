@@ -32,19 +32,39 @@ class PageUser(Page):
 
         return(get_args)
 
+    def render_profile_header(self):
+        # pfp
+        if self.user_row["PROFILE_PICTURE_EXTENSION"] is not None:
+            pfp_ext_ind = int(self.user_row["PROFILE_PICTURE_EXTENSION"])
+            pfp_url = url_for('static', filename=f"user_content/profile_pictures/{self.username}_pfp{PFP_EXTENSIONS[pfp_ext_ind]}")
+            self.structured_html.append([
+                f"<img src=\"{pfp_url}\" alt=\"{self.username} profile picture\">"
+                ])
+
     def render_content_logged_in(self):
         # Add features: send friend request, block, archive of games with you
-        pass
+        self.render_content_logged_out()
 
 
     def render_content_logged_out(self):
         # username, pfp, stats (rating, number of games played), archive of all games, list of friends
-        pass
+        db = get_db()
+        self.user_row = db.execute("SELECT USERNAME, D_CREATED, RATING, PROFILE_PICTURE_EXTENSION FROM BOC_USER WHERE USERNAME = ?", (self.username,)).fetchone()
+
+        self.open_container("main_content")
+        self.open_container("main_column")
+
+        self.open_container("profile_header", "main_column_section")
+        self.render_profile_header()
+        self.close_container()
+
+        self.close_container()
+        self.close_container()
 
 
     def render_page(self):
         self.resolve_request()
-        self.html_open("style")
+        self.html_open("user_style")
         self.html_navbar()
 
         # Check if logged in

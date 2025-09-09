@@ -35,7 +35,7 @@ class ActionForm(HTMLObject):
 
     # instance methods
 
-    def __init__(self, identifier, form_title, blueprint, method = "post"):
+    def __init__(self, identifier, form_title, blueprint, method = "post", allow_file_encoding = False):
         super().__init__()
         self.identifier = identifier
         self.form_title = form_title
@@ -45,9 +45,14 @@ class ActionForm(HTMLObject):
 
         self.number_of_tabs = 0
 
+        if allow_file_encoding:
+            encoding_str = "enctype=\"multipart/form-data\""
+        else:
+            encoding_str = ""
+
         self.structured_html.append([
             f"<div id=\"action_form_{self.identifier}_container\" class=\"action_form_container\">",
-            f"<form id=\"action_form_{self.identifier}\" method=\"{method}\" action=\"{self.action_url}\">",
+            f"<form id=\"action_form_{self.identifier}\" method=\"{method}\" action=\"{self.action_url}\" {encoding_str}>",
             f"  <button type=\"submit\" name=\"action_{self.identifier}_nav\" value=\"refresh\" hidden></button>" # automatic refresh on Enter press
             ])
 
