@@ -23,34 +23,51 @@ def index():
 
 # Endpoints for form submissions
 
-@bp.route('/action_pending_challenges', methods=['POST'])
-def action_pending_challenges():
+@bp.route('/action_your_pending_challenges', methods=['POST'])
+def action_your_pending_challenges():
     rendered_page = PageHome()
-    rendered_page.resolve_action_pending_challenges()
-    return(redirect(url_for("home.index", section=0)))
+    rendered_page.resolve_action_your_pending_challenges()
+    get_args = rendered_page.resolve_dynamic_get_form()
+    if get_args is None:
+        return(redirect(url_for("home.index", section=0)))
+    else:
+        return(redirect(url_for("home.index", section=0, **get_args)))
 
 @bp.route('/action_existing_games', methods=['POST'])
 def action_existing_games():
     rendered_page = PageHome()
     rendered_page.resolve_action_existing_games()
-    return(redirect(url_for("home.index", section=0)))
+    get_args = rendered_page.resolve_dynamic_get_form()
+    if get_args is None:
+        return(redirect(url_for("home.index", section=0)))
+    else:
+        return(redirect(url_for("home.index", section=0, **get_args)))
 
 @bp.route('/action_new_game', methods=['POST'])
 def action_new_game():
     rendered_page = PageHome()
     rendered_page.resolve_action_new_game()
-    return(redirect(url_for("home.index", section=0)))
+    get_args = rendered_page.resolve_dynamic_get_form()
+    if get_args is None:
+        return(redirect(url_for("home.index", section=0)))
+    else:
+        return(redirect(url_for("home.index", section=0, **get_args)))
 
 @bp.route('/action_your_boards', methods=['POST'])
 def action_your_boards():
     rendered_page = PageHome()
     rendered_page.resolve_action_your_boards()
-    return(redirect(url_for("home.index", section=1)))
+    get_args = rendered_page.resolve_dynamic_get_form()
+    if get_args is None:
+        return(redirect(url_for("home.index", section=1)))
+    else:
+        return(redirect(url_for("home.index", section=1, **get_args)))
 
 @bp.route('/action_public_boards', methods=['POST'])
 def action_public_boards():
     rendered_page = PageHome()
-    get_args = rendered_page.resolve_action_public_boards()
+    rendered_page.resolve_action_public_boards()
+    get_args = rendered_page.resolve_dynamic_get_form()
     if get_args is None:
         return(redirect(url_for("home.index", section=2)))
     else:

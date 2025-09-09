@@ -29,13 +29,33 @@ class PageHome(Page):
             for key, val in request.form.items():
                 print(f"  {key} --> {val} ({type(val)})")
 
-    def resolve_action_pending_challenges(self):
+    def resolve_dynamic_get_form(self):
+        # Table navigation GET preparation
+        get_args = {}
+        # Play
+        get_args.update(ActionForm.get_args("new_game", ["select_board_for_new_game"]))
+        get_args.update(ActionTable.get_navigation_keywords("select_board_for_new_game", ["BOARD_NAME", "AUTHOR", "D_SAVED"]))
+        get_args.update(ActionTable.get_navigation_keywords("select_opponent_for_new_game", ["USERNAME"]))
+        get_args.update(ActionForm.get_args("your_pending_challenges"))
+        get_args.update(ActionTable.get_navigation_keywords("pending_challenges"))
+        get_args.update(ActionForm.get_args("existing_games"))
+        get_args.update(ActionTable.get_navigation_keywords("active_games_your_turn"))
+        get_args.update(ActionTable.get_navigation_keywords("active_games_not_your_turn"))
+        # Your boards
+        get_args.update(ActionForm.get_args("your_boards"))
+        get_args.update(ActionTable.get_navigation_keywords("your_boards_unpublished", ["BOARD_NAME"]))
+        get_args.update(ActionTable.get_navigation_keywords("your_boards_published", ["BOARD_NAME"]))
+        # Public boards
+        get_args.update(ActionForm.get_args("public_boards"))
+        get_args.update(ActionTable.get_navigation_keywords("board_marketplace_table", ["BOARD_NAME", "AUTHOR", "D_PUBLISHED"]))
+        get_args.update(ActionTable.get_navigation_keywords("your_saved_boards", ["BOARD_NAME", "AUTHOR", "D_PUBLISHED", "D_SAVED"]))
+
+        return(get_args)
+
+    def resolve_action_your_pending_challenges(self):
         if request.form.get("action_pending_challenges") == "accept":
             print("Accept this challenge!")
             accept_challenge(int(request.form.get("action_table_pending_challenges_selected_row")))
-
-        elif request.form.get("action_pending_challenges") == "view_board":
-            print("View the board!")
         elif request.form.get("action_pending_challenges") == "decline":
             print("Decline this challenge!")
             decline_challenge(int(request.form.get("action_table_pending_challenges_selected_row")))
@@ -86,8 +106,6 @@ class PageHome(Page):
 
     def resolve_action_your_boards(self):
         db = get_db()
-        for key, val in request.form.items():
-            print(f"{key} -> {val}")
         if "action_your_boards" in request.form.keys():
             # The form buttons were interacted with
             if request.form.get("action_your_boards") == "create_new_board":
@@ -119,8 +137,6 @@ class PageHome(Page):
 
     def resolve_action_public_boards(self):
         db = get_db()
-        for key, val in request.form.items():
-            print(f"{key} -> {val}")
 
         # Database manipulation
         if "action_board_marketplace_table" in request.form:
@@ -142,13 +158,6 @@ class PageHome(Page):
                 db.execute("DELETE FROM BOC_USER_SAVED_BOARDS WHERE BOARD_ID = ? AND USERNAME = ?", (removed_board_id, g.user["username"]))
                 db.commit()
 
-        # Table navigation GET preparation
-        get_args = {}
-        get_args.update(ActionTable.get_navigation_keywords("board_marketplace_table", ["BOARD_NAME", "AUTHOR", "D_PUBLISHED"]))
-        get_args.update(ActionTable.get_navigation_keywords("your_saved_boards", ["BOARD_NAME", "AUTHOR", "D_PUBLISHED", "D_SAVED"]))
-
-        return(get_args)
-
     def render_content_logged_out(self):
         self.structured_html.append([
             "<header>",
@@ -166,63 +175,82 @@ class PageHome(Page):
         # New game
         form_new_game = ActionForm("new_game", "New game", "home")
         form_new_game.initialise_tabs(["Rules", "Board", "Opponent"])
-        form_new_game.open_section(0)
 
         select_rules_dataset = get_table_as_list_of_dicts("SELECT RULE AS ID, RULE_GROUP AS \"GROUP\", DESCRIPTION, \"ORDER\", RESTRICTION, REQUIREMENT, LABEL FROM BOC_RULES", "ID", ["ID", "GROUP", "DESCRIPTION", "ORDER", "RESTRICTION", "REQUIREMENT", "LABEL"])
         select_rulegroups_dataset = get_table_as_list_of_dicts("SELECT RULE_GROUP AS ID, DESCRIPTION, \"ORDER\" FROM BOC_RULEGROUPS", "ID", ["ID", "DESCRIPTION", "ORDER"])
         select_rules_form = CascadeForm("select_rules_form", select_rulegroups_dataset, select_rules_dataset)
-        form_new_game.structured_html.append(select_rules_form.structured_html)
-        form_new_game.open_section_footer()
-        form_new_game.add_button("submit", "blind_board_blind_opponent", "Create challenge on random board with random opponent")
-        form_new_game.close_section()
+
+        form_new_game.add_to_tab(0, "content", select_rules_form.structured_html)
+        form_new_game.add_button(0, "submit", "blind_board_blind_opponent", "Create challenge on random board with random opponent")
 
 
         # Now: Board choices
-        select_board_dataset = get_table_as_list_of_dicts(f"SELECT BOC_BOARDS.BOARD_ID AS BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_USER_SAVED_BOARDS.D_SAVED AS D_SAVED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP FROM BOC_BOARDS INNER JOIN BOC_USER_SAVED_BOARDS ON BOC_BOARDS.BOARD_ID = BOC_USER_SAVED_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = \"{g.user["username"]}\"", "BOARD_ID", ["BOARD_NAME", "D_SAVED", "AUTHOR", "D_PUBLISHED", "HANDICAP"])
-        form_new_game.open_section(1)
-        select_board_table = ActionTable("select_board_for_new_game")
-        select_board_table.make_head({"BOARD_NAME" : "Board", "D_SAVED" : "Saved to library", "AUTHOR" : "Author", "D_PUBLISHED" : "Published", "HANDICAP" : "Handicap"}, {"view" : "View"}, {"view" : {"type" : "link", "url_func" : (lambda x : url_for("board.board", board_id = x))}})
-        select_board_table.make_body(select_board_dataset)
-        form_new_game.structured_html.append(select_board_table.structured_html)
-        form_new_game.open_section_footer()
-        form_new_game.add_button("submit", "blind_opponent", "Create challenge on selected board with random opponent", selection_condition = "action_table_select_board_for_new_game_selected_row_input")
-        form_new_game.close_section()
+        form_new_game.add_ordered_table(1, "select_board_for_new_game",
+            f"""SELECT BOC_BOARDS.BOARD_ID AS BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_USER_SAVED_BOARDS.D_SAVED AS D_SAVED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED
+            FROM BOC_BOARDS
+                LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
+                INNER JOIN BOC_USER_SAVED_BOARDS ON BOC_BOARDS.BOARD_ID = BOC_USER_SAVED_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = \"{g.user["username"]}\"
+                GROUP BY BOC_BOARDS.BOARD_ID""",
+            "BOARD_ID", ["BOARD_NAME", "AUTHOR", "D_SAVED", "GAMES_PLAYED", "HANDICAP"],
+            include_select = True,
+            headers = {"BOARD_NAME" : "Board", "AUTHOR" : "Author", "D_SAVED" : "Saved to library", "GAMES_PLAYED" : "# of games", "HANDICAP" : "Handicap"},
+            order_options = [["D_SAVED", "Saved"]],
+            actions = {"view" : "View"},
+            filters = ["BOARD_NAME", "AUTHOR", "D_SAVED"],
+            action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
+            rows_per_view = 6
+            )
+
+        form_new_game.add_button(1, "submit", "blind_opponent", "Create challenge on selected board with random opponent", selection_condition = "action_table_select_board_for_new_game_selected_row_input")
 
         # Now: opponent choices
-        select_opponent_dataset = get_table_as_list_of_dicts(f"SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])}))", "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES"])
-        form_new_game.open_section(2)
-        select_opponent_table = ActionTable("select_opponent_for_new_game")
-        select_opponent_table.make_head({"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games played with you"})
-        select_opponent_table.make_body(select_opponent_dataset)
-        form_new_game.structured_html.append(select_opponent_table.structured_html)
-        form_new_game.open_section_footer()
-        form_new_game.add_button("submit", "targeted_challenge", "Challenge opponent on selected board", selection_condition = f"action_table_select_opponent_for_new_game_selected_row_input")
-        form_new_game.close_section(selection_condition = "action_table_select_board_for_new_game_selected_row_input")
-        form_new_game.close_form()
+        # This tab only shows if a board was chosen in previous tab
+        form_new_game.set_tab_property(2, "selection_condition", "action_table_select_board_for_new_game_selected_row_input")
+
+        form_new_game.add_ordered_table(2, "select_opponent_for_new_game",
+            f"SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])}))",
+            "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES"],
+            include_select = True,
+            headers = {"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games played with you"},
+            order_options = [["COUNT_GAMES", "# games"]],
+            actions = {"view" : "View"},
+            filters = ["USERNAME"],
+            rows_per_view = 6
+            )
+
+        #form_new_game.add_to_tab(2, "content", select_opponent_table.structured_html)
+        form_new_game.add_button(2, "submit", "targeted_challenge", "Challenge opponent on selected board", selection_condition = f"action_table_select_opponent_for_new_game_selected_row_input")
+
+        form_new_game.realise_form()
         self.structured_html.append(form_new_game.structured_html)
 
         self.open_container("play_forms_right")
 
-        # Pending challenges TODO
-        #pending_challenges_dataset = get_table_as_list_of_dicts(f"SELECT BOC_GAMES.GAME_ID AS GAME_ID, BOC_GAMES.PLAYER_A AS PLAYER_A, BOC_GAMES.PLAYER_B AS PLAYER_B, BOC_BOARDS.BOARD_NAME, BOC_GAMES.D_CHALLENGE FROM BOC_GAMES INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE (BOC_GAMES.STATUS = \"waiting_for_acceptance\" AND (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])}))", ["GAME_ID"])
-        pending_challenges_dataset = get_table_as_list_of_dicts(f"SELECT BOC_CHALLENGES.CHALLENGE_ID AS CHALLENGE_ID, BOC_CHALLENGES.CHALLENGER AS CHALLENGER, BOC_CHALLENGES.DATE_CREATED AS DATE_CREATED, BOC_BOARDS.BOARD_NAME AS BOARD_NAME FROM BOC_CHALLENGES LEFT JOIN BOC_BOARDS ON BOC_CHALLENGES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE BOC_CHALLENGES.STATUS = 'active' AND BOC_CHALLENGES.CHALLENGEE = {json.dumps(g.user["username"])}", "CHALLENGE_ID", ["CHALLENGER", "BOARD_NAME", "DATE_CREATED"]) # WHERE BOC_CHALLENGES.CHALLENGEE = {json.dumps(g.user["username"])}
-        if len(pending_challenges_dataset) > 0:
-            form_pending_challenges = ActionForm("pending_challenges", "Challenges for you", "home")
+        # Pending challenges
+        pending_challenges_sample = db.execute(f"SELECT CHALLENGE_ID FROM BOC_CHALLENGES WHERE BOC_CHALLENGES.STATUS = 'active' AND BOC_CHALLENGES.CHALLENGEE = ? LIMIT 1", (g.user["username"],)).fetchone()
+        if pending_challenges_sample is not None:
+            form_pending_challenges = ActionForm("your_pending_challenges", "Challenges for you", "home")
             form_pending_challenges.initialise_tabs(["Incoming challenges"])
-            form_pending_challenges.open_section(0)
-            pending_challenges_table = ActionTable("pending_challenges", include_select = False)
-            pending_challenges_table.make_head({"CHALLENGER" : "Challenger", "BOARD_NAME" : "Board", "DATE_CREATED" : "Date"}, {"accept" : "Accept", "view_board" : "View board", "decline" : "Decline"})
-            pending_challenges_table.make_body(pending_challenges_dataset)
-            form_pending_challenges.structured_html.append(pending_challenges_table.structured_html)
-            form_pending_challenges.close_section()
 
-            form_pending_challenges.close_form()
+            form_pending_challenges.add_ordered_table(0, "pending_challenges",
+                f"SELECT BOC_CHALLENGES.CHALLENGE_ID AS CHALLENGE_ID, BOC_CHALLENGES.CHALLENGER AS CHALLENGER, BOC_CHALLENGES.DATE_CREATED AS DATE_CREATED, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.BOARD_ID AS BOARD_ID FROM BOC_CHALLENGES LEFT JOIN BOC_BOARDS ON BOC_CHALLENGES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE BOC_CHALLENGES.STATUS = 'active' AND BOC_CHALLENGES.CHALLENGEE = {json.dumps(g.user["username"])}",
+                "CHALLENGE_ID", ["CHALLENGER", "BOARD_NAME", "DATE_CREATED", "BOARD_ID"],
+                include_select = False,
+                headers = {"CHALLENGER" : "Challenger", "BOARD_NAME" : "Board", "DATE_CREATED" : "Date"},
+                order_options = [["DATE_CREATED", "Date"]],
+                actions = {"accept" : "Accept", "view_board" : "View", "decline" : "Decline"},
+                filters = False,
+                action_instructions = {"view_board" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["BOARD_ID"]))}},
+                rows_per_view = 3
+                )
+
+            form_pending_challenges.realise_form()
             self.structured_html.append(form_pending_challenges.structured_html)
 
 
         # Existing games
-        #active_games_dataset = get_table_as_list_of_dicts(f"SELECT GAME_ID, PLAYER_A, PLAYER_B, D_STARTED FROM BOC_GAMES WHERE (PLAYER_A = \"{g.user["username"]}\" OR PLAYER_B = \"{g.user["username"]}\") AND STATUS = \"in_progress\"", "GAME_ID", ["PLAYER_A", "PLAYER_B", "D_STARTED"])
-        active_games_not_your_turn = get_table_as_list_of_dicts(f"""
+        active_games_not_your_turn_sample = db.execute(
+            f"""
                 WITH latest AS (
                     SELECT BOC_MOVES.GAME_ID, MAX(BOC_MOVES.TURN_INDEX) AS max_turn
                     FROM BOC_MOVES
@@ -234,19 +262,22 @@ class PageHome(Page):
                     JOIN latest L ON L.GAME_ID = BOC_MOVES.GAME_ID AND L.max_turn = BOC_MOVES.TURN_INDEX
                     GROUP BY BOC_MOVES.GAME_ID
                 )
-                SELECT BOC_GAMES.GAME_ID AS GAME_ID, BOC_GAMES.PLAYER_A AS PLAYER_A, BOC_GAMES.PLAYER_B AS PLAYER_B, BOC_GAMES.D_STARTED AS D_STARTED
+                SELECT
+                    BOC_GAMES.GAME_ID
                 FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID
                 WHERE
-                    (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
+                    (BOC_GAMES.PLAYER_A = ? OR BOC_GAMES.PLAYER_B = ?)
                     AND BOC_GAMES.STATUS = \"in_progress\"
                     AND (
-                        (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'A')
+                        (BOC_GAMES.PLAYER_A = ? AND LM.players_at_latest = 'A')
                         OR
-                        (BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'B')
+                        (BOC_GAMES.PLAYER_B = ? AND LM.players_at_latest = 'B')
                     )
-                ORDER BY D_STARTED
-            """, "GAME_ID", ["PLAYER_A", "PLAYER_B", "D_STARTED"])
-        active_games_your_turn = get_table_as_list_of_dicts(f"""
+                LIMIT 1
+            """, (g.user["username"], g.user["username"], g.user["username"], g.user["username"])
+            ).fetchone()
+        active_games_your_turn_sample = db.execute(
+            f"""
                 WITH latest AS (
                     SELECT BOC_MOVES.GAME_ID, MAX(BOC_MOVES.TURN_INDEX) AS max_turn
                     FROM BOC_MOVES
@@ -258,68 +289,113 @@ class PageHome(Page):
                     JOIN latest L ON L.GAME_ID = BOC_MOVES.GAME_ID AND L.max_turn = BOC_MOVES.TURN_INDEX
                     GROUP BY BOC_MOVES.GAME_ID
                 )
-                SELECT BOC_GAMES.GAME_ID AS GAME_ID, BOC_GAMES.PLAYER_A AS PLAYER_A, BOC_GAMES.PLAYER_B AS PLAYER_B, BOC_GAMES.D_STARTED AS D_STARTED
+                SELECT
+                    BOC_GAMES.GAME_ID
                 FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID
                 WHERE
-                    (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
+                    (BOC_GAMES.PLAYER_A = ? OR BOC_GAMES.PLAYER_B = ?)
                     AND BOC_GAMES.STATUS = \"in_progress\"
                     AND NOT (
-                        (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'A')
+                        (BOC_GAMES.PLAYER_A = ? AND LM.players_at_latest = 'A')
                         OR
-                        (BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'B')
+                        (BOC_GAMES.PLAYER_B = ? AND LM.players_at_latest = 'B')
                     )
-                ORDER BY D_STARTED
-            """, "GAME_ID", ["PLAYER_A", "PLAYER_B", "D_STARTED"])
-        for row in active_games_your_turn:
-            if row["PLAYER_A"] == g.user["username"]:
-                row["OPPONENT"] = row["PLAYER_B"]
-            if row["PLAYER_B"] == g.user["username"]:
-                row["OPPONENT"] = row["PLAYER_A"]
-            del row["PLAYER_A"]
-            del row["PLAYER_B"]
-        for row in active_games_not_your_turn:
-            if row["PLAYER_A"] == g.user["username"]:
-                row["OPPONENT"] = row["PLAYER_B"]
-            if row["PLAYER_B"] == g.user["username"]:
-                row["OPPONENT"] = row["PLAYER_A"]
-            del row["PLAYER_A"]
-            del row["PLAYER_B"]
+                LIMIT 1
+            """, (g.user["username"], g.user["username"], g.user["username"], g.user["username"])
+            ).fetchone()
 
-        if len(active_games_your_turn) == 0 and len(active_games_not_your_turn) == 0:
+        if active_games_not_your_turn_sample is None and active_games_your_turn_sample is None:
             self.structured_html.append("<h2 class=\"empty_form_placeholder\">No ongoing games</h2>")
         else:
             active_game_headers = []
-            if len(active_games_your_turn) > 0:
+            if active_games_your_turn_sample is not None:
                 active_game_headers.append("Your turn")
-            if len(active_games_not_your_turn) > 0:
+            if active_games_not_your_turn_sample is not None:
                 active_game_headers.append("Waiting for opponent")
             form_existing_games = ActionForm("existing_games", "Ongoing games", "home")
             form_existing_games.initialise_tabs(active_game_headers)
             sections_initialised = 0
-            if len(active_games_your_turn) > 0:
-                form_existing_games.open_section(sections_initialised)
+            if active_games_your_turn_sample is not None:
+                form_existing_games.add_ordered_table(sections_initialised, "active_games_your_turn",
+                    f"""
+                    WITH latest AS (
+                        SELECT BOC_MOVES.GAME_ID, MAX(BOC_MOVES.TURN_INDEX) AS max_turn
+                        FROM BOC_MOVES
+                        GROUP BY BOC_MOVES.GAME_ID
+                    ),
+                    latest_moves AS (
+                        SELECT BOC_MOVES.GAME_ID, GROUP_CONCAT(BOC_MOVES.PLAYER) AS players_at_latest
+                        FROM BOC_MOVES
+                        JOIN latest L ON L.GAME_ID = BOC_MOVES.GAME_ID AND L.max_turn = BOC_MOVES.TURN_INDEX
+                        GROUP BY BOC_MOVES.GAME_ID
+                    )
+                    SELECT
+                        BOC_GAMES.GAME_ID AS GAME_ID,
+                        CASE
+                            WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} THEN BOC_GAMES.PLAYER_B
+                            ELSE BOC_GAMES.PLAYER_A
+                        END AS OPPONENT,
+                        BOC_GAMES.D_STARTED AS D_STARTED
+                    FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID
+                    WHERE
+                        (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
+                        AND BOC_GAMES.STATUS = \"in_progress\"
+                        AND NOT (
+                            (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'A')
+                            OR
+                            (BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'B')
+                        )
+                    """, "GAME_ID", ["OPPONENT", "D_STARTED"],
+                    include_select = False,
+                    headers = {"OPPONENT" : "Opponent", "D_STARTED" : "Start date"},
+                    order_options = [["D_STARTED", "Start"]],
+                    actions = {"open" : "Open game"},
+                    filters = False,
+                    action_instructions = {"open" : {"type" : "link", "url_func" : (lambda datum : url_for("game_bp.game", game_id = datum["IDENTIFIER"]))}},
+                    rows_per_view = 5
+                    )
                 sections_initialised += 1
-                active_games_your_turn_table = ActionTable("active_games_your_turn", include_select = False)
-                active_games_your_turn_table.make_head({"OPPONENT" : "Opponent", "D_STARTED" : "Start date"}, {"open" : "Open game"}, action_instructions = {
-                        "open" : {"type" : "link", "url_func" : (lambda x : url_for("game_bp.game", game_id = x))}
-                    })
-                active_games_your_turn_table.make_body(active_games_your_turn)
-                form_existing_games.structured_html.append(active_games_your_turn_table.structured_html)
-                form_existing_games.close_section()
-            if len(active_games_not_your_turn) > 0:
-                form_existing_games.open_section(sections_initialised)
-                sections_initialised += 1
-                active_games_not_your_turn_table = ActionTable("active_games_not_your_turn", include_select = False)
-                active_games_not_your_turn_table.make_head({"OPPONENT" : "Opponent", "D_STARTED" : "Start date"}, {"open" : "Open game"}, action_instructions = {
-                        "open" : {"type" : "link", "url_func" : (lambda x : url_for("game_bp.game", game_id = x))}
-                    })
-                active_games_not_your_turn_table.make_body(active_games_not_your_turn)
-                form_existing_games.structured_html.append(active_games_not_your_turn_table.structured_html)
-                form_existing_games.close_section()
-            form_existing_games.close_form()
+            if active_games_not_your_turn_sample is not None:
+                form_existing_games.add_ordered_table(sections_initialised, "active_games_not_your_turn",
+                    f"""
+                    WITH latest AS (
+                        SELECT BOC_MOVES.GAME_ID, MAX(BOC_MOVES.TURN_INDEX) AS max_turn
+                        FROM BOC_MOVES
+                        GROUP BY BOC_MOVES.GAME_ID
+                    ),
+                    latest_moves AS (
+                        SELECT BOC_MOVES.GAME_ID, GROUP_CONCAT(BOC_MOVES.PLAYER) AS players_at_latest
+                        FROM BOC_MOVES
+                        JOIN latest L ON L.GAME_ID = BOC_MOVES.GAME_ID AND L.max_turn = BOC_MOVES.TURN_INDEX
+                        GROUP BY BOC_MOVES.GAME_ID
+                    )
+                    SELECT
+                        BOC_GAMES.GAME_ID AS GAME_ID,
+                        CASE
+                            WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} THEN BOC_GAMES.PLAYER_B
+                            ELSE BOC_GAMES.PLAYER_A
+                        END AS OPPONENT,
+                        BOC_GAMES.D_STARTED AS D_STARTED
+                    FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID
+                    WHERE
+                        (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
+                        AND BOC_GAMES.STATUS = \"in_progress\"
+                        AND (
+                            (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'A')
+                            OR
+                            (BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'B')
+                        )
+                    """, "GAME_ID", ["OPPONENT", "D_STARTED"],
+                    include_select = False,
+                    headers = {"OPPONENT" : "Opponent", "D_STARTED" : "Start date"},
+                    order_options = [["D_STARTED", "Start"]],
+                    actions = {"open" : "Open game"},
+                    filters = False,
+                    action_instructions = {"open" : {"type" : "link", "url_func" : (lambda datum : url_for("game_bp.game", game_id = datum["IDENTIFIER"]))}},
+                    rows_per_view = 5
+                    )
+            form_existing_games.realise_form()
             self.structured_html.append(form_existing_games.structured_html)
-
-
 
         self.close_container()
         self.close_container()
@@ -343,25 +419,45 @@ class PageHome(Page):
 
         form_your_boards = ActionForm("your_boards", "Your boards", "home")
         form_your_boards.initialise_tabs(form_your_boards_tabs)
-        form_your_boards.open_section(0)
-        your_unpublished_boards_table = ActionTable("your_boards_unpublished", include_select = False)
+        """your_unpublished_boards_table = ActionTable("your_boards_unpublished", include_select = False)
         your_unpublished_boards_table.make_head({"BOARD_NAME" : "Board", "D_CHANGED" : "Changed", "D_CREATED" : "Created"}, {"edit" : "Edit", "publish" : "Publish", "delete" : "Delete"}, action_instructions = {
-                        "edit" : {"type" : "link", "url_func" : (lambda x : url_for("board.board", board_id = x))}
+                        "edit" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}
                     })
-        your_unpublished_boards_table.make_body(your_unpublished_boards_dataset)
-        form_your_boards.structured_html.append(your_unpublished_boards_table.structured_html)
-        form_your_boards.open_section_footer()
-        form_your_boards.add_button("submit", "create_new_board", "Create new board", "create_new_board_btn")
-        form_your_boards.close_section()
-        if len(your_published_boards_dataset) > 0:
-            form_your_boards.open_section(1)
-            your_published_boards_table = ActionTable("your_boards_published", include_select = False)
-            your_published_boards_table.make_head({"BOARD_NAME" : "Board", "D_PUBLISHED" : "Published", "GAMES_PLAYED" : "# games played", "HANDICAP" : "Handicap"}, {"view" : "View", "fork" : "Fork", "hide" : "Hide"}, action_instructions = {"view" : {"type" : "link", "url_func" : (lambda x : url_for("board.board", board_id = x))}})
-            your_published_boards_table.make_body(your_published_boards_dataset)
-            form_your_boards.structured_html.append(your_published_boards_table.structured_html)
-            form_your_boards.close_section()
+        your_unpublished_boards_table.make_body(your_unpublished_boards_dataset)"""
+        form_your_boards.add_ordered_table(0, "your_boards_unpublished",
+            f"SELECT BOARD_ID, BOARD_NAME, D_CREATED, D_CHANGED FROM BOC_BOARDS WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 0",
+            "BOARD_ID", ["BOARD_NAME", "D_CHANGED", "D_CREATED"],
+            include_select = False,
+            headers = {"BOARD_NAME" : "Board", "D_CHANGED" : "Changed", "D_CREATED" : "Created"},
+            order_options = [["D_CHANGED", "Changed"]],
+            actions = {"edit" : "Edit", "publish" : "Publish", "delete" : "Delete"},
+            filters = ["BOARD_NAME"],
+            action_instructions = {"edit" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
+            rows_per_view = 7
+            )
+        #form_your_boards.add_to_tab(0, "content", your_unpublished_boards_table.structured_html)
+        form_your_boards.add_button(0, "submit", "create_new_board", "Create new board", "create_new_board_btn")
 
-        form_your_boards.close_form()
+        if len(your_published_boards_dataset) > 0:
+            """your_published_boards_table = ActionTable("your_boards_published", include_select = False)
+            your_published_boards_table.make_head({"BOARD_NAME" : "Board", "D_PUBLISHED" : "Published", "GAMES_PLAYED" : "# games played", "HANDICAP" : "Handicap"}, {"view" : "View", "fork" : "Fork", "hide" : "Hide"}, action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}})
+            your_published_boards_table.make_body(your_published_boards_dataset)
+            form_your_boards.add_to_tab(1, "content", your_published_boards_table.structured_html)"""
+            form_your_boards.add_ordered_table(1, "your_boards_published",
+                f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED
+                    FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
+                    WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1 GROUP BY BOC_BOARDS.BOARD_ID""",
+                "BOARD_ID", ["BOARD_NAME", "D_PUBLISHED", "GAMES_PLAYED", "HANDICAP"],
+                include_select = False,
+                headers = {"BOARD_NAME" : "Board", "D_PUBLISHED" : "Published", "GAMES_PLAYED" : "# games played", "HANDICAP" : "Handicap"},
+                order_options = [["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"]],
+                actions = {"view" : "View", "fork" : "Fork", "hide" : "Hide"},
+                filters = ["BOARD_NAME"],
+                action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
+                rows_per_view = 8
+                )
+
+        form_your_boards.realise_form()
 
         self.structured_html.append(form_your_boards.structured_html)
 
@@ -370,40 +466,34 @@ class PageHome(Page):
         # One action form with two tabs: Your collection and Marketplace
         form_public_boards = ActionForm("public_boards", "Public boards", "home")
         form_public_boards.initialise_tabs(["Board marketplace", "Saved boards"])
-        form_public_boards.open_section(0)
-        form_public_boards.add_ordered_table("board_marketplace_table",
-                                             f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED, BOC_BOARDS.AUTHOR AS AUTHOR
-                                             FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
-                                             WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1
-                                             AND NOT EXISTS (
-                                                 SELECT 1 FROM BOC_USER_SAVED_BOARDS WHERE BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = {json.dumps(g.user["username"])})
-                                             GROUP BY BOC_BOARDS.BOARD_ID""",
-                                             "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "D_PUBLISHED", "HANDICAP"], include_select = False,
-                                             headers = {"BOARD_NAME" : "Board", "AUTHOR" : "Author", "GAMES_PLAYED" : "# games played", "D_PUBLISHED" : "Published", "HANDICAP" : "Handicap"},
-                                             order_options = [["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"], ["HANDICAP", "Handicap"]],
-                                             actions = {"view" : "View", "save" : "Save"},
-                                             filters = ["BOARD_NAME", "AUTHOR", "D_PUBLISHED"],
-                                             action_instructions = {"view" : {"type" : "link", "url_func" : (lambda x : url_for("board.board", board_id = x))}},
-                                             rows_per_view = 8)
-        form_public_boards.close_section()
-        form_public_boards.open_section(1)
-        form_public_boards.add_ordered_table(
-            "your_saved_boards",
+        form_public_boards.add_ordered_table(0, "board_marketplace_table",
+            f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED, BOC_BOARDS.AUTHOR AS AUTHOR
+            FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
+            WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1
+            AND NOT EXISTS (
+                SELECT 1 FROM BOC_USER_SAVED_BOARDS WHERE BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = {json.dumps(g.user["username"])})
+            GROUP BY BOC_BOARDS.BOARD_ID""",
+            "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "D_PUBLISHED", "HANDICAP"], include_select = False,
+            headers = {"BOARD_NAME" : "Board", "AUTHOR" : "Author", "GAMES_PLAYED" : "# games played", "D_PUBLISHED" : "Published", "HANDICAP" : "Handicap"},
+            order_options = [["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"], ["HANDICAP", "Handicap"]],
+            actions = {"view" : "View", "save" : "Save"},
+            filters = ["BOARD_NAME", "AUTHOR", "D_PUBLISHED"],
+            action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
+            rows_per_view = 8)
+        form_public_boards.add_ordered_table(1, "your_saved_boards",
             f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_USER_SAVED_BOARDS.D_SAVED AS D_SAVED
                 FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
                                 INNER JOIN BOC_USER_SAVED_BOARDS ON BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = {json.dumps(g.user["username"])}
-                WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1
-                GROUP BY BOC_BOARDS.BOARD_ID""",
-                "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "D_PUBLISHED", "D_SAVED", "HANDICAP"], include_select = False,
-                headers = {"BOARD_NAME" : "Board", "AUTHOR" : "Author", "GAMES_PLAYED" : "# games played", "D_PUBLISHED" : "Published", "D_SAVED" : "Saved", "HANDICAP" : "Handicap"},
-                order_options = [["D_SAVED", "Saved"], ["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"], ["HANDICAP", "Handicap"]],
-                actions = {"view" : "View", "remove" : "Remove"},
-                filters = ["BOARD_NAME", "AUTHOR", "D_PUBLISHED", "D_SAVED"],
-                action_instructions = {"view" : {"type" : "link", "url_func" : (lambda x : url_for("board.board", board_id = x))}},
-                rows_per_view = 8
-            )
-        form_public_boards.close_section()
-        form_public_boards.close_form()
+            WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1
+            GROUP BY BOC_BOARDS.BOARD_ID""",
+            "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "D_PUBLISHED", "D_SAVED", "HANDICAP"], include_select = False,
+            headers = {"BOARD_NAME" : "Board", "AUTHOR" : "Author", "GAMES_PLAYED" : "# games played", "D_PUBLISHED" : "Published", "D_SAVED" : "Saved", "HANDICAP" : "Handicap"},
+            order_options = [["D_SAVED", "Saved"], ["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"], ["HANDICAP", "Handicap"]],
+            actions = {"view" : "View", "remove" : "Remove"},
+            filters = ["BOARD_NAME", "AUTHOR", "D_PUBLISHED", "D_SAVED"],
+            action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
+            rows_per_view = 8)
+        form_public_boards.realise_form()
 
         self.structured_html.append(form_public_boards.structured_html)
 

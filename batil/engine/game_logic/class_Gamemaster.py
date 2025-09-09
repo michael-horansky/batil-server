@@ -837,7 +837,10 @@ class Gamemaster():
         # returns list of flag IDs
         flags_added = []
         if command["type"] == "add_stone":
-            flags_added = self.add_stone_on_setup(command["faction"], command["stone_type"], command["x"], command["y"], command["a"])
+            if "a" in command.keys():
+                flags_added = self.add_stone_on_setup(command["faction"], command["stone_type"], command["x"], command["y"], command["a"])
+            else:
+                flags_added = self.add_stone_on_setup(command["faction"], command["stone_type"], command["x"], command["y"], None)
         elif command["type"] == "add_base":
             flags_added = self.add_base(command["faction"], command["x"], command["y"])
         elif command["type"] == "spatial_move":

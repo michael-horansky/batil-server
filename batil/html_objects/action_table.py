@@ -10,7 +10,7 @@ class ActionTable(HTMLObject):
 
     # static methods
 
-    def get_navigation_keywords(table_id, list_of_filters):
+    def get_navigation_keywords(table_id, list_of_filters = None):
         nav_keywords = {}
         if f"{table_id}_order" in request.form:
             table_order_val = request.form.get(f"{table_id}_order")
@@ -19,10 +19,6 @@ class ActionTable(HTMLObject):
                 table_page_val = int(request.form.get(f"{table_id}_page"))
             except:
                 table_page_val = 0
-            if f"action_{table_id}_order" in request.form:
-                table_order_val = request.form.get(f"action_{table_id}_order")
-            if f"action_{table_id}_dir" in request.form:
-                table_dir_val = request.form.get(f"action_{table_id}_dir")
             if f"action_{table_id}_page" in request.form:
                 page_action = request.form.get(f"action_{table_id}_page")
                 if page_action == "top":
@@ -31,17 +27,25 @@ class ActionTable(HTMLObject):
                     table_page_val -= 1
                 if page_action == "next":
                     table_page_val += 1
+            # If the filters or ordering changed, the page resets to 0
+            if f"action_{table_id}_order" in request.form:
+                table_order_val = request.form.get(f"action_{table_id}_order")
+                table_page_val = 0
+            if f"action_{table_id}_dir" in request.form:
+                table_dir_val = request.form.get(f"action_{table_id}_dir")
+                table_page_val = 0
 
             nav_keywords[f"{table_id}_order"] = table_order_val
             nav_keywords[f"{table_id}_dir"] = table_dir_val
             nav_keywords[f"{table_id}_page"] = table_page_val
 
             # filters
-            for filter_kw in list_of_filters:
-                cur_filter_val = request.form.get(f"filter_{table_id}_{filter_kw}")
-                if cur_filter_val is None:
-                    cur_filter_val = ""
-                nav_keywords[f"filter_{table_id}_{filter_kw}"] = cur_filter_val
+            if list_of_filters is not None:
+                for filter_kw in list_of_filters:
+                    cur_filter_val = request.form.get(f"filter_{table_id}_{filter_kw}")
+                    if cur_filter_val is None:
+                        cur_filter_val = ""
+                    nav_keywords[f"filter_{table_id}_{filter_kw}"] = cur_filter_val
         return(nav_keywords)
 
     # instance methods
@@ -63,12 +67,20 @@ class ActionTable(HTMLObject):
                 "    <tr>",
             ])
         for iden, name in headers.items():
-            self.structured_html.append(f"      <th>{name}</th>")
+            self.structured_html.append(f"      <th class=\"action_table_header\">{name}</th>")
         """if self.include_select:
             self.structured_html.append(f"      <th>Select</th>")
         if actions is not None:
             for iden, name in actions.items():
                 self.structured_html.append(f"      <th>{name}</th>")"""
+        if actions is None:
+            actions_span = 0
+        else:
+            actions_span = len(actions)
+        if self.include_select:
+            actions_span += 1
+        if actions_span > 0:
+            self.structured_html.append(f"      <th colspan=\"{actions_span}\" class=\"action_table_actions_header\">Actions</th>")
         self.structured_html.append([
                 "    </tr>",
                 "  </thead>",
@@ -94,7 +106,7 @@ class ActionTable(HTMLObject):
             if self.include_select:
                 self.structured_html.append([
                         "      <td>",
-                        f"        <button type=\"button\" class=\"{self.identifier}_select_row_btn action_table_button\" data-rowid=\"{ datum["IDENTIFIER"] }\">Select</button>",
+                        f"        <button type=\"button\" class=\"{self.identifier}_select_row_btn action_table_column_button\" data-rowid=\"{ datum["IDENTIFIER"] }\">Select</button>",
                         "      </td>"
                     ])
             if self.actions is not None:
@@ -102,18 +114,18 @@ class ActionTable(HTMLObject):
                     if iden in self.action_instructions.keys():
                         # Special type of button
                         if self.action_instructions[iden]["type"] == "link":
-                            target_url = self.action_instructions[iden]["url_func"](datum["IDENTIFIER"])
+                            target_url = self.action_instructions[iden]["url_func"](datum)
                             self.structured_html.append([
                                     "      <td>",
                                     f"        <a href=\"{target_url}\" target=\"_blank\">",
-                                    f"          <button type=\"button\" class=\"action_table_button\">{name}</button>",
+                                    f"          <button type=\"button\" class=\"action_table_column_button\">{name}</button>",
                                     f"        </a>",
                                     "      </td>"
                                 ])
                     else:
                         self.structured_html.append([
                                 "      <td>",
-                                f"        <button type=\"submit\" name=\"action_{self.identifier}\" value=\"{iden}\" class=\"{self.identifier}_submit_btn action_table_button\" data-rowid=\"{ datum["IDENTIFIER"] }\">{name}</button>",
+                                f"        <button type=\"submit\" name=\"action_{self.identifier}\" value=\"{iden}\" class=\"{self.identifier}_submit_btn action_table_column_button\" data-rowid=\"{ datum["IDENTIFIER"] }\">{name}</button>",
                                 "      </td>"
                             ])
             self.structured_html.append("    </tr>")
@@ -185,9 +197,24 @@ class ActionTable(HTMLObject):
                 f"      selectedRow.classList.add('selected');",
                 f"      selectedRow.setAttribute('data-selected', 'true');",
                 f"    }});",
-                f"  }});",
-                "</script>"
-            ])
+                f"  }});"])
+        # if the selection is specified in GET, we select now
+        if f"action_table_{self.identifier}_cur_sel" in request.args:
+            cur_sel = request.args.get(f"action_table_{self.identifier}_cur_sel")
+            if cur_sel != "":
+                self.structured_html.append([
+                    f"      document.querySelectorAll('#action_table_{self.identifier} tbody tr').forEach(function(tr) {{",
+                    f"        tr.classList.remove('selected');",
+                    f"        tr.removeAttribute('data-selected');",
+                    f"      }});",
+                    f"      var rowId = {cur_sel};",
+                    f"      var selectedRow = document.querySelector('tr[data-rowid=\"' + rowId + '\"]');",
+                    f"      selectedRow.classList.add('selected');",
+                    f"      selectedRow.setAttribute('data-selected', 'true');",
+                    f"      document.getElementById('action_table_{self.identifier}_selected_row_input').value = rowId;",
+                    f"      document.getElementById('action_table_{self.identifier}_selected_row_input').dispatchEvent(new Event(\"change\"));"
+                    ])
+        self.structured_html.append("</script>")
 
 
 
