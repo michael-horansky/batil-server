@@ -324,9 +324,9 @@ cameraman.fov_coef = 1.0;
 
 cameraman.put_down_tripod = function() {
     // Find the default setting, which just about displays the entire board
-    let default_width_fov_coef = board_window_width / (x_dim * 100);
-    let default_height_fov_coef = board_window_height / (y_dim * 100);
-    cameraman.default_fov_coef = Math.min(default_width_fov_coef, default_height_fov_coef); // This is also the max value!
+    cameraman.default_width_fov_coef = board_window_width / (x_dim * 100);
+    cameraman.default_height_fov_coef = board_window_height / (y_dim * 100);
+    cameraman.default_fov_coef = Math.min(cameraman.default_width_fov_coef, cameraman.default_height_fov_coef); // This is also the max value!
     cameraman.max_fov_coef = board_window_width / 400;
     // Find an offset which places the middle of the board into the middle of the board window
     cameraman.offset_x = board_window_width * 0.5 - x_dim * 50;
@@ -334,6 +334,7 @@ cameraman.put_down_tripod = function() {
 
     // Find and store the element which is target to camera's transformations
     cameraman.subject = document.getElementById("camera_subject");
+    cameraman.subject.setAttribute("transform-origin", `${x_dim * 50}px ${y_dim * 50}px`);
 }
 
 cameraman.apply_camera = function() {
@@ -354,7 +355,7 @@ cameraman.zoom_camera = function() {
     if (cameraman.camera_zoom_directions["in"] && (! cameraman.camera_zoom_directions["out"])) {
         cameraman.fov_coef = Math.min(cameraman.fov_coef * cameraman.zoom_speed, cameraman.max_fov_coef);
     } else if (cameraman.camera_zoom_directions["out"] && (! cameraman.camera_zoom_directions["in"])) {
-        cameraman.fov_coef = Math.max(cameraman.fov_coef / cameraman.zoom_speed, cameraman.default_fov_coef);
+        cameraman.fov_coef = Math.max(cameraman.fov_coef / cameraman.zoom_speed, Math.min(cameraman.default_fov_coef, 1.0));
     }
     if (!cameraman.used_by_an_animation) {
         cameraman.apply_camera();

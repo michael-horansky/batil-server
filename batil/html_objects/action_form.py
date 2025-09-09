@@ -190,7 +190,7 @@ class ActionForm(HTMLObject):
                 ])
         self.add_to_tab(section_i, "footer", button_html)
 
-    def add_ordered_table(self, section_i, table_id, table_query, data_identifier, data_cols, include_select, headers, order_options, actions = None, filters = None, action_instructions = {}, rows_per_view = 10):
+    def add_ordered_table(self, section_i, table_id, table_query, data_identifier, data_cols, include_select, headers, order_options, actions = None, filters = None, action_instructions = {}, rows_per_view = 10, enforce_filter_kw = None):
         # Call this after open_section. This also opens section footer, so there can only be this table in the content of this section
         # The ordering and navigation are done through the GET form!
 
@@ -234,22 +234,9 @@ class ActionForm(HTMLObject):
 
         filter_clause = ""
         filter_subclauses = []
-        if isinstance(filters, bool):
-            if filters:
-                if "GROUP BY" in table_query:
-                    filter_clause = " HAVING ("
-                else:
-                    if "WHERE" in table_query:
-                        filter_clause = " AND ("
-                    else:
-                        filter_clause = " WHERE ("
-                for col_id in headers.keys():
-                    filter_value = request.args.get(f"filter_{table_id}_{col_id}")
-                    if filter_value is not None:
-                        filter_subclauses.append(f"{col_id} LIKE %{filter_value}%")
-                filter_clause += " AND ".join(filter_subclauses)
-                filter_clause += ")"
-        elif filters is not None:
+        if enforce_filter_kw is not None:
+            filter_clause = f" {enforce_filter_kw} ("
+        else:
             if "GROUP BY" in table_query:
                 filter_clause = " HAVING ("
             else:
@@ -257,6 +244,15 @@ class ActionForm(HTMLObject):
                     filter_clause = " AND ("
                 else:
                     filter_clause = " WHERE ("
+        if isinstance(filters, bool):
+            if filters:
+                for col_id in headers.keys():
+                    filter_value = request.args.get(f"filter_{table_id}_{col_id}")
+                    if filter_value is not None:
+                        filter_subclauses.append(f"{col_id} LIKE %{filter_value}%")
+                filter_clause += " AND ".join(filter_subclauses)
+                filter_clause += ")"
+        elif filters is not None:
             for col_id in filters:
                 filter_value = request.args.get(f"filter_{table_id}_{col_id}")
                 if filter_value is not None:

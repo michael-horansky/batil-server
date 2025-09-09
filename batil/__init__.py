@@ -52,6 +52,10 @@ def create_app(test_config=None):
     from .routes import board_editor
     app.register_blueprint(board_editor.bp)
 
+    # User viewer blueprint
+    from .routes import user
+    app.register_blueprint(user.bp)
+
     # Home blueprint
     from .routes import home
     app.register_blueprint(home.bp)

@@ -2,3 +2,5 @@
 from . import home
 from . import auth
 from . import game
+from . import board_editor
+from . import user

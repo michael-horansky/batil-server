@@ -602,7 +602,7 @@ class BoardEditorHTMLRenderer(Renderer):
             return(x,y)
 
         input_icon_index = 0
-        for allegiance in self.required_stone_types.keys():
+        for allegiance in ["neutral", "A", "B"]:
             x, y = get_pos_from_i(input_icon_index)
             self.commit_to_output(self.create_base({"faction" : allegiance, "x" : x, "y" : y}, "input_icon", "block", f"inspector.select_input_element(\'base\', \'{allegiance}\', null)"))
             input_icon_index += 1
@@ -670,7 +670,7 @@ class BoardEditorHTMLRenderer(Renderer):
         self.commit_to_output("  <svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"cursor_overlay_svg\">")
 
 
-        for allegiance in self.required_stone_types.keys():
+        for allegiance in ["neutral", "A", "B"]:
             self.commit_to_output(self.create_base({"faction" : allegiance}, "input_icon_shadow", ""))
         for allegiance in self.required_stone_types.keys():
             for stone_type in self.required_stone_types[allegiance]:

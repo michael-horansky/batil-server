@@ -44,7 +44,7 @@ def init_db():
     # Default admin user
     cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS) VALUES( 'batil', 'dvojka@110zbor.sk', '{generate_password_hash('loopinsohard')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE' )")
     cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS) VALUES( 'dvojka110', 'dvojka@110zbor.sk', '{generate_password_hash('Allegro4Ever')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE' )")
-    cur.execute("INSERT INTO BOC_USER_RELATIONSHIPS VALUES('batil', 'dvojka110', 'friends')")
+    #cur.execute("INSERT INTO BOC_USER_RELATIONSHIPS (USER_1, USER_2, STATUS, D_STATUS) VALUES('batil', 'dvojka110', 'friends', CURRENT_TIMESTAMP)")
 
     # Add default boards
     default_boards_file = current_app.open_resource("database/default_boards.json")
@@ -264,6 +264,20 @@ def decline_challenge(challenge_id):
     db.execute("UPDATE BOC_GAMES SET STATUS = \"declined\" WHERE GAME_ID = ?", (challenge_row["RESERVED_GAME_ID"],))
     db.execute("UPDATE BOC_CHALLENGES SET STATUS = 'resolved' WHERE CHALLENGE_ID = ?", (challenge_id,))
     db.commit()
+
+# User relationship management
+
+def send_friend_request(sender, receiver):
+    # Basically if relationship doesn't exist already, a friends_pending one is created. If there is a pending one from the other one, it gets accepted. Otherwise nothing happens (existing friends, blocked etc)
+    db = get_db()
+    existing_relation_row = db.execute("SELECT USER_1, USER_2, STATUS, D_STATUS FROM BOC_USER_RELATIONSHIPS WHERE ((USER_1 = ? AND USER_2 = ?) OR (USER_1 = ? AND USER_2 = ?))", (sender, receiver, receiver, sender)).fetchone()
+    if existing_relation_row is None:
+        db.execute("INSERT INTO BOC_USER_RELATIONSHIPS (USER_1, USER_2, STATUS, D_STATUS) VALUES (?, ?, \"friends_pending\", CURRENT_TIMESTAMP)", (sender, receiver))
+        db.commit()
+    elif existing_relation_row["USER_1"] == receiver and existing_relation_row["STATUS"] == "friends_pending":
+        db.execute("UPDATE BOC_USER_RELATIONSHIPS SET STATUS = \"friends\", D_STATUS = CURRENT_TIMESTAMP WHERE USER_1 = ? AND USER_2 = ?", (receiver, sender))
+        db.commit()
+
 
 
 

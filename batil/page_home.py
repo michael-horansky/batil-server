@@ -6,7 +6,7 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, current_app
 )
 
-from batil.db import get_db, get_table_as_list_of_dicts, new_blind_challenge, new_targeted_challenge, accept_challenge, decline_challenge
+from batil.db import get_db, get_table_as_list_of_dicts, new_blind_challenge, new_targeted_challenge, accept_challenge, decline_challenge, send_friend_request
 
 from batil.aux_funcs import *
 
@@ -49,6 +49,17 @@ class PageHome(Page):
         get_args.update(ActionForm.get_args("public_boards"))
         get_args.update(ActionTable.get_navigation_keywords("board_marketplace_table", ["BOARD_NAME", "AUTHOR", "D_PUBLISHED"]))
         get_args.update(ActionTable.get_navigation_keywords("your_saved_boards", ["BOARD_NAME", "AUTHOR", "D_PUBLISHED", "D_SAVED"]))
+        # Users
+        get_args.update(ActionForm.get_args("users"))
+        get_args.update(ActionTable.get_navigation_keywords("leaderboard", ["USERNAME", "RATING", "COUNT_GAMES"]))
+        # Profile
+        get_args.update(ActionForm.get_args("pending_friend_requests"))
+        get_args.update(ActionTable.get_navigation_keywords("friend_requests_for_you", ["USER_1", "D_STATUS"]))
+        get_args.update(ActionForm.get_args("your_profile"))
+        get_args.update(ActionTable.get_navigation_keywords("your_archive", ["PLAYER_A", "PLAYER_B", "OUTCOME", "D_STARTED", "D_FINISHED"]))
+        get_args.update(ActionTable.get_navigation_keywords("your_friends", ["USERNAME", "RATING", "COUNT_GAMES"]))
+        get_args.update(ActionTable.get_navigation_keywords("your_blocked", ["USERNAME", "RATING", "COUNT_GAMES"]))
+
 
         return(get_args)
 
@@ -61,7 +72,7 @@ class PageHome(Page):
             decline_challenge(int(request.form.get("action_table_pending_challenges_selected_row")))
 
     def resolve_action_existing_games(self):
-        print("Existing games action!")
+        pass
 
     def resolve_action_new_game(self):
         db = get_db()
@@ -121,12 +132,13 @@ class PageHome(Page):
                 db.commit()
             elif request.form.get("action_your_boards_unpublished") == "publish":
                 db.execute("UPDATE BOC_BOARDS SET IS_PUBLIC = 1, D_PUBLISHED = CURRENT_TIMESTAMP WHERE BOARD_ID = ?", (action_board_id,))
+                db.execute("INSERT INTO BOC_USER_SAVED_BOARDS (BOARD_ID, USERNAME, D_SAVED) VALUES (?, ?, CURRENT_TIMESTAMP)", (action_board_id, g.user["username"]))
                 db.commit()
         elif "action_your_boards_published" in request.form.keys():
             action_board_id = int(request.form.get("action_table_your_boards_published_selected_row"))
             if request.form.get("action_your_boards_published") == "hide":
                 # published baords are always shown from BOC_USER_SAVED_BOARDS, this just deletes the relational line
-                pass
+                db.execute("DELETE FROM BOC_USER_SAVED_BOARDS WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user["username"]))
             elif request.form.get("action_your_boards_published") == "fork":
                 db.execute("INSERT INTO BOC_BOARDS (T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, HANDICAP, BOARD_NAME) SELECT T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.0, BOARD_NAME || \" (fork)\" FROM BOC_BOARDS WHERE BOARD_ID = ?", (g.user["username"], action_board_id))
                 db.commit()
@@ -157,6 +169,46 @@ class PageHome(Page):
                 removed_board_id = int(request.form.get("action_table_your_saved_boards_selected_row"))
                 db.execute("DELETE FROM BOC_USER_SAVED_BOARDS WHERE BOARD_ID = ? AND USERNAME = ?", (removed_board_id, g.user["username"]))
                 db.commit()
+
+    def resolve_action_users(self):
+        db = get_db()
+        for k, v in request.form.items():
+            print(f" {k} -> {v}")
+        # Database manipulation
+        if "action_leaderboard" in request.form:
+            action_username = request.form.get("action_table_leaderboard_selected_row")
+            if request.form.get("action_leaderboard") == "send_friend_request":
+                send_friend_request(g.user["username"], action_username)
+            if request.form.get("action_leaderboard") == "block_user":
+                print("User blocked!")
+
+    def resolve_action_pending_friend_requests(self):
+        db = get_db()
+        for k, v in request.form.items():
+            print(f" {k} -> {v}")
+        if "action_friend_requests_for_you" in request.form:
+            active_username = request.form.get("action_table_friend_requests_for_you_selected_row")
+            if request.form.get("action_friend_requests_for_you") == "accept":
+                db.execute("UPDATE BOC_USER_RELATIONSHIPS SET STATUS = \"friends\", D_STATUS = CURRENT_TIMESTAMP WHERE USER_1 = ? AND USER_2 = ?", (active_username, g.user["username"]))
+                db.commit()
+            elif request.form.get("action_friend_requests_for_you") == "decline":
+                db.execute("DELETE FROM BOC_USER_RELATIONSHIPS WHERE USER_1 = ? AND USER_2 = ?", (active_username, g.user["username"]))
+                db.commit()
+
+
+    def resolve_action_your_profile(self):
+        db = get_db()
+
+        # Database manipulation
+        if "action_your_profile" in request.form:
+            if request.form.get("action_your_profile") == "save_changes":
+                print("User profile settings changed!")
+        if "action_your_friends" in request.form:
+            if request.form.get("action_your_friends") == "unfriend":
+                print("User unfriended!")
+        if "action_your_blocked" in request.form:
+            if request.form.get("action_your_blocked") == "unblock":
+                print("User unblocked!")
 
     def render_content_logged_out(self):
         self.structured_html.append([
@@ -208,7 +260,7 @@ class PageHome(Page):
         form_new_game.set_tab_property(2, "selection_condition", "action_table_select_board_for_new_game_selected_row_input")
 
         form_new_game.add_ordered_table(2, "select_opponent_for_new_game",
-            f"SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])}))",
+            f"SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])})) AND BOC_USER_RELATIONSHIPS.STATUS=\"friends\"",
             "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES"],
             include_select = True,
             headers = {"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games played with you"},
@@ -335,8 +387,9 @@ class PageHome(Page):
                             WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} THEN BOC_GAMES.PLAYER_B
                             ELSE BOC_GAMES.PLAYER_A
                         END AS OPPONENT,
-                        BOC_GAMES.D_STARTED AS D_STARTED
-                    FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID
+                        BOC_GAMES.D_STARTED AS D_STARTED,
+                        BOC_BOARDS.BOARD_NAME AS BOARD_NAME
+                    FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID
                     WHERE
                         (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
                         AND BOC_GAMES.STATUS = \"in_progress\"
@@ -345,9 +398,9 @@ class PageHome(Page):
                             OR
                             (BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'B')
                         )
-                    """, "GAME_ID", ["OPPONENT", "D_STARTED"],
+                    """, "GAME_ID", ["OPPONENT", "BOARD_NAME", "D_STARTED"],
                     include_select = False,
-                    headers = {"OPPONENT" : "Opponent", "D_STARTED" : "Start date"},
+                    headers = {"OPPONENT" : "Opponent", "BOARD_NAME" : "Board", "D_STARTED" : "Start date"},
                     order_options = [["D_STARTED", "Start"]],
                     actions = {"open" : "Open game"},
                     filters = False,
@@ -375,8 +428,9 @@ class PageHome(Page):
                             WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} THEN BOC_GAMES.PLAYER_B
                             ELSE BOC_GAMES.PLAYER_A
                         END AS OPPONENT,
-                        BOC_GAMES.D_STARTED AS D_STARTED
-                    FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID
+                        BOC_GAMES.D_STARTED AS D_STARTED,
+                        BOC_BOARDS.BOARD_NAME AS BOARD_NAME
+                    FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID
                     WHERE
                         (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
                         AND BOC_GAMES.STATUS = \"in_progress\"
@@ -385,9 +439,9 @@ class PageHome(Page):
                             OR
                             (BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'B')
                         )
-                    """, "GAME_ID", ["OPPONENT", "D_STARTED"],
+                    """, "GAME_ID", ["OPPONENT", "BOARD_NAME", "D_STARTED"],
                     include_select = False,
-                    headers = {"OPPONENT" : "Opponent", "D_STARTED" : "Start date"},
+                    headers = {"OPPONENT" : "Opponent", "BOARD_NAME" : "Board", "D_STARTED" : "Start date"},
                     order_options = [["D_STARTED", "Start"]],
                     actions = {"open" : "Open game"},
                     filters = False,
@@ -486,27 +540,146 @@ class PageHome(Page):
                                 INNER JOIN BOC_USER_SAVED_BOARDS ON BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = {json.dumps(g.user["username"])}
             WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1
             GROUP BY BOC_BOARDS.BOARD_ID""",
-            "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "D_PUBLISHED", "D_SAVED", "HANDICAP"], include_select = False,
+            "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "D_PUBLISHED", "D_SAVED", "HANDICAP"],
+            include_select = False,
             headers = {"BOARD_NAME" : "Board", "AUTHOR" : "Author", "GAMES_PLAYED" : "# games played", "D_PUBLISHED" : "Published", "D_SAVED" : "Saved", "HANDICAP" : "Handicap"},
             order_options = [["D_SAVED", "Saved"], ["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"], ["HANDICAP", "Handicap"]],
             actions = {"view" : "View", "remove" : "Remove"},
             filters = ["BOARD_NAME", "AUTHOR", "D_PUBLISHED", "D_SAVED"],
             action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
             rows_per_view = 8)
-        form_public_boards.realise_form()
 
+        form_public_boards.realise_form()
         self.structured_html.append(form_public_boards.structured_html)
+
+    def render_section_user_profiles(self):
+        form_users = ActionForm("users", "Users", "home")
+        form_users.initialise_tabs(["Leaderboard"])
+
+        form_users.add_ordered_table(0, "leaderboard",
+            f"""SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER""",
+            "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES"],
+            include_select = False,
+            headers = {"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games played with you"},
+            order_options = [["RATING", "Rating"], ["COUNT_GAMES", "# games"], ["USERNAME", "Username"]],
+            actions = {"view" : "View", "send_friend_request" : "Befriend", "block_user" : "Block"},
+            filters = ["USERNAME", "RATING", "COUNT_GAMES"],
+            action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("user.user", username = datum["IDENTIFIER"]))}},
+            rows_per_view = 8,
+            enforce_filter_kw = "WHERE")
+
+        form_users.realise_form()
+        self.structured_html.append(form_users.structured_html)
+
+
+    def render_section_your_profile(self):
+        db = get_db()
+        # If you have any pending friend requests sent your way, they will be displayed in a separate form on top
+        self.open_container("your_profile_forms_container")
+
+        pending_friend_requests_sample = db.execute("SELECT * FROM BOC_USER_RELATIONSHIPS WHERE USER_2 = ? AND STATUS = \"friends_pending\" LIMIT 1", (g.user["username"],)).fetchone()
+        if pending_friend_requests_sample is not None:
+            form_pending_friend_requests = ActionForm("pending_friend_requests", "Pending friend requests", "home")
+            form_pending_friend_requests.initialise_tabs(["Friend requests for you"])
+            form_pending_friend_requests.add_ordered_table(0, "friend_requests_for_you",
+                f"SELECT USER_1, D_STATUS FROM BOC_USER_RELATIONSHIPS WHERE USER_2 = {json.dumps(g.user["username"])} AND STATUS = \"friends_pending\"",
+                "USER_1", ["USER_1", "D_STATUS"],
+                include_select = False,
+                headers = {"USER_1" : "Sender", "D_STATUS" : "When received"},
+                order_options = [["D_STATUS", "Received"]],
+                actions = {"accept" : "Accept", "view" : "View", "decline" : "Decline"},
+                filters = ["USER_1", "D_STATUS"],
+                action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("user.user", username = datum["IDENTIFIER"]))}},
+                rows_per_view = 3)
+
+            form_pending_friend_requests.realise_form()
+            self.structured_html.append(form_pending_friend_requests.structured_html)
+
+        form_your_profile = ActionForm("your_profile", "Profile", "home")
+        form_your_profile.initialise_tabs(["Personal settings", "Archive", "Friends", "Blocked"])
+        # Personal settings: change pfp, change password, set language etc
+        personal_settings_form = [
+            f"  <h2>Profile picture</h2>",
+            f"  <button type=\"button\" name=\"upload_profile_picture\">Upload new picture</button>",
+            f"  <h2>Language</h2>",
+            f"  <label for=\"user_language_select\">Select language:</label>",
+            f"  <select name=\"user_language_select\" id=\"user_language_select\">",
+            f"    <option value=\"english\">English</option>",
+            f"    <option value=\"french\">French</option>",
+            f"    <option value=\"czech\">Raz som si tak nadrbal palec na nohe až mi guľky zmakoveli</option>",
+            f"    <option value=\"slovak\">Slovak</option>",
+            f"  </select>",
+            f"  <h2>Change password</h2>",
+            f"  <label for=\"new_password\">New password</label>",
+            f"  <input type=\"password\" name=\"new_password\" id=\"new_password\">",
+            f"  <label for=\"new_password_confirm\">Confirm password</label>",
+            f"  <input type=\"password\" name=\"new_password_confirm\" id=\"new_password_confirm\">",
+            ]
+        form_your_profile.add_to_tab(0, "content", personal_settings_form)
+        form_your_profile.add_button(0, "submit", "save_changes", "Save changes", "save_changes")
+
+        # Archive of past games
+        # TODO: special method of ActionForm for this: highlight green/red for your wins/losses, add column for your ELO change (or/and elo difference + handicap)
+        form_your_profile.add_ordered_table(1, "your_archive",
+            f"""SELECT GAME_ID, PLAYER_A, PLAYER_B, D_STARTED, D_FINISHED, OUTCOME
+            FROM BOC_GAMES
+            WHERE (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
+                AND BOC_GAMES.STATUS = \"concluded\"""",
+            "GAME_ID", ["PLAYER_A", "PLAYER_B", "OUTCOME", "D_STARTED", "D_FINISHED"],
+            include_select = False,
+            headers = {"PLAYER_A" : "Player A", "PLAYER_B" : "Player B", "OUTCOME" : "Outcome", "D_STARTED" : "Started", "D_FINISHED" : "Finished"},
+            order_options = [["D_FINISHED", "Finished"]],
+            actions = {"view" : "View"},
+            filters = ["PLAYER_A", "PLAYER_B", "OUTCOME", "D_STARTED", "D_FINISHED"],
+            action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("game_bp.game", game_id = datum["IDENTIFIER"]))}},
+            rows_per_view = 8)
+
+        # List of friends
+        form_your_profile.add_ordered_table(2, "your_friends",
+            f"""SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])})) AND BOC_USER_RELATIONSHIPS.STATUS=\"friends\"""",
+            "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES"],
+            include_select = False,
+            headers = {"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games played with you"},
+            order_options = [["COUNT_GAMES", "# games"], ["RATING", "Rating"], ["USERNAME", "Username"]],
+            actions = {"view" : "View", "unfriend" : "Unfriend"},
+            filters = ["USERNAME", "RATING", "COUNT_GAMES"],
+            action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("user.user", username = datum["IDENTIFIER"]))}},
+            rows_per_view = 8,
+            enforce_filter_kw = "WHERE")
+
+        # List of blocked users
+        form_your_profile.add_ordered_table(3, "your_blocked",
+            f"""SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])})) AND BOC_USER_RELATIONSHIPS.STATUS=\"blocked\"""",
+            "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES"],
+            include_select = False,
+            headers = {"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games played with you"},
+            order_options = [["COUNT_GAMES", "# games"], ["RATING", "Rating"], ["USERNAME", "Username"]],
+            actions = {"view" : "View", "unblock" : "Unblock"},
+            filters = ["USERNAME", "RATING", "COUNT_GAMES"],
+            action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("user.user", username = datum["IDENTIFIER"]))}},
+            rows_per_view = 8,
+            enforce_filter_kw = "WHERE")
+
+        form_your_profile.realise_form()
+        self.structured_html.append(form_your_profile.structured_html)
+
+        self.close_container()
+
 
 
 
 
     def render_content_logged_in(self):
-        self.initialise_sections({"play" : "Play", "your_boards" : "Your boards", "public_boards" : "Public boards"})
+        self.initialise_sections({"play" : "Play", "your_boards" : "Your boards", "public_boards" : "Public boards", "user_profiles" : "Users", "your_profile_section" : "Profile"})
         self.render_section_play()
         self.open_next_section()
         self.render_section_your_boards()
         self.open_next_section()
         self.render_section_public_boards()
+        self.open_next_section()
+        self.render_section_user_profiles()
+        self.open_next_section()
+        self.render_section_your_profile()
         self.close_sections()
 
 
