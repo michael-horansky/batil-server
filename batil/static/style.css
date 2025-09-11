@@ -568,3 +568,13 @@ input, textarea, select { width: 100%; padding: 8px; }
 }
 
 
+.your_archive_row_win {
+  background-color: #e6f4ea;
+}
+.your_archive_row_loss {
+  background-color: #fdecea;
+}
+.your_archive_row_draw {
+  background-color: #f9f9f9;
+}
+

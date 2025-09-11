@@ -104,6 +104,8 @@ hr {
 
 #main_column {
   flex: 1 1 auto;           /* let it grow/shrink vertically */
+  flex-direction: column;
+  display: flex;
   max-width: 1280px;        /* constrain width */
   width: 100%;              /* take full width up to max */
   background: white;        /* just demo */
@@ -114,6 +116,83 @@ hr {
   width: 100%;
   padding: 20px;
   box-sizing: border-box;
+}
+
+
+#profile_header {
+
+  padding-left: 300px;
+  display: flex;
+  align-items: center;   /* vertical centering */
+  gap: 1em;              /* spacing between image and text */
+}
+
+#profile_header img {
+  max-height: 200px;     /* or whatever makes sense */
+  width: auto;
+}
+
+#profile_header_username {
+  flex: 1;
+  font-size: 25px;
+  margin-left: 100px;
+
+}
+
+#profile_content {
+  flex: 1;
+  flex-direction: column;
+  display: flex;
+}
+
+#action_form_profile_form_container {
+  flex: 1;
+  flex-direction: column;
+  display: flex;
+}
+
+#action_form_profile_form {
+  flex: 1;
+  flex-direction: column;
+  display: flex;
+}
+
+
+/* Static table */
+
+.static_table_container {
+  max-width: 400px;
+  background: #fff;
+  border: 2px solid #bbb;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  padding: 1em 1.5em;
+  margin: 1em auto;
+}
+
+.static_table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+  color: #333;
+}
+
+.static_table .stats_header {
+  text-align: left;
+  padding: 0.5em 0.75em 0.5em 0;
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+}
+
+.static_table .stats_val {
+  text-align: right;
+  padding: 0.5em 0;
+  color: #222;
+}
+
+.static_table tr + tr td {
+  border-top: 1px solid #eee;
 }
 
 /* Tab Content */
@@ -511,4 +590,25 @@ input, textarea, select { width: 100%; padding: 8px; }
   background: #c6e2ff;
 }
 
+
+
+.profile_archive_row_win {
+  background-color: #e6f4ea;
+}
+.profile_archive_row_loss {
+  background-color: #fdecea;
+}
+.profile_archive_row_draw {
+  background-color: #f9f9f9;
+}
+
+.profile_archive_with_you_row_win {
+  background-color: #e6f4ea;
+}
+.profile_archive_with_you_row_loss {
+  background-color: #fdecea;
+}
+.profile_archive_with_you_row_draw {
+  background-color: #f9f9f9;
+}
 

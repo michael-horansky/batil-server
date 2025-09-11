@@ -35,12 +35,12 @@ class ActionForm(HTMLObject):
 
     # instance methods
 
-    def __init__(self, identifier, form_title, blueprint, method = "post", allow_file_encoding = False):
+    def __init__(self, identifier, form_title, blueprint, method = "post", allow_file_encoding = False, **kwargs):
         super().__init__()
         self.identifier = identifier
         self.form_title = form_title
         self.blueprint = blueprint # To create the url for action
-        self.action_url = url_for(f"{self.blueprint}.action_{self.identifier}")
+        self.action_url = url_for(f"{self.blueprint}.action_{self.identifier}", **kwargs)
         self.cls = "action_form"
 
         self.number_of_tabs = 0
@@ -195,7 +195,7 @@ class ActionForm(HTMLObject):
                 ])
         self.add_to_tab(section_i, "footer", button_html)
 
-    def add_ordered_table(self, section_i, table_id, table_query, data_identifier, data_cols, include_select, headers, order_options, actions = None, filters = None, action_instructions = {}, rows_per_view = 10, enforce_filter_kw = None):
+    def add_ordered_table(self, section_i, table_id, table_query, data_identifier, data_cols, include_select, headers, order_options, actions = None, filters = None, action_instructions = {}, rows_per_view = 10, enforce_filter_kw = None, row_class_by_col = None):
         # Call this after open_section. This also opens section footer, so there can only be this table in the content of this section
         # The ordering and navigation are done through the GET form!
 
@@ -283,7 +283,7 @@ class ActionForm(HTMLObject):
                 if f"filter_{table_id}_{col_id}" in request.args:
                     current_filter_values[col_id] = request.args.get(f"filter_{table_id}_{col_id}")
 
-        main_table.make_body(main_table_data, filters, current_filter_values)
+        main_table.make_body(main_table_data, filters, current_filter_values, row_class_by_col)
 
         self.add_to_tab(section_i, "content", main_table.structured_html)
 
@@ -332,7 +332,69 @@ class ActionForm(HTMLObject):
         self.add_to_tab(section_i, "header", order_form)
         self.set_tab_property(section_i, "ignore_padding", True)
 
+    def add_game_archive(self, section_i, table_id, username, opponent_username = None, rows_per_view = 8):
+        # A special ordered_table which does the OPPONENT thing and also highlights rows with green/red based on whether USERNAME won the match
+        # If opponent_username is specified, only the matches between the two users are included
 
+        if opponent_username is None:
+            table_query = f"""
+                SELECT BOC_GAMES.GAME_ID AS GAME_ID, BOC_GAMES.D_STARTED AS D_STARTED, BOC_GAMES.D_FINISHED AS D_FINISHED, BOC_GAMES.BOARD_ID AS BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME,
+                    CASE
+                        WHEN BOC_GAMES.PLAYER_A = {json.dumps(username)} THEN BOC_GAMES.PLAYER_B
+                        ELSE BOC_GAMES.PLAYER_A
+                    END AS OPPONENT,
+                    CASE
+                        WHEN BOC_GAMES.PLAYER_A = {json.dumps(username)} THEN \"A\"
+                        ELSE \"B\"
+                    END AS PLAYER_ROLE,
+                    CASE
+                        WHEN BOC_GAMES.OUTCOME = \"draw\" THEN \"draw\"
+                        WHEN ((BOC_GAMES.PLAYER_A = {json.dumps(username)} AND BOC_GAMES.OUTCOME = \"A\") OR (BOC_GAMES.PLAYER_B = {json.dumps(username)} AND BOC_GAMES.OUTCOME = \"B\")) THEN \"win\"
+                        ELSE \"loss\"
+                    END AS POV_OUTCOME
+                FROM BOC_GAMES INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID
+                WHERE (BOC_GAMES.PLAYER_A = {json.dumps(username)} OR BOC_GAMES.PLAYER_B = {json.dumps(username)})
+                    AND BOC_GAMES.STATUS = \"concluded\"
+            """
+            data_identifier = "GAME_ID"
+            data_cols = ["OPPONENT", "POV_OUTCOME", "BOARD_NAME", "PLAYER_ROLE", "D_STARTED", "D_FINISHED", "BOARD_ID"]
+            headers = {"OPPONENT" : "Opponent", "POV_OUTCOME" : "Outcome", "BOARD_NAME" : "Board", "PLAYER_ROLE": "Role", "D_STARTED" : "Started", "D_FINISHED" : "Finished"}
+            order_options = [["D_FINISHED", "Finished"]]
+            actions = {"view_game" : "Game", "view_board" : "Board", "view_opponent" : "Opponent"}
+            filters = ["OPPONENT", "POV_OUTCOME", "BOARD_NAME", "PLAYER_ROLE", "D_STARTED", "D_FINISHED"]
+            action_instructions = {
+                "view_game" : {"type" : "link", "url_func" : (lambda datum : url_for("game_bp.game", game_id = datum["IDENTIFIER"]))},
+                "view_board" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["BOARD_ID"]))},
+                "view_opponent" : {"type" : "link", "url_func" : (lambda datum : url_for("user.user", username = datum["OPPONENT"]))}
+                }
 
+        else:
+            table_query = f"""
+                SELECT BOC_GAMES.GAME_ID AS GAME_ID, BOC_GAMES.D_STARTED AS D_STARTED, BOC_GAMES.D_FINISHED AS D_FINISHED, BOC_GAMES.BOARD_ID AS BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME,
+                    CASE
+                        WHEN BOC_GAMES.PLAYER_A = {json.dumps(username)} THEN \"A\"
+                        ELSE \"B\"
+                    END AS PLAYER_ROLE,
+                    CASE
+                        WHEN BOC_GAMES.OUTCOME = \"draw\" THEN \"draw\"
+                        WHEN ((BOC_GAMES.PLAYER_A = {json.dumps(username)} AND BOC_GAMES.OUTCOME = \"A\") OR (BOC_GAMES.PLAYER_B = {json.dumps(username)} AND BOC_GAMES.OUTCOME = \"B\")) THEN \"win\"
+                        ELSE \"loss\"
+                    END AS POV_OUTCOME
+                FROM BOC_GAMES INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID
+                WHERE ((BOC_GAMES.PLAYER_A = {json.dumps(username)} AND BOC_GAMES.PLAYER_B = {json.dumps(opponent_username)}) OR (BOC_GAMES.PLAYER_B = {json.dumps(username)} AND BOC_GAMES.PLAYER_A = {json.dumps(opponent_username)}))
+                    AND BOC_GAMES.STATUS = \"concluded\"
+            """
+            data_identifier = "GAME_ID"
+            data_cols = ["POV_OUTCOME", "BOARD_NAME", "PLAYER_ROLE", "D_STARTED", "D_FINISHED", "BOARD_ID"]
+            headers = {"POV_OUTCOME" : "Outcome", "BOARD_NAME" : "Board", "PLAYER_ROLE": "Role", "D_STARTED" : "Started", "D_FINISHED" : "Finished"}
+            order_options = [["D_FINISHED", "Finished"]]
+            actions = {"view_game" : "Game", "view_board" : "Board"}
+            filters = ["POV_OUTCOME", "BOARD_NAME", "PLAYER_ROLE", "D_STARTED", "D_FINISHED"]
+            action_instructions = {
+                "view_game" : {"type" : "link", "url_func" : (lambda datum : url_for("game_bp.game", game_id = datum["IDENTIFIER"]))},
+                "view_board" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["BOARD_ID"]))}
+                }
+
+        self.add_ordered_table(section_i, table_id, table_query, data_identifier, data_cols, False, headers, order_options, actions, filters, action_instructions, rows_per_view, row_class_by_col = "POV_OUTCOME")
 
 

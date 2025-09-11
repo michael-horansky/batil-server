@@ -20,3 +20,12 @@ def user(username):
     return(rendered_page.render_page())
 
 # API endpoints for persistent version checking, form submissions etc
+@bp.route('/<username>/action_profile_form', methods=['POST'])
+def action_profile_form(username):
+    rendered_page = PageUser(username)
+    rendered_page.resolve_action_profile_form()
+    get_args = rendered_page.resolve_dynamic_get_form()
+    if get_args is None:
+        return(redirect(url_for("user.user", username=username)))
+    else:
+        return(redirect(url_for("user.user", username=username, **get_args)))

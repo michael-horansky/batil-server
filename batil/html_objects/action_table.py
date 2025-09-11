@@ -86,7 +86,7 @@ class ActionTable(HTMLObject):
                 "  </thead>",
             ])
 
-    def make_body(self, data, include_filters = False, filter_values = None):
+    def make_body(self, data, include_filters = False, filter_values = None, row_class_by_col = None):
         # data is a list of dictionaries, where each dictionary is in the form {header_id : row_value}.
         # Also, each row has to have a key called "IDENTIFIER", the value of which is a string which is a
         # valid partial SQL query, namely the WHERE condition for a SELECT query which selects this row.
@@ -97,7 +97,10 @@ class ActionTable(HTMLObject):
             filter_values = {}
         self.structured_html.append("  <tbody>")
         for datum in data:
-            self.structured_html.append(f"    <tr data-rowid=\"{datum["IDENTIFIER"]}\">")
+            if row_class_by_col is None:
+                self.structured_html.append(f"    <tr data-rowid=\"{datum["IDENTIFIER"]}\">")
+            else:
+                self.structured_html.append(f"    <tr data-rowid=\"{datum["IDENTIFIER"]}\" class=\"{self.identifier}_row_{datum[row_class_by_col]}\">")
             for column_id in self.headers.keys():
                 if self.include_select:
                     self.structured_html.append(f"      <td class=\"{self.identifier}_select_row_btn\" data-rowid=\"{ datum["IDENTIFIER"] }\">{ datum[column_id] }</td>")

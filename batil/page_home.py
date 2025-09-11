@@ -59,7 +59,7 @@ class PageHome(Page):
         get_args.update(ActionForm.get_args("pending_friend_requests"))
         get_args.update(ActionTable.get_navigation_keywords("friend_requests_for_you", ["USER_1", "D_STATUS"]))
         get_args.update(ActionForm.get_args("your_profile"))
-        get_args.update(ActionTable.get_navigation_keywords("your_archive", ["PLAYER_A", "PLAYER_B", "OUTCOME", "D_STARTED", "D_FINISHED"]))
+        get_args.update(ActionTable.get_navigation_keywords("your_archive", ["OPPONENT", "POV_OUTCOME", "BOARD_NAME", "PLAYER_ROLE", "D_STARTED", "D_FINISHED"]))
         get_args.update(ActionTable.get_navigation_keywords("your_friends", ["USERNAME", "RATING", "COUNT_GAMES"]))
         get_args.update(ActionTable.get_navigation_keywords("your_blocked", ["USERNAME", "RATING", "COUNT_GAMES"]))
 
@@ -474,27 +474,16 @@ class PageHome(Page):
     def render_section_your_boards(self):
         db = get_db()
         # One action form with two tabs: Published boards and Workshop
-        your_published_boards_dataset = get_table_as_list_of_dicts(f"""
-            SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED
-            FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
-            WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1 GROUP BY BOC_BOARDS.BOARD_ID
-            """, "BOARD_ID", ["BOARD_NAME", "D_PUBLISHED", "GAMES_PLAYED", "HANDICAP"]
-            )
-        your_unpublished_boards_dataset = get_table_as_list_of_dicts(
-            f"SELECT BOARD_ID, BOARD_NAME, D_CREATED, D_CHANGED FROM BOC_BOARDS WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 0 ORDER BY D_CHANGED DESC",
-            "BOARD_ID", ["BOARD_NAME", "D_CHANGED", "D_CREATED"])
+        your_published_boards_sample = db.execute("SELECT BOARD_ID FROM BOC_BOARDS WHERE AUTHOR = ? AND IS_PUBLIC = 1 LIMIT 1", (g.user["username"],)).fetchone()
+        any_published_boards = your_published_boards_sample is not None
 
         form_your_boards_tabs = ["Boards workshop"]
-        if len(your_published_boards_dataset) > 0:
+        if any_published_boards:
             form_your_boards_tabs.append("Public boards")
 
         form_your_boards = ActionForm("your_boards", "Your boards", "home")
         form_your_boards.initialise_tabs(form_your_boards_tabs)
-        """your_unpublished_boards_table = ActionTable("your_boards_unpublished", include_select = False)
-        your_unpublished_boards_table.make_head({"BOARD_NAME" : "Board", "D_CHANGED" : "Changed", "D_CREATED" : "Created"}, {"edit" : "Edit", "publish" : "Publish", "delete" : "Delete"}, action_instructions = {
-                        "edit" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}
-                    })
-        your_unpublished_boards_table.make_body(your_unpublished_boards_dataset)"""
+
         form_your_boards.add_ordered_table(0, "your_boards_unpublished",
             f"SELECT BOARD_ID, BOARD_NAME, D_CREATED, D_CHANGED FROM BOC_BOARDS WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 0",
             "BOARD_ID", ["BOARD_NAME", "D_CHANGED", "D_CREATED"],
@@ -506,14 +495,9 @@ class PageHome(Page):
             action_instructions = {"edit" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
             rows_per_view = 7
             )
-        #form_your_boards.add_to_tab(0, "content", your_unpublished_boards_table.structured_html)
         form_your_boards.add_button(0, "submit", "create_new_board", "Create new board", "create_new_board_btn")
 
-        if len(your_published_boards_dataset) > 0:
-            """your_published_boards_table = ActionTable("your_boards_published", include_select = False)
-            your_published_boards_table.make_head({"BOARD_NAME" : "Board", "D_PUBLISHED" : "Published", "GAMES_PLAYED" : "# games played", "HANDICAP" : "Handicap"}, {"view" : "View", "fork" : "Fork", "hide" : "Hide"}, action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}})
-            your_published_boards_table.make_body(your_published_boards_dataset)
-            form_your_boards.add_to_tab(1, "content", your_published_boards_table.structured_html)"""
+        if any_published_boards:
             form_your_boards.add_ordered_table(1, "your_boards_published",
                 f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED
                     FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
@@ -637,20 +621,7 @@ class PageHome(Page):
         form_your_profile.add_button(0, "submit", "save_changes", "Save changes", "save_changes")
 
         # Archive of past games
-        # TODO: special method of ActionForm for this: highlight green/red for your wins/losses, add column for your ELO change (or/and elo difference + handicap)
-        form_your_profile.add_ordered_table(1, "your_archive",
-            f"""SELECT GAME_ID, PLAYER_A, PLAYER_B, D_STARTED, D_FINISHED, OUTCOME
-            FROM BOC_GAMES
-            WHERE (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
-                AND BOC_GAMES.STATUS = \"concluded\"""",
-            "GAME_ID", ["PLAYER_A", "PLAYER_B", "OUTCOME", "D_STARTED", "D_FINISHED"],
-            include_select = False,
-            headers = {"PLAYER_A" : "Player A", "PLAYER_B" : "Player B", "OUTCOME" : "Outcome", "D_STARTED" : "Started", "D_FINISHED" : "Finished"},
-            order_options = [["D_FINISHED", "Finished"]],
-            actions = {"view" : "View"},
-            filters = ["PLAYER_A", "PLAYER_B", "OUTCOME", "D_STARTED", "D_FINISHED"],
-            action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("game_bp.game", game_id = datum["IDENTIFIER"]))}},
-            rows_per_view = 8)
+        form_your_profile.add_game_archive(1, "your_archive", g.user["username"], rows_per_view = 8)
 
         # List of friends
         form_your_profile.add_ordered_table(2, "your_friends",
