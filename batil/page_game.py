@@ -159,7 +159,7 @@ class PageGame(Page):
 
                 if (data.changed) {{
                     move_count = data.count;
-                    window.location.reload();
+                    window.location.href = window.location.pathname + \"?last_displayed_turn=\" + encodeURIComponent({self.gm.rendering_output.current_turn});
                 }}
 
                 setTimeout(poll_moves, 1000);

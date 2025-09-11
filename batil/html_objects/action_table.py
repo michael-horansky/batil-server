@@ -57,11 +57,13 @@ class ActionTable(HTMLObject):
 
         self.structured_html.append(f"<table id=\"action_table_{self.identifier}\" class=\"action_table\">")
 
-    def make_head(self, headers, actions = None, action_instructions = {}):
+    def make_head(self, headers, actions = None, action_instructions = {}, col_links = {}):
         # Both headers and actions are dictionaries in the form {id : name}
+        # col_links[col iden] = link func
         self.headers = headers
         self.actions = actions
         self.action_instructions = action_instructions
+        self.col_links = col_links
         self.structured_html.append([
                 "  <thead>",
                 "    <tr>",
@@ -102,10 +104,14 @@ class ActionTable(HTMLObject):
             else:
                 self.structured_html.append(f"    <tr data-rowid=\"{datum["IDENTIFIER"]}\" class=\"{self.identifier}_row_{datum[row_class_by_col]}\">")
             for column_id in self.headers.keys():
-                if self.include_select:
-                    self.structured_html.append(f"      <td class=\"{self.identifier}_select_row_btn\" data-rowid=\"{ datum["IDENTIFIER"] }\">{ datum[column_id] }</td>")
+                if column_id in self.col_links:
+                    td_content = f"<a href=\"{self.col_links[column_id](datum)}\" target=\"_blank\" class=\"action_table_col_link\">{ datum[column_id] }</a>"
                 else:
-                    self.structured_html.append(f"      <td>{ datum[column_id] }</td>")
+                    td_content = datum[column_id]
+                if self.include_select:
+                    self.structured_html.append(f"      <td class=\"{self.identifier}_select_row_btn\" data-rowid=\"{ datum["IDENTIFIER"] }\">{ td_content }</td>")
+                else:
+                    self.structured_html.append(f"      <td>{ td_content }</td>")
             if self.include_select:
                 self.structured_html.append([
                         "      <td>",
@@ -115,14 +121,41 @@ class ActionTable(HTMLObject):
             if self.actions is not None:
                 for iden, name in self.actions.items():
                     if iden in self.action_instructions.keys():
+                        # Toggle condition
+                        if "toggle" in self.action_instructions[iden]:
+                            if datum[self.action_instructions[iden]["toggle"]] != iden:
+                                continue
+
+                        # Disable condition
+                        if "condition" in self.action_instructions[iden]:
+                            if datum[self.action_instructions[iden]["condition"]] == 0:
+                                self.structured_html.append([
+                                    "      <td>",
+                                    f"        <button type=\"button\" class=\"{self.identifier}_submit_btn action_table_column_button\" data-rowid=\"{ datum["IDENTIFIER"] }\" disabled>{name}</button>",
+                                    "      </td>"
+                                ])
+                                continue
+
+
                         # Special type of button
-                        if self.action_instructions[iden]["type"] == "link":
-                            target_url = self.action_instructions[iden]["url_func"](datum)
+                        if "type" in self.action_instructions[iden]:
+                            if self.action_instructions[iden]["type"] == "link":
+                                target_url = self.action_instructions[iden]["url_func"](datum)
+                                self.structured_html.append([
+                                        "      <td>",
+                                        f"        <a href=\"{target_url}\" target=\"_blank\">",
+                                        f"          <button type=\"button\" class=\"action_table_column_button\">{name}</button>",
+                                        f"        </a>",
+                                        "      </td>"
+                                    ])
+                                continue
+                            else:
+                                self.structured_html.append("<td></td>")
+                                continue
+                        else:
                             self.structured_html.append([
                                     "      <td>",
-                                    f"        <a href=\"{target_url}\" target=\"_blank\">",
-                                    f"          <button type=\"button\" class=\"action_table_column_button\">{name}</button>",
-                                    f"        </a>",
+                                    f"        <button type=\"submit\" name=\"action_{self.identifier}\" value=\"{iden}\" class=\"{self.identifier}_submit_btn action_table_column_button\" data-rowid=\"{ datum["IDENTIFIER"] }\">{name}</button>",
                                     "      </td>"
                                 ])
                     else:

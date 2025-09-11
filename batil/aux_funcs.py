@@ -25,4 +25,4 @@ def get_file_extension(file_storage):
 
 # --------------------------------- CONSTANTS ---------------------------------
 
-PFP_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".gif"]
+PFP_EXTENSIONS = ["_DEFAULT_USER_pfp", ".png", ".jpg", ".jpeg", ".webp", ".gif"]

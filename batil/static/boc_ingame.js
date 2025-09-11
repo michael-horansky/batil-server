@@ -2381,4 +2381,34 @@ inspector.organise_reverse_causality_flags();
 inspector.hide_stone_info();
 inspector.hide_square_info();
 
-show_active_timeslice();
+// If the game state was updated automatically, we animate the latest changes. Otherwise, we display the active timeslice
+if (last_displayed_turn < current_turn) {
+    let last_displayed_turn_props = round_from_turn(last_displayed_turn);
+    let last_displayed_round = last_displayed_turn_props[0];
+    let last_displayed_timeslice = last_displayed_turn_props[1];
+
+    show_canon_board_slice(last_displayed_round, last_displayed_timeslice);
+
+    if (last_displayed_round < active_round) {
+        // The game crossed into a new round. Let's ffw to it
+        animation_manager.add_to_queue([["change_round", active_round, 0, ">|", "up"], ["reset_to_canon", active_round, 0]]);
+        last_displayed_timeslice = 0;
+    }
+
+    //select_round(active_round, last_displayed_timeslice);
+    // Now we add the animation for every timeslice in between
+    for (t_i = last_displayed_timeslice; t_i < active_timeslice; t_i++) {
+        //select_timeslice(selected_timeslice += 1);
+        //select_timeslice(t_i);
+        animation_manager.add_to_queue([["change_process", active_round, t_i, "canon", false]]);
+        for (let process_key_index = 0; process_key_index < process_keys.length - 1; process_key_index++) {
+            animation_manager.add_to_queue([["change_process", active_round, t_i + 1, process_keys[process_key_index], false]]);
+        }
+        animation_manager.add_to_queue([["reset_to_canon", active_round, t_i + 1]]);
+    }
+    select_round(active_round, active_timeslice);
+
+} else {
+    show_active_timeslice();
+
+}

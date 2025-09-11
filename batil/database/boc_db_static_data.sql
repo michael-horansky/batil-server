@@ -48,4 +48,11 @@ INSERT INTO BOC_RULES VALUES( 'hide_future', 'viewing_scope', 'The players can o
 INSERT INTO BOC_RULES VALUES( 'presence', 'unlock_tagscreen_behaviour', 'If both "unlock" and "lock" are present, they cancel each other out, regardless of the number of tagscreens of each type.', 0, '', '', 'Antidote' );
 INSERT INTO BOC_RULES VALUES( 'saturation', 'unlock_tagscreen_behaviour', 'The difference between the number of "unlock" and "lock" tagscreens for each stone is calculated in each time-slice. If negative, lock state is forced. If zero, nothing happens. If positive, stones in lock state become unlocked and unlocked states are interfered with.', 1, '', '', 'Tug-o-war' );
 
+/* Initialise home.index tutorial */
+
+INSERT INTO BOC_TREE_DOCUMENTS (LABEL, CONTENT, VIEWER) VALUES ('Welcome', 'Welcome to Batil (BAttle in TIme Loops)!<br>This guide is divided into two parts. The first will teach you how to navigate the Batil website and how to start playing the game right away. The second is a complete rulebook for Batil, including example scenarios which you can explore in-game by clicking on the interactive links inside the tutorial text.<br>If you''re reading this, the first ''beta'' version of the game has been deployed to a live server. Please keep track of any issues, wanted features, unwanted bugs, unclear explanations, or comments regarding the rules of the game that you might have and send them to me either via this (TODO LINK) feedback submission form (/TODO) or via my e-mail address michael.horansky@gmail.com. If you won''t, I will send you unsolicited emails on the address you provided during registration, where I will spam you with tedious multi-page feedback forms. Thank you for being a cooperating test subject.<br>Enjoy the game!', 'tutorial_guide');
+
+
+
+
 

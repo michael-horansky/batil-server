@@ -4,7 +4,7 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for
 )
 
-from batil.db import get_db
+from batil.db import get_db, get_pfp_source
 from batil.html_objects.html_object import HTMLObject
 from batil.aux_funcs import *
 
@@ -65,7 +65,6 @@ class Page(HTMLObject):
 
     def initialise_sections(self, section_names):
         # section names = {"id" : "human-readable label"}
-        db = get_db()
         self.section_names = []
         self.structured_html.append([
             "<div class=\"container\">",
@@ -87,16 +86,17 @@ class Page(HTMLObject):
             ])
         # if logged in, we display the pfp here
         if g.user:
-            user_row = db.execute("SELECT USERNAME, D_CREATED, RATING, PROFILE_PICTURE_EXTENSION FROM BOC_USER WHERE USERNAME = ?", (g.user["username"],)).fetchone()
+            """user_row = db.execute("SELECT USERNAME, D_CREATED, RATING, PROFILE_PICTURE_EXTENSION FROM BOC_USER WHERE USERNAME = ?", (g.user["username"],)).fetchone()
             if user_row["PROFILE_PICTURE_EXTENSION"] is not None:
                 pfp_ext_ind = int(user_row["PROFILE_PICTURE_EXTENSION"])
-                pfp_url = url_for('static', filename=f"user_content/profile_pictures/{g.user["username"]}_pfp{PFP_EXTENSIONS[pfp_ext_ind]}")
-                self.structured_html.append([
-                    "  <div class=\"sidebar_pfp\">",
-                    f"    <div class=\"sidebar_pfp_username\">{ g.user['username'] }</div>",
-                    f"    <img src=\"{pfp_url}\" alt=\"{g.user["username"]} profile picture\">",
-                    "  </div>"
-                    ])
+                pfp_url = url_for('static', filename=f"user_content/profile_pictures/{g.user["username"]}_pfp{PFP_EXTENSIONS[pfp_ext_ind]}")"""
+            pfp_url = get_pfp_source(g.user["username"])
+            self.structured_html.append([
+                "  <div class=\"sidebar_pfp\">",
+                f"    <div class=\"sidebar_pfp_username\">{ g.user['username'] }</div>",
+                f"    <img src=\"{pfp_url}\" alt=\"{g.user["username"]} profile picture\">",
+                "  </div>"
+                ])
 
         self.structured_html.append([
             "  </nav>",

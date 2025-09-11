@@ -6,7 +6,7 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, current_app
 )
 
-from batil.db import get_db, get_table_as_list_of_dicts, new_blind_challenge, new_targeted_challenge, accept_challenge, decline_challenge
+from batil.db import get_db, get_table_as_list_of_dicts, new_blind_challenge, new_targeted_challenge, accept_challenge, decline_challenge, get_pfp_source
 
 from batil.aux_funcs import *
 
@@ -43,14 +43,11 @@ class PageUser(Page):
         pass
 
     def render_profile_header(self):
-        # pfp
-        if self.user_row["PROFILE_PICTURE_EXTENSION"] is not None:
-            pfp_ext_ind = int(self.user_row["PROFILE_PICTURE_EXTENSION"])
-            pfp_url = url_for('static', filename=f"user_content/profile_pictures/{self.username}_pfp{PFP_EXTENSIONS[pfp_ext_ind]}")
-            self.structured_html.append([
-                f"<img src=\"{pfp_url}\" alt=\"{self.username} profile picture\">",
-                f"<div id=\"profile_header_username\">{ self.username }</div>",
-                ])
+        pfp_url = get_pfp_source(self.username)
+        self.structured_html.append([
+            f"<img src=\"{pfp_url}\" alt=\"{self.username} profile picture\">",
+            f"<div id=\"profile_header_username\">{ self.username }</div>",
+            ])
 
     def render_profile_content(self):
         db = get_db()
@@ -64,6 +61,15 @@ class PageUser(Page):
         profile_form.initialise_tabs(profile_form_tabs)
 
         # Stats
+        pfp_url = get_pfp_source(self.username)
+        business_card = [
+            f"<div id=\"profile_head\">",
+            f"  <img src=\"{pfp_url}\" alt=\"{self.username}'s profile picture\" class=\"profile_picture\">",
+            f"  <div class=\"profile_picture_tag\">{self.username}</div>",
+            f"</div>"
+            ]
+
+
         number_of_games = db.execute("SELECT COUNT(*) AS COUNT_GAMES FROM BOC_GAMES WHERE STATUS=\"concluded\" AND (PLAYER_A = ? OR PLAYER_B = ?)", (self.username, self.username)).fetchone()["COUNT_GAMES"]
         number_of_boards = db.execute("SELECT COUNT(*) AS COUNT_BOARDS FROM BOC_BOARDS WHERE IS_PUBLIC=1 AND AUTHOR = ?", (self.username,)).fetchone()["COUNT_BOARDS"]
         number_of_boards_saved = db.execute("SELECT COUNT(*) AS COUNT_BOARDS_SAVED FROM BOC_USER_SAVED_BOARDS WHERE USERNAME = ?", (self.username,)).fetchone()["COUNT_BOARDS_SAVED"]
@@ -80,7 +86,16 @@ class PageUser(Page):
             ["Friends:", number_of_friends]
             ]
         stats_table.make_table(stats_table_data, stats_table_cols)
-        profile_form.add_to_tab(0, "content", stats_table.structured_html)
+
+        profile_stats = [
+            "<div id=\"business_card\">",
+            business_card,
+            stats_table.structured_html,
+            "</div>"
+            ]
+
+        profile_form.add_to_tab(0, "content", profile_stats)
+        #profile_form.add_to_tab(0, "content", stats_table.structured_html)
 
         # Archive
         profile_form.add_game_archive(1, "profile_archive", self.username, rows_per_view = 8)
@@ -139,9 +154,9 @@ class PageUser(Page):
         self.open_container("main_content")
         self.open_container("main_column")
 
-        self.open_container("profile_header", "main_column_section")
-        self.render_profile_header()
-        self.close_container()
+        #self.open_container("profile_header", "main_column_section")
+        #self.render_profile_header()
+        #self.close_container()
 
         self.open_container("profile_content", "main_column_section")
         self.render_profile_content()

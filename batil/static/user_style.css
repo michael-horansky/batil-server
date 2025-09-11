@@ -157,6 +157,43 @@ hr {
   display: flex;
 }
 
+/* Profile picture */
+
+#business_card {
+  display: flex;              /* make children sit side by side */
+  flex-direction: row;        /* default, but explicit */
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: #fafafa;
+  font-family: system-ui, sans-serif;
+  margin: 0 auto;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+#profile_head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.profile_picture {
+  width: 256px;
+  height: 256px;
+  border: 2px solid #ccc;
+  background: #fff;
+}
+
+.profile_picture_tag {
+  margin-top: 12px;
+  font-size: 1.2em;
+  font-weight: 500;
+  color: #333;
+  text-align: center;
+}
+
 
 /* Static table */
 

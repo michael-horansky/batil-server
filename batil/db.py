@@ -7,7 +7,9 @@ from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
 
 import click
-from flask import current_app, g
+from flask import current_app, g, url_for
+#from flask_mail import Message
+#from batil.batil_flask_extensions import mail
 
 from batil.aux_funcs import *
 
@@ -42,8 +44,8 @@ def init_db():
     with current_app.open_resource('database/boc_db_static_data.sql') as f:
         cur.executescript(f.read().decode('utf8'))
     # Default admin user
-    cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS, PROFILE_PICTURE_EXTENSION) VALUES( 'batil', 'dvojka@110zbor.sk', '{generate_password_hash('loopinsohard')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE', 0 )")
-    cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS, PROFILE_PICTURE_EXTENSION) VALUES( 'dvojka110', 'dvojka@110zbor.sk', '{generate_password_hash('Allegro4Ever')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE', 1 )")
+    cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS, PROFILE_PICTURE_EXTENSION) VALUES( 'batil', 'dvojka@110zbor.sk', '{generate_password_hash('loopinsohard')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE', 1 )")
+    cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS, PROFILE_PICTURE_EXTENSION) VALUES( 'dvojka110', 'dvojka@110zbor.sk', '{generate_password_hash('Allegro4Ever')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE', 2 )")
     #cur.execute("INSERT INTO BOC_USER_RELATIONSHIPS (USER_1, USER_2, STATUS, D_STATUS) VALUES('batil', 'dvojka110', 'friends', CURRENT_TIMESTAMP)")
 
     # Add default boards
@@ -128,7 +130,7 @@ def add_user(username, email, password):
     random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
     db.execute(
-        "INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, AUTH_CODE, N_FAILS, D_CREATED, D_CHANGED, PRIVILEGE) VALUES (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, \'USER\')",
+        "INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, AUTH_CODE, N_FAILS, D_CREATED, D_CHANGED, PRIVILEGE, STATUS) VALUES (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, \'USER\', \'PENDING\')",
         (username, email, generate_password_hash(password), random_string),
     )
 
@@ -141,6 +143,15 @@ def add_user(username, email, password):
         )
 
     db.commit()
+
+    # We send the verification email
+    """varify_url =
+    msg = Message(
+        subject="batil - email verification",
+        recipients=[email],
+        body="This is a test email."
+    )
+    mail.send(msg)"""
 
 def new_blind_challenge(target_board, challenge_author, ruleset_selection):
     # target_board can be null for blind challenges
@@ -278,6 +289,78 @@ def send_friend_request(sender, receiver):
         db.execute("UPDATE BOC_USER_RELATIONSHIPS SET STATUS = \"friends\", D_STATUS = CURRENT_TIMESTAMP WHERE USER_1 = ? AND USER_2 = ?", (receiver, sender))
         db.commit()
 
+def accept_friend_request(sender, receiver):
+    db = get_db()
+    db.execute("UPDATE BOC_USER_RELATIONSHIPS SET STATUS = \"friends\", D_STATUS = CURRENT_TIMESTAMP WHERE USER_1 = ? AND USER_2 = ? AND STATUS = \"friends_pending\"", (receiver, sender))
+    db.commit()
+
+def decline_friend_request(sender, receiver):
+    db = get_db()
+    db.execute("DELETE FROM BOC_USER_RELATIONSHIPS WHERE USER_1 = ? AND USER_2 = ? AND STATUS = \"friends_pending\"", (receiver, sender))
+    db.commit()
+
+def withdraw_friend_request(sender, receiver):
+    db = get_db()
+    db.execute("DELETE FROM BOC_USER_RELATIONSHIPS WHERE USER_1 = ? AND USER_2 = ? AND STATUS = \"friends_pending\"", (sender, receiver))
+    db.commit()
+
+def unfriend_user(sender, receiver):
+    db = get_db()
+    db.execute("DELETE FROM BOC_USER_RELATIONSHIPS WHERE ((USER_1 = ? AND USER_2 = ?) OR (USER_1 = ? AND USER_2 = ?)) AND STATUS = \"friends\"", (sender, receiver, receiver, sender))
+    db.commit()
+
+def block_user(sender, receiver):
+    db = get_db()
+    # Removes existing freindship
+    db.execute("DELETE FROM BOC_USER_RELATIONSHIPS WHERE ((USER_1 = ? AND USER_2 = ?) OR (USER_1 = ? AND USER_2 = ?)) AND (STATUS = \"friends\" OR STATUS = \"friends_pending\")", (sender, receiver, receiver, sender))
+    existing_relation_row = db.execute("SELECT USER_1, USER_2, STATUS, D_STATUS FROM BOC_USER_RELATIONSHIPS WHERE USER_1 = ? AND USER_2 = ?", (sender, receiver)).fetchone()
+    if existing_relation_row is None:
+        db.execute("INSERT INTO BOC_USER_RELATIONSHIPS (USER_1, USER_2, STATUS, D_STATUS) VALUES (?, ?, \"blocked\", CURRENT_TIMESTAMP)", (sender, receiver))
+    else:
+        db.execute("UPDATE BOC_USER_RELATIONSHIPS SET STATUS = \"blocked\", D_STATUS = CURRENT_TIMESTAMP WHERE USER_1 = ? AND USER_2 = ?", (receiver, sender))
+    db.commit()
+
+def unblock_user(sender, receiver):
+    db = get_db()
+    db.execute("DELETE FROM BOC_USER_RELATIONSHIPS WHERE USER_1 = ? AND USER_2 = ? AND STATUS = \"blocked\"", (sender, receiver))
+    db.commit()
+
+
+# User data access aux functions
+
+def get_pfp_source(username):
+    db = get_db()
+    pfp_ext_index_raw = db.execute("SELECT PROFILE_PICTURE_EXTENSION FROM BOC_USER WHERE USERNAME = ?", (username,)).fetchone()["PROFILE_PICTURE_EXTENSION"]
+    try:
+        pfp_ext_index = int(pfp_ext_index_raw)
+        if pfp_ext_index == 0:
+            # Default pfp
+            return(url_for('static', filename=f"user_content/profile_pictures/_DEFAULT_USER_pfp.jpeg"))
+        else:
+            return(url_for('static', filename=f"user_content/profile_pictures/{username}_pfp{PFP_EXTENSIONS[pfp_ext_index]}"))
+    except:
+        return(url_for('static', filename=f"user_content/profile_pictures/_DEFAULT_USER_pfp.jpeg"))
+
+# User boards actions
+
+def hide_board(username, board_id):
+    # If only this user saved the board, and it was not used for any game or challenge so far, then it is properly deleted
+    # otherwise he just unsaves it
+    db = get_db()
+    no_one_saved_the_board_data = db.execute("SELECT 1 FROM BOC_USER_SAVED_BOARDS WHERE BOARD_ID = ? AND USERNAME != ? LIMIT 1", (board_id, username)).fetchone()
+    no_one_saved_the_board = no_one_saved_the_board_data is None
+    no_chal_used_the_board_data = db.execute("SELECT 1 FROM BOC_CHALLENGES WHERE BOARD_ID = ? LIMIT 1", (board_id,)).fetchone()
+    no_chal_used_the_board = no_chal_used_the_board_data is None
+    no_game_used_the_board_data = db.execute("SELECT 1 FROM BOC_GAMES WHERE BOARD_ID = ? LIMIT 1", (board_id,)).fetchone()
+    no_game_used_the_board = no_game_used_the_board_data is None
+
+    if no_one_saved_the_board and no_chal_used_the_board and no_game_used_the_board:
+        db.execute("DELETE FROM BOC_USER_SAVED_BOARDS WHERE BOARD_ID = ? AND USERNAME = ?", (board_id, username))
+        db.execute("DELETE FROM BOC_BOARDS WHERE BOARD_ID = ?", (board_id,))
+        db.commit()
+    else:
+        db.execute("DELETE FROM BOC_USER_SAVED_BOARDS WHERE BOARD_ID = ? AND USERNAME = ?", (board_id, username))
+        db.commit()
 
 
 

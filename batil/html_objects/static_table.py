@@ -1,4 +1,4 @@
-# Generic class for static tables. Every page inherits this.
+# Generic class for static tables.
 
 from batil.html_objects.html_object import HTMLObject
 

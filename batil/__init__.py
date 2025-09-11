@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask
+#from batil.batil_flask_extensions import mail
 
 from werkzeug.routing import BaseConverter
 
@@ -19,6 +20,18 @@ def create_app(test_config=None):
         SESSION_COOKIE_NAME=os.getenv("SESSION_COOKIE_NAME", "session"),
         DATABASE=os.path.join(app.instance_path, 'batil.sqlite'),
     )
+
+    # Initialise mail server
+    app.config.update(
+        MAIL_SERVER='smtp.gmail.com',
+        MAIL_PORT=587,
+        MAIL_USE_TLS=True,
+        MAIL_USERNAME='noreply@batil.com',
+        MAIL_PASSWORD='loopinsohard',
+        MAIL_DEFAULT_SENDER=('Batil', 'noreply@batil.com')
+    )
+
+    #mail.init_app(app)
 
     if test_config is None:
         # load the instance config, if it exists, when not testing

@@ -153,6 +153,16 @@ class HTMLRenderer(Renderer):
         self.deposit_object("time_jumps", self.render_object.time_jumps)
 
         self.deposit_datum("current_turn", self.render_object.current_turn)
+        if "last_displayed_turn" in request.args:
+            try:
+                if int(request.args.get("last_displayed_turn")) >= 1 and int(request.args.get("last_displayed_turn")) <= self.render_object.current_turn:
+                    self.deposit_datum("last_displayed_turn", int(request.args.get("last_displayed_turn")))
+                else:
+                    self.deposit_datum("last_displayed_turn", self.render_object.current_turn)
+            except:
+                self.deposit_datum("last_displayed_turn", self.render_object.current_turn)
+        else:
+            self.deposit_datum("last_displayed_turn", self.render_object.current_turn)
 
         # ---------------------- Game status properties -----------------------
         self.deposit_datum("game_status", self.render_object.game_status)

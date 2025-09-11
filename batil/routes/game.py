@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 bp = Blueprint('game_bp', __name__, url_prefix="/game")
 
-@bp.route('/<regex("[A-Za-z0-9]{16}"):game_id>', methods=['GET', 'POST'])
+@bp.route('/<regex("[A-Za-z0-9]{16}"):game_id>', methods=['GET'])
 def game(game_id):
     rendered_page = PageGame(game_id)
     rendered_page.load_game()
@@ -37,6 +37,7 @@ def moves_count(game_id):
 def command_submission(game_id):
     rendered_page = PageGame(game_id)
     rendered_page.load_game()
+    last_turn_index = rendered_page.gm.current_turn_index
     rendered_page.resolve_command_submission()
-    return(redirect(url_for("game_bp.game", game_id=game_id)))
+    return(redirect(url_for("game_bp.game", game_id=game_id, last_displayed_turn = last_turn_index)))
 
