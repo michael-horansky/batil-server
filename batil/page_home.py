@@ -10,7 +10,7 @@ from PIL import Image
 import os
 
 
-from batil.db import get_db, get_table_as_list_of_dicts, new_blind_challenge, new_targeted_challenge, accept_challenge, decline_challenge, send_friend_request, accept_friend_request, decline_friend_request, withdraw_friend_request, unfriend_user, block_user, unblock_user, hide_board
+from batil.db import get_db, get_table_as_list_of_dicts, new_blind_challenge, new_targeted_challenge, accept_challenge, decline_challenge, send_friend_request, accept_friend_request, decline_friend_request, withdraw_friend_request, unfriend_user, block_user, unblock_user, hide_board, tdv_edit_chapter, tdv_add_chapter, tdv_add_child
 
 from batil.aux_funcs import *
 
@@ -64,7 +64,8 @@ class PageHome(Page):
         get_args.update(ActionTable.get_navigation_keywords("your_archive", ["OPPONENT", "POV_OUTCOME", "BOARD_NAME", "PLAYER_ROLE", "D_STARTED", "D_FINISHED"]))
         get_args.update(ActionTable.get_navigation_keywords("your_friends", ["USERNAME", "RATING", "COUNT_GAMES"]))
         get_args.update(ActionTable.get_navigation_keywords("your_blocked", ["USERNAME", "RATING", "COUNT_GAMES"]))
-
+        # Tutorials
+        get_args.update(TreeDocumentViewer.get_navigation_keywords("tutorial_guide"))
 
         return(get_args)
 
@@ -244,13 +245,13 @@ class PageHome(Page):
 
     def resolve_action_tutorial_guide(self):
         if "tutorial_guide_action" in request.form:
-            action_chapter = int(request.form.get("tutorial_guide_open_chapter"))
+            action_chapter = int(request.form.get("tutorial_guide_chapter"))
             if request.form.get("tutorial_guide_action") == "edit":
-                print(f"Edited Chapter {action_chapter}")
+                tdv_edit_chapter(action_chapter, request.form.get("chapter_label"), request.form.get("chapter_content"))
             if request.form.get("tutorial_guide_action") == "insert_new_chapter_next":
-                print(f"Inserted new chapter after Chapter {action_chapter}")
+                tdv_add_chapter(action_chapter)
             if request.form.get("tutorial_guide_action") == "insert_new_child":
-                print(f"Added new subchapter to Chapter {action_chapter}")
+                tdv_add_child(action_chapter)
 
     def render_content_logged_out(self):
         self.structured_html.append([
@@ -770,12 +771,15 @@ class PageHome(Page):
         self.close_container()
 
     def render_section_tutorials(self):
-        self.structured_html.append("<h1>Tutorial</h1>")
-        #tutorial_guide = TreeDocumentViewer("tutorial_guide", "home", "index", "USER")
+        if g.user:
+            db = get_db()
+            client_privilege = db.execute("SELECT PRIVILEGE FROM BOC_USER WHERE USERNAME = ?", (g.user["username"],)).fetchone()["PRIVILEGE"]
+        else:
+            client_privilege = "GUEST"
 
+        tutorial_guide = TreeDocumentViewer("tutorial_guide", "home", "index", client_privilege, {"section" : 5})
 
-
-        #self.structured_html.append(tutorial_guide.structured_html)
+        self.structured_html.append(tutorial_guide.structured_html)
 
 
 

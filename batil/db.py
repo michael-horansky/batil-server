@@ -362,5 +362,35 @@ def hide_board(username, board_id):
         db.execute("DELETE FROM BOC_USER_SAVED_BOARDS WHERE BOARD_ID = ? AND USERNAME = ?", (board_id, username))
         db.commit()
 
+# Tree document viewer actions
+
+def tdv_edit_chapter(chapter_id, new_label, new_content):
+    db = get_db()
+    db.execute("UPDATE BOC_TREE_DOCUMENTS SET LABEL = ?, CONTENT = ? WHERE CHAPTER_ID = ?", (new_label, new_content, chapter_id))
+    db.commit()
+
+def tdv_add_chapter(prev_chapter_id):
+    db = get_db()
+    cur = db.cursor()
+    # First we find the parent and next_chapter of the prev chapter
+    prev_chapter_row = cur.execute("SELECT NEXT_CHAPTER, PARENT_CHAPTER, VIEWER FROM BOC_TREE_DOCUMENTS WHERE CHAPTER_ID = ?", (prev_chapter_id,)).fetchone()
+
+    cur.execute("INSERT INTO BOC_TREE_DOCUMENTS (LABEL, CONTENT, NEXT_CHAPTER, PARENT_CHAPTER, VIEWER) VALUES (\'New chapter\', \'Change me\', ?, ?, ?)", (prev_chapter_row["NEXT_CHAPTER"], prev_chapter_row["PARENT_CHAPTER"], prev_chapter_row["VIEWER"]))
+    new_chapter_id = cur.lastrowid
+
+    cur.execute("UPDATE BOC_TREE_DOCUMENTS SET NEXT_CHAPTER = ? WHERE CHAPTER_ID = ?", (new_chapter_id, prev_chapter_id))
+    db.commit()
+
+def tdv_add_child(parent_chapter_id):
+    db = get_db()
+    cur = db.cursor()
+    # First we find the first child and the viewer of the prev chapter
+    parent_chapter_row = cur.execute("SELECT FIRST_SUBCHAPTER, VIEWER FROM BOC_TREE_DOCUMENTS WHERE CHAPTER_ID = ?", (parent_chapter_id,)).fetchone()
+
+    cur.execute("INSERT INTO BOC_TREE_DOCUMENTS (LABEL, CONTENT, NEXT_CHAPTER, PARENT_CHAPTER, VIEWER) VALUES (\'New chapter\', \'Change me\', ?, ?, ?)", (parent_chapter_row["FIRST_SUBCHAPTER"], parent_chapter_id, parent_chapter_row["VIEWER"]))
+    new_chapter_id = cur.lastrowid
+
+    cur.execute("UPDATE BOC_TREE_DOCUMENTS SET FIRST_SUBCHAPTER = ? WHERE CHAPTER_ID = ?", (new_chapter_id, parent_chapter_id))
+    db.commit()
 
 

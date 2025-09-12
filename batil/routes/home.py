@@ -109,8 +109,8 @@ def action_tutorial_guide():
     rendered_page.resolve_action_tutorial_guide()
     get_args = rendered_page.resolve_dynamic_get_form()
     if get_args is None:
-        return(redirect(url_for("home.index", section=4)))
+        return(redirect(url_for("home.index", section=5)))
     else:
-        return(redirect(url_for("home.index", section=4, **get_args)))
+        return(redirect(url_for("home.index", section=5, **get_args)))
 
 
