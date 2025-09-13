@@ -30,9 +30,6 @@ class HTMLRenderer(Renderer):
 
         # Document structure
 
-        self.board_window_width = 800
-        self.board_window_height = 700
-
         self.board_square_empty_color = "#E5E5FF"
         self.unused_TJ_clip_circle_radius = 0.45
 
@@ -178,8 +175,8 @@ class HTMLRenderer(Renderer):
 
     def open_board_window(self):
         enclosing_div = "<div id=\"board_window\">"
-        svg_window = f"<svg width=\"{self.board_window_width}\" height=\"{self.board_window_height}\" xmlns=\"http://www.w3.org/2000/svg\" id=\"board_window_svg\">"
-        background_rectangle = f"<rect x=\"0\" y =\"0\" width=\"{self.board_window_width}\" height=\"{self.board_window_height}\" id=\"board_window_background\" />"
+        svg_window = f"<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"board_window_svg\">"
+        background_rectangle = f"<rect x=\"0\" y =\"0\" id=\"board_window_background\" />"
         self.commit_to_output([enclosing_div, svg_window, background_rectangle])
         self.board_window_definitions()
 
@@ -322,7 +319,7 @@ class HTMLRenderer(Renderer):
     def draw_selection_mode_highlights(self):
         # Highlights
         selection_mode_highlights = []
-        selection_mode_highlights.append(f"<g id=\"selection_mode_highlights\" width=\"{self.board_window_width}\" height=\"{self.board_window_height}\" visibility=\"hidden\">")
+        selection_mode_highlights.append(f"<g id=\"selection_mode_highlights\" visibility=\"hidden\">")
         for x in range(self.render_object.x_dim):
             for y in range(self.render_object.y_dim):
                 selection_mode_highlights.append(f"  <rect width=\"{self.board_square_base_side_length}\" height=\"{self.board_square_base_side_length}\" x=\"{x * self.board_square_base_side_length}\" y=\"{y * self.board_square_base_side_length}\" class=\"selection_mode_highlight\" id=\"selection_mode_highlight_{x}_{y}\" />")
@@ -350,26 +347,14 @@ class HTMLRenderer(Renderer):
             ]
         azimuth_indicators = []
         for azimuth in range(4):
-            if azimuth == 0:
-                offset_x = self.board_window_width / 2
-                offset_y = self.board_window_height * triangle_offset
-            elif azimuth == 1:
-                offset_x = self.board_window_width * (1 - triangle_offset)
-                offset_y = self.board_window_height / 2
-            elif azimuth == 2:
-                offset_x = self.board_window_width / 2
-                offset_y = self.board_window_height * (1 - triangle_offset)
-            elif azimuth == 3:
-                offset_x = self.board_window_width * triangle_offset
-                offset_y = self.board_window_height / 2
-            azimuth_indicators.append(f"  <polygon id=\"azimuth_indicator_{azimuth}\" points=\"{self.get_polygon_points(azimuth_indicator_points[azimuth], (offset_x, offset_y))}\" class=\"azimuth_indicator\" id=\"azimuth_indicator_{azimuth}\" onclick=\"inspector.select_azimuth({azimuth})\" display=\"none\"/>")
+            azimuth_indicators.append(f"  <polygon id=\"azimuth_indicator_{azimuth}\" points=\"{self.get_polygon_points(azimuth_indicator_points[azimuth])}\" class=\"azimuth_indicator\" id=\"azimuth_indicator_{azimuth}\" onclick=\"inspector.select_azimuth({azimuth})\" display=\"none\"/>")
         self.commit_to_output(azimuth_indicators)
 
 
     def draw_board_animation_overlay(self):
         animation_overlay = []
-        animation_overlay.append(f"<g id=\"board_animation_overlay\" width=\"{self.board_window_width}\" height=\"{self.board_window_height}\" visibility=\"hidden\">")
-        animation_overlay.append(f"  <rect id=\"board_animation_overlay_bg\" x=\"0\" y=\"0\" width=\"{self.board_window_width}\" height=\"{self.board_window_height}\" />")
+        animation_overlay.append(f"<g id=\"board_animation_overlay\" visibility=\"hidden\">")
+        animation_overlay.append(f"  <rect id=\"board_animation_overlay_bg\" x=\"0\" y=\"0\" />")
         animation_overlay.append(f"  <text id=\"board_animation_overlay_text\"  x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" >changeme</text>")
         animation_overlay.append("</g>")
         self.commit_to_output(animation_overlay)

@@ -105,7 +105,7 @@ class PageGame(Page):
 
         # We now identify the user who opened the page
         self.client_role = None
-        if g.user["username"] is not None:
+        if g.user is not None:
             if boc_games_row["STATUS"] == "in_progress":
                 if g.user["username"] == boc_games_row["PLAYER_A"]:
                     self.client_role = "A"

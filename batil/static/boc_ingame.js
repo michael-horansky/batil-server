@@ -694,16 +694,16 @@ animation_manager.change_round_preparation = function(animation_args) {
     document.getElementById("board_animation_overlay_bg").style.fill = "rgb(200, 200, 200)";
     switch (transition_direction) {
         case "down":
-            document.getElementById("board_animation_overlay").style.transform = `translate(0px,${- board_window_height}px)`;
+            document.getElementById("board_animation_overlay").style.transform = `translate(0px,${- cameraman.board_dimensions.height}px)`;
             break;
         case "left":
-            document.getElementById("board_animation_overlay").style.transform = `translate(${board_window_width}px,0px)`;
+            document.getElementById("board_animation_overlay").style.transform = `translate(${cameraman.board_dimensions.width}px,0px)`;
             break;
         case "up":
-            document.getElementById("board_animation_overlay").style.transform = `translate(0px,${board_window_height}px)`;
+            document.getElementById("board_animation_overlay").style.transform = `translate(0px,${cameraman.board_dimensions.height}px)`;
             break;
         case "right":
-            document.getElementById("board_animation_overlay").style.transform = `translate(${-board_window_width}px,0px)`;
+            document.getElementById("board_animation_overlay").style.transform = `translate(${-cameraman.board_dimensions.width}px,0px)`;
             break;
     }
     document.getElementById("board_animation_overlay").style.visibility = "visible";
@@ -717,16 +717,16 @@ animation_manager.change_round_get_frame = function(animation_args) {
     //document.getElementById("board_animation_overlay").style.opacity = animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, animation_manager.current_frame_key, "boomerang");
     switch (transition_direction) {
         case "down":
-            document.getElementById("board_animation_overlay").style.transform = `translate(0px,${animated_scalar_transformation(- board_window_height, board_window_height, animation_manager.total_frames, animation_manager.current_frame_key, method="linear")}px)`;
+            document.getElementById("board_animation_overlay").style.transform = `translate(0px,${animated_scalar_transformation(- cameraman.board_dimensions.height, cameraman.board_dimensions.height, animation_manager.total_frames, animation_manager.current_frame_key, method="linear")}px)`;
             break;
         case "left":
-            document.getElementById("board_animation_overlay").style.transform = `translate(${animated_scalar_transformation(board_window_width, -board_window_width, animation_manager.total_frames, animation_manager.current_frame_key, method="linear")}px,0px)`;
+            document.getElementById("board_animation_overlay").style.transform = `translate(${animated_scalar_transformation(cameraman.board_dimensions.width, -cameraman.board_dimensions.width, animation_manager.total_frames, animation_manager.current_frame_key, method="linear")}px,0px)`;
             break;
         case "up":
-            document.getElementById("board_animation_overlay").style.transform = `translate(0px,${animated_scalar_transformation(board_window_height, -board_window_height, animation_manager.total_frames, animation_manager.current_frame_key, method="linear")}px)`;
+            document.getElementById("board_animation_overlay").style.transform = `translate(0px,${animated_scalar_transformation(cameraman.board_dimensions.height, -cameraman.board_dimensions.height, animation_manager.total_frames, animation_manager.current_frame_key, method="linear")}px)`;
             break;
         case "right":
-            document.getElementById("board_animation_overlay").style.transform = `translate(${animated_scalar_transformation(- board_window_width, board_window_width, animation_manager.total_frames, animation_manager.current_frame_key, method="linear")}px,0px)`;
+            document.getElementById("board_animation_overlay").style.transform = `translate(${animated_scalar_transformation(- cameraman.board_dimensions.width, cameraman.board_dimensions.width, animation_manager.total_frames, animation_manager.current_frame_key, method="linear")}px,0px)`;
             break;
     }
 
@@ -774,10 +774,17 @@ animation_manager.add_animation("change_round", {
 const cameraman = new Object();
 
 // Board window dimensions
-
+cameraman.board_window = document.getElementById("board_window_svg");
 cameraman.board_dimensions = {"width" : 0, "height" : 0};
-const board_window_width = 800;
-const board_window_height = 700;
+
+
+cameraman.resize_observer = new ResizeObserver(entries => {
+  for (let entry of entries) {
+    cameraman.update_board_dimension();
+  }
+});
+
+cameraman.resize_observer.observe(cameraman.board_window);
 
 cameraman.camera_zoom_status = "idle";
 cameraman.camera_move_keys_pressed = 0;
@@ -804,7 +811,7 @@ cameraman.used_by_an_animation = false;
 // --------------------------------- Methods ----------------------------------
 
 cameraman.update_board_dimension = function() {
-    const rect = document.getElementById("board_window_svg").getBoundingClientRect();
+    const rect = cameraman.board_window.getBoundingClientRect();
     cameraman.board_dimensions.width = rect.width;
     cameraman.board_dimensions.height = rect.height;
 
@@ -813,17 +820,19 @@ cameraman.update_board_dimension = function() {
     cameraman.put_down_tripod();
     // 2. repositioning of azimuth indicators
     cameraman.reposition_board_elements();
+    // 3. apply camera
+    cameraman.apply_camera();
 }
 
 cameraman.put_down_tripod = function() {
     // Find the default setting, which just about displays the entire board
-    let default_width_fov_coef = board_window_width / (x_dim * 100);
-    let default_height_fov_coef = board_window_height / (y_dim * 100);
+    let default_width_fov_coef = cameraman.board_dimensions.width / (x_dim * 100);
+    let default_height_fov_coef = cameraman.board_dimensions.height / (y_dim * 100);
     cameraman.default_fov_coef = Math.min(default_width_fov_coef, default_height_fov_coef); // This is also the max value!
-    cameraman.max_fov_coef = board_window_width / 400;
+    cameraman.max_fov_coef = Math.max(cameraman.board_dimensions.width / 400, 1.0);
     // Find an offset which places the middle of the board into the middle of the board window
-    cameraman.offset_x = board_window_width * 0.5 - x_dim * 50;
-    cameraman.offset_y = board_window_height * 0.5 - y_dim * 50;
+    cameraman.offset_x = cameraman.board_dimensions.width * 0.5 - x_dim * 50;
+    cameraman.offset_y = cameraman.board_dimensions.height * 0.5 - y_dim * 50;
 
     // Find and store the element which is target to camera's transformations
     cameraman.subject = document.getElementById("camera_subject");
@@ -2409,7 +2418,8 @@ var visible_process = "canon";
 var selection_mode = false;
 
 // Set up the camera
-cameraman.put_down_tripod();
+//cameraman.put_down_tripod();
+cameraman.update_board_dimension();
 cameraman.reset_camera();
 
 // Set up commander if game in progress
