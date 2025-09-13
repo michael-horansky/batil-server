@@ -88,6 +88,7 @@ class Gamemaster():
         # ----------------------- Game status variables -----------------------
         self.current_turn_index = None # Index of turn where some or all players need to add commands
         self.outcome = None # If not None, can be "win;[winning faction]" or "draw"
+        self.last_command_round = 0 # Used to keep track of whether there is a draw by repetition
 
         # ------------------ Trackers for reverse causality -------------------
         # General trackers
@@ -677,7 +678,11 @@ class Gamemaster():
         # TODO check if other game-end conditions have been satisfied
         current_game_winner = self.game_winner()
         if current_game_winner is None:
-            return(Message("in_progress"))
+            # We now check for draw conditions
+            if round_n > self.last_command_round:
+                return(Message("concluded", "draw"))
+            else:
+                return(Message("in_progress"))
         else:
             return(Message("concluded", current_game_winner))
 
@@ -866,6 +871,12 @@ class Gamemaster():
 
         # We record the flags into the time rep
         self.flags_by_turn[self.current_turn_index][commander] += flags_added
+
+        # We update game status trackers
+        if command["type"] != "pass":
+            r_no, t_s = self.round_from_turn(self.current_turn_index)
+            if r_no > self.last_command_round:
+                self.last_command_round = r_no
 
     def commit_commands(self, list_of_commands, turn_index, commander):
         # list_of_commands is a list of dictionaries
@@ -2170,6 +2181,8 @@ class Gamemaster():
                     print("  ...but they have no causally free stones. Inserting empty move.")
                     self.commit_commands([], self.current_turn_index, faction)"""
 
+        # Draw by repetition: if an "empty round" (i.e. a round made entirely out of automatic moves) occurs, the game ends.
+
         while(True):
             self.bring_board_to_turn(self.current_turn_index)
             if not self.did_everyone_finish_turn(self.current_turn_index):
@@ -2192,19 +2205,6 @@ class Gamemaster():
                 self.execute_moves(read_causality_trackers = False, max_turn_index = self.current_turn_index, precanonisation = True, save_to_output = True)
                 self.rendering_output.add_scenario(current_round, scenario_for_next_round, self.flags, self.causes_by_round[current_round], self.effects_by_round[current_round])
 
-                # Win condition testing
-                """self.realise_scenario(scenario_for_next_round)
-                self.execute_moves(read_causality_trackers = False, max_turn_index = self.current_turn_index, precanonisation = True, save_to_output = True)
-                self.rendering_output.add_scenario(current_round, scenario_for_next_round, self.flags, self.causes_by_round[current_round], self.effects_by_round[current_round])
-                self.print_heading_message(f"Canonized board for next round, omitting reverse-causality effects added this round.", 1)
-                self.print_board_horizontally(active_turn = self.current_turn_index, highlight_active_timeslice = False)
-                current_game_winner = self.game_winner()
-                if current_game_winner is not None:
-                    self.print_heading_message(f"Player {current_game_winner} wins the game!", 0)
-                    self.outcome = (constants.Gamemaster_delim).join(["win", current_game_winner])
-                    self.prepare_for_rendering(player)
-                    return(Message("game_end", current_game_winner))"""
-
                 game_status = self.check_game_status_at_end_of_round(current_round)
                 if game_status.header == "concluded":
                     self.print_heading_message(f"Player {game_status.msg} wins the game!", 0)
@@ -2213,6 +2213,7 @@ class Gamemaster():
 
                 self.effects_by_round.append([])
                 self.causes_by_round.append([])
+                current_round += 1
 
 
             self.flags_by_turn.append({})

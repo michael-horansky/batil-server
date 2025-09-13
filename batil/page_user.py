@@ -6,7 +6,7 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, current_app
 )
 
-from batil.db import get_db, get_table_as_list_of_dicts, new_blind_challenge, new_targeted_challenge, accept_challenge, decline_challenge, get_pfp_source
+from batil.db import get_db, get_pfp_source, send_friend_request, accept_friend_request, decline_friend_request, withdraw_friend_request, unfriend_user, block_user, unblock_user
 
 from batil.aux_funcs import *
 
@@ -40,7 +40,22 @@ class PageUser(Page):
         return(get_args)
 
     def resolve_action_profile_form(self):
-        pass
+        if "action_profile_form" in request.form:
+            if request.form.get("action_profile_form") == "unfriend":
+                unfriend_user(g.user["username"], self.username)
+            if request.form.get("action_profile_form") == "withdraw_friend_request":
+                withdraw_friend_request(g.user["username"], self.username)
+            if request.form.get("action_profile_form") == "accept_friend_request":
+                accept_friend_request(g.user["username"], self.username)
+            if request.form.get("action_profile_form") == "decline_friend_request":
+                decline_friend_request(g.user["username"], self.username)
+            if request.form.get("action_profile_form") == "send_friend_request":
+                send_friend_request(g.user["username"], self.username)
+            if request.form.get("action_profile_form") == "unblock":
+                unblock_user(g.user["username"], self.username)
+            if request.form.get("action_profile_form") == "block":
+                block_user(g.user["username"], self.username)
+
 
     def render_profile_header(self):
         pfp_url = get_pfp_source(self.username)
@@ -95,7 +110,33 @@ class PageUser(Page):
             ]
 
         profile_form.add_to_tab(0, "content", profile_stats)
-        #profile_form.add_to_tab(0, "content", stats_table.structured_html)
+        if g.user:
+            # We determine the relationship between the displayed user and the client
+            client_user_relation = db.execute("""
+                SELECT
+                    MAX(CASE WHEN r.STATUS = 'friends' THEN 1 ELSE 0 END) AS ARE_FRIENDS,
+                    MAX(CASE WHEN r.STATUS = 'friends_pending' AND r.USER_1 = :b AND r.USER_2 = :a THEN 1 ELSE 0 END) AS YOUR_REQUEST_PENDING,
+                    MAX(CASE WHEN r.STATUS = 'friends_pending' AND r.USER_1 = :a AND r.USER_2 = :b THEN 1 ELSE 0 END) AS THEIR_REQUEST_PENDING,
+                    MAX(CASE WHEN r.STATUS = 'blocked' THEN 1 ELSE 0 END) AS ARE_BLOCKED,
+                    MAX(CASE WHEN r.STATUS = 'blocked' AND r.USER_1 = :b AND r.USER_2 = :a THEN 1 ELSE 0 END) AS BLOCKED_BY_YOU
+                FROM BOC_USER_RELATIONSHIPS r
+                WHERE (r.USER_1 = :a AND r.USER_2 = :b) OR (r.USER_1 = :b AND r.USER_2 = :a)
+                """, {"a" : self.username, "b" : g.user["USERNAME"]}).fetchone()
+
+            if client_user_relation["ARE_FRIENDS"]:
+                profile_form.add_button(0, "submit", "unfriend", "Unfriend", "unfriend")
+            elif client_user_relation["YOUR_REQUEST_PENDING"]:
+                profile_form.add_button(0, "submit", "withdraw_friend_request", "Withdraw friend request", "withdraw_friend_request")
+            elif client_user_relation["THEIR_REQUEST_PENDING"]:
+                profile_form.add_button(0, "submit", "accept_friend_request", "Accept friend request", "accept_friend_request")
+                profile_form.add_button(0, "submit", "decline_friend_request", "Decline friend request", "decline_friend_request")
+            elif not client_user_relation["ARE_BLOCKED"]:
+                profile_form.add_button(0, "submit", "send_friend_request", "Send friend request", "send_friend_request")
+
+            if client_user_relation["BLOCKED_BY_YOU"]:
+                profile_form.add_button(0, "submit", "unblock", "Unblock", "unblock")
+            else:
+                profile_form.add_button(0, "submit", "block", "Block", "block")
 
         # Archive
         profile_form.add_game_archive(1, "profile_archive", self.username, rows_per_view = 8)

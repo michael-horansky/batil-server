@@ -1,0 +1,36 @@
+<html>
+    <body>
+
+        <div id="boardside">
+            <div id="board_control_panel">...</div>
+            <div id="board_window">...</div>
+            <div id="inspectors">
+                <div id="stone_inspector">...</div>
+                <div id="tracking_inspector">...</div>
+                <div id="square_inspector">...</div>
+            </div>
+        </div>
+        <div id="gameside">
+            <div id="game_control_panel">...</div>
+            <div id="game_log">...</div>
+            <div id="game_management">...</div>
+        </div>
+
+    </body>
+</html>
+
+html, body fill the entire document
+
+div gameside is a control panel at the bottom of the screen, with a fixed height of 200px.
+
+div boarside fills the rest of the screen, adjusting its height and width depending on the browser size.
+
+div board_control_panel is a left sidebar which has a fixed width of 150px and fills the entire available space vertically.
+
+div board_window is the element which provides "springiness" to the document, since both its width and height are adjusted depending on the browser dimensions. Specifically, board_window fills the entire available width and height! It contains only a single element, which is an svg environment which also fills the entire parent.
+
+div inspectors is a right sidebar with a fixed width of 500px which fills the entire available space vertically.
+
+divs stone_inspector, tracking_inspector, and square_inspector fill the entire width and height of div inspectors, with their heights being calculated as follows: tracking_inspector has a fixed width of 100px, and stone_inspector and square_inspector have equal heights to each other.
+
+divs game_control_panel, game_log, and game_management fill the entire height and width of the gameside div in the following way: game_log has a fixed width of 200px, and game_control panel and game_management have equal widths.

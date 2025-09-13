@@ -1,15 +1,12 @@
-html {
-  font-family: sans-serif;
-  background: #eee;
-  padding: 0;
-}
-
-body {
+html, body {
   height: 100%;
   width: 100%;
   margin: 0;
   background: white;
+  display: flex;
+  flex-direction: column;
 }
+
 
 h1, h2, h3, h4, h5, h6 {
   font-family: serif;
@@ -328,6 +325,9 @@ input[type=submit] {
   transition: background 0.2s, box-shadow 0.2s;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
+.action_form_button:disabled {
+  pointer-events: none;
+}
 .action_form_button_label {
     align-self: center;
     font-size: 1em;
@@ -505,6 +505,9 @@ input, textarea, select { width: 100%; padding: 8px; }
   cursor: pointer;
   transition: background 0.2s, box-shadow 0.2s;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.action_table_column_button:disabled {
+  pointer-events: none;
 }
 .action_table_actions_header {
     text-align: center;
@@ -775,6 +778,54 @@ input, textarea, select { width: 100%; padding: 8px; }
 
 .tdv_action_button:hover {
   background: #ccc;
+}
+
+/* Logged out main Content */
+#logged_out_main_content {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center; /* horizontal centering */
+  align-items: stretch;    /* let inner fill height */
+  background: #f8f8f8;     /* just to see boundaries */
+  overflow: hidden;        /* prevent scrollbars if content fits */
+}
+
+#logged_out_main_content > header {
+  border-bottom: 1px solid lightgray;
+  display: flex;
+  align-items: flex-end;
+}
+
+#logged_out_main_content > header h1 {
+  flex: auto;
+  margin: 1rem 0 0.25rem 0;
+}
+
+#logged_out_main_content:last-child {
+  margin-bottom: 0;
+}
+
+#logged_out_main_content form {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+#logged_out_main_column {
+  flex: 1 1 auto;           /* let it grow/shrink vertically */
+  flex-direction: column;
+  display: flex;
+  max-width: 1280px;        /* constrain width */
+  width: 100%;              /* take full width up to max */
+  background: white;        /* just demo */
+  overflow-y: auto;         /* scroll vertically if content too tall */
+}
+
+.logged_out_main_column_section {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
 

@@ -93,7 +93,7 @@ class ActionForm(HTMLObject):
         self.tab_structure_html = []
         self.tab_properties = []
         for i in range(len(list_of_tabs)):
-            self.tab_structure_html.append({"content" : ""})
+            self.tab_structure_html.append({"content" : []})
             self.tab_properties.append({})
 
     def add_to_tab(self, tab_index, key, content):
@@ -102,7 +102,10 @@ class ActionForm(HTMLObject):
         # content is structured html
         if tab_index < 0 or tab_index >= self.number_of_tabs:
             return(-1)
-        self.tab_structure_html[tab_index][key] = content
+        if key not in self.tab_structure_html[tab_index]:
+            self.tab_structure_html[tab_index][key] = [content]
+        else:
+            self.tab_structure_html[tab_index][key].append(content)
 
     def set_tab_property(self, tab_index, key, value):
         # selection_condition: tab only shows up if a given element's value is non-empty
@@ -367,6 +370,10 @@ class ActionForm(HTMLObject):
                 "view_board" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["BOARD_ID"]))},
                 "view_opponent" : {"type" : "link", "url_func" : (lambda datum : url_for("user.user", username = datum["OPPONENT"]))}
                 }
+            col_links = {
+                "OPPONENT" : (lambda datum : url_for("user.user", username = datum["OPPONENT"])),
+                "BOARD_NAME" : (lambda datum : url_for("board.board", board_id = datum["BOARD_ID"])),
+                }
 
         else:
             table_query = f"""
@@ -394,7 +401,10 @@ class ActionForm(HTMLObject):
                 "view_game" : {"type" : "link", "url_func" : (lambda datum : url_for("game_bp.game", game_id = datum["IDENTIFIER"]))},
                 "view_board" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["BOARD_ID"]))}
                 }
+            col_links = {
+                "BOARD_NAME" : (lambda datum : url_for("board.board", board_id = datum["BOARD_ID"]))
+                }
 
-        self.add_ordered_table(section_i, table_id, table_query, data_identifier, data_cols, False, headers, order_options, actions, filters, action_instructions, rows_per_view, row_class_by_col = "POV_OUTCOME")
+        self.add_ordered_table(section_i, table_id, table_query, data_identifier, data_cols, False, headers, order_options, actions, filters, action_instructions, col_links, rows_per_view, row_class_by_col = "POV_OUTCOME")
 
 

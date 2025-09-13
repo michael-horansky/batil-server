@@ -4,13 +4,12 @@ margin: 0;
 }
 
 html, body {
-  margin: 0;
-  padding: 0;
   height: 100%;
   width: 100%;
-  display: flex;
-  flex-direction: column; /* stack boardside on top, gameside at bottom */
+  margin: 0;
   background: white;
+  display: flex;
+  flex-direction: column;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -32,24 +31,34 @@ hr {
 /* --------------------------------- */
 
 #boardside {
-    flex: 1; /* take up leftover vertical space */
-    display: flex;
-    flex-direction: row; /* sidebar | board_window | inspectors */
-    min-height: 0; /* prevents overflow issues */
+    position : absolute;
+    left : 0px;
+    top : 0px;
+    width : 950px;
+    height : 700px;
 }
 
 #gameside {
-    height: 200px;
-    display: flex;
-    flex-direction: row;
-    border-top: 2px solid #ccc;
+    position : absolute;
+    left : 0px;
+    top : 700px;
+    width : 950px;
+    height : 200px;
 }
 
 
 #board_control_panel {
-    width: 150px;
-    flex-shrink: 0;
-    border-right: 2px solid #ccc;
+    width : 150px;
+    height : 400px;
+    float : left;
+    margin-top : 150px;
+}
+
+#game_control_panel {
+    width : 550px;
+    height : 140px;
+    float : left;
+    margin-top : 30px;
 }
 
 .board_control_panel_button {
@@ -109,48 +118,31 @@ hr {
 }
 
 #board_window {
-  flex: 1; /* fills remaining space */
-  display: flex;
-}
-
-#board_window > svg {
-  flex: 1; /* makes SVG fill parent */
-  width: 100%;
-  height: 100%;
+    float : left;
 }
 
 #inspectors {
-  width: 500px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  border-left: 2px solid #ccc;
+    position : absolute;
+    top : 0;
+    left : 950px;
 }
 
-/* Inspector children */
+#stone_inspector {
+    width : 500px;
+    height : 300px;
+    background-color : grey;
+}
+
 #tracking_inspector {
-    height: 100px;
-    flex-shrink: 0;
-    border-bottom: 1px solid #eee;
+    width : 500px;
+    height : 100px;
     background-color : AntiqueWhite;
     overflow: hidden;
 }
 
-#stone_inspector, #square_inspector {
-  flex: 1; /* split remaining height equally */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid #eee;
-}
-#square_inspector { border-bottom: none; }
-
-
-#stone_inspector {
-    background-color : grey;
-}
-
 #square_inspector {
+    width : 500px;
+    height : 300px;
     background-color : lightblue;
 }
 
@@ -164,21 +156,6 @@ hr {
     width : 500px;
     height : 300px;
     background-color : lightblue;
-}
-
-/* Gameside children */
-#game_log {
-  width: 200px;
-  flex-shrink: 0;
-  border-right: 2px solid #ccc;
-}
-
-#game_control_panel,
-#game_management {
-  flex: 1; /* share remaining width equally */
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* --------------------------------- */

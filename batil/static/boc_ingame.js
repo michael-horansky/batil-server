@@ -2,8 +2,6 @@
 // ----------------------------------------------------------------------------
 // --------------------------- Rendering constants ----------------------------
 // ----------------------------------------------------------------------------
-const board_window_width = 800;
-const board_window_height = 700;
 
 const stone_command_btn_width = 100;
 const stone_command_btn_height = 83;
@@ -774,6 +772,13 @@ animation_manager.add_animation("change_round", {
 // as the camera moves.
 
 const cameraman = new Object();
+
+// Board window dimensions
+
+cameraman.board_dimensions = {"width" : 0, "height" : 0};
+const board_window_width = 800;
+const board_window_height = 700;
+
 cameraman.camera_zoom_status = "idle";
 cameraman.camera_move_keys_pressed = 0;
 cameraman.camera_move_directions = {"w" : false, "d" : false, "s" : false, "a" : false};
@@ -798,6 +803,18 @@ cameraman.used_by_an_animation = false;
 
 // --------------------------------- Methods ----------------------------------
 
+cameraman.update_board_dimension = function() {
+    const rect = document.getElementById("board_window_svg").getBoundingClientRect();
+    cameraman.board_dimensions.width = rect.width;
+    cameraman.board_dimensions.height = rect.height;
+
+    // Now for what needs to update.
+    // 1. tripod readjustment
+    cameraman.put_down_tripod();
+    // 2. repositioning of azimuth indicators
+    cameraman.reposition_board_elements();
+}
+
 cameraman.put_down_tripod = function() {
     // Find the default setting, which just about displays the entire board
     let default_width_fov_coef = board_window_width / (x_dim * 100);
@@ -810,6 +827,30 @@ cameraman.put_down_tripod = function() {
 
     // Find and store the element which is target to camera's transformations
     cameraman.subject = document.getElementById("camera_subject");
+    cameraman.subject.setAttribute("transform-origin", `${x_dim * 50}px ${y_dim * 50}px`);
+}
+
+cameraman.reposition_board_elements = function() {
+    // azimuth indicators
+    const triangle_offset = 0.1;
+    for (azimuth = 0; azimuth < 4; azimuth++) {
+        let offset_x = 0;
+        let offset_y = 0;
+        if (azimuth == 0) {
+            offset_x = cameraman.board_dimensions.width / 2;
+            offset_y = cameraman.board_dimensions.height * triangle_offset;
+        } else if (azimuth == 1) {
+            offset_x = cameraman.board_dimensions.width * (1 - triangle_offset);
+            offset_y = cameraman.board_dimensions.height / 2;
+        } else if (azimuth == 2) {
+            offset_x = cameraman.board_dimensions.width / 2;
+            offset_y = cameraman.board_dimensions.height * (1 - triangle_offset);
+        } else if (azimuth == 3) {
+            offset_x = cameraman.board_dimensions.width * triangle_offset;
+            offset_y = cameraman.board_dimensions.height / 2;
+        }
+        document.getElementById(`azimuth_indicator_${azimuth}`).style.transform = `translate(${offset_x}px,${offset_y}px)`;
+    }
 }
 
 cameraman.apply_camera = function() {
@@ -903,7 +944,7 @@ cameraman.zoom_camera = function() {
     if (cameraman.camera_zoom_directions["in"] && (! cameraman.camera_zoom_directions["out"])) {
         cameraman.fov_coef = Math.min(cameraman.fov_coef * cameraman.zoom_speed, cameraman.max_fov_coef);
     } else if (cameraman.camera_zoom_directions["out"] && (! cameraman.camera_zoom_directions["in"])) {
-        cameraman.fov_coef = Math.max(cameraman.fov_coef / cameraman.zoom_speed, cameraman.default_fov_coef);
+        cameraman.fov_coef = Math.max(cameraman.fov_coef / cameraman.zoom_speed, Math.min(cameraman.default_fov_coef, 1.0));
     }
     if (!cameraman.used_by_an_animation) {
         cameraman.apply_camera();

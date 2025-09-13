@@ -38,12 +38,12 @@ class Page(HTMLObject):
                 "  <div class=\"navbar-left\">",
                 f"    <span class=\"app_name\">{self.title} - Batil</span>",
                 "  </div>",
-                "  <div class=\"navbar-right\">"
+                "  <div class=\"navbar-right\">",
+                f"    <a href=\"{ url_for('home.index') }\">Home</a>"
             ])
         if g.user:
             # logged in
             navlist.append([
-                    f"    <span>{ g.user['username'] }</span>",
                     f"    <a href=\"{ url_for('auth.logout') }\">Log Out</a>"
                 ])
         else:

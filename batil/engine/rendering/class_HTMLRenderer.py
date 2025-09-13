@@ -29,14 +29,9 @@ class HTMLRenderer(Renderer):
         # ------------------------ Rendering constants ------------------------
 
         # Document structure
-        self.board_control_panel_width = 150
-        self.board_control_panel_height = 400
 
         self.board_window_width = 800
         self.board_window_height = 700
-
-        self.game_log_width = 400
-        self.game_log_height = 200
 
         self.board_square_empty_color = "#E5E5FF"
         self.unused_TJ_clip_circle_radius = 0.45
@@ -367,7 +362,7 @@ class HTMLRenderer(Renderer):
             elif azimuth == 3:
                 offset_x = self.board_window_width * triangle_offset
                 offset_y = self.board_window_height / 2
-            azimuth_indicators.append(f"  <polygon points=\"{self.get_polygon_points(azimuth_indicator_points[azimuth], (offset_x, offset_y))}\" class=\"azimuth_indicator\" id=\"azimuth_indicator_{azimuth}\" onclick=\"inspector.select_azimuth({azimuth})\" display=\"none\"/>")
+            azimuth_indicators.append(f"  <polygon id=\"azimuth_indicator_{azimuth}\" points=\"{self.get_polygon_points(azimuth_indicator_points[azimuth], (offset_x, offset_y))}\" class=\"azimuth_indicator\" id=\"azimuth_indicator_{azimuth}\" onclick=\"inspector.select_azimuth({azimuth})\" display=\"none\"/>")
         self.commit_to_output(azimuth_indicators)
 
 
@@ -662,7 +657,7 @@ class HTMLRenderer(Renderer):
     # --------------------------- Game log methods ----------------------------
 
     def draw_game_log(self):
-        self.commit_to_output(f"<div width=\"{self.game_log_width}px\" height=\"{self.game_log_height}px\" id=\"game_log\">")
+        self.commit_to_output(f"<div id=\"game_log\">")
         self.commit_to_output(f"  <p id=\"navigation_label\"></p>")
         self.commit_to_output("</div>")
 

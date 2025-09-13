@@ -19,8 +19,15 @@ class PageRegister(Page):
             ])
 
     def render_page(self):
-        self.html_open("style")
+        self.html_open("auth_style")
         self.html_navbar()
+
+        self.open_container("main_content")
+        self.open_container("main_column")
+
+
+        self.open_container("profile_content", "main_column_section")
+
         self.structured_html.append([
                 "<section class=\"content\">",
                 "<header>",
@@ -28,7 +35,11 @@ class PageRegister(Page):
                 "</header>"
             ])
         self.html_register_form()
-        self.structured_html.append(["</section>"])
+
+        self.close_container()
+
+        self.close_container()
+        self.close_container()
         return(self.print_html())
 
 

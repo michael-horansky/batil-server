@@ -25,7 +25,7 @@ class TreeDocumentViewer(HTMLObject):
 
     # Instance methods
 
-    def __init__(self, iden, bp, home_index, client_privilege, persistent_get_args):
+    def __init__(self, iden, bp, home_index, client_privilege, persistent_get_args = {}):
         super().__init__()
         self.iden = iden
         self.bp = bp
@@ -133,7 +133,13 @@ class TreeDocumentViewer(HTMLObject):
         elif self.client_privilege in ["USER", "GUEST"]:
             self.structured_html.append([
                 f"  <div id=\"{self.iden}_content\" class=\"tdv_main\">",
+                f"    <div id=\"{self.iden}_section_container\" class=\"tdv_section_container\">",
+                f"      <div id=\"{self.iden}_section_read\" class=\"tdv_section_read tdv_section active\">",
+                f"        <div id=\"{self.iden}_section_read_content\" class=\"tdv_section_content\">",
                 self.display_element["CONTENT"],
+                f"        </div>",
+                f"      </div>",
+                f"    </div>",
                 f"  </div>"
                 ])
 

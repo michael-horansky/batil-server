@@ -111,6 +111,8 @@ class PageGame(Page):
                     self.client_role = "A"
                 elif g.user["username"] == boc_games_row["PLAYER_B"]:
                     self.client_role = "B"
+                else:
+                    self.client_role = "guest"
 
 
 

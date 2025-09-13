@@ -254,11 +254,9 @@ class PageHome(Page):
                 tdv_add_child(action_chapter)
 
     def render_content_logged_out(self):
-        self.structured_html.append([
-            "<header>",
-            f"  <h1>Get outta here</h1>",
-            "</header>"
-        ])
+        tutorial_guide = TreeDocumentViewer("tutorial_guide", "home", "index", "GUEST")
+
+        self.structured_html.append(tutorial_guide.structured_html)
 
     def render_section_play(self):
         db = get_db()
@@ -544,13 +542,17 @@ class PageHome(Page):
 
         if any_published_boards:
             form_your_boards.add_ordered_table(1, "your_boards_published",
-                f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED
-                    FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
+                f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP,
+                        COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED,
+                        COUNT(BOC_USER_SAVED_BOARDS.BOARD_ID) AS SAVED_BY
+                    FROM BOC_BOARDS
+                        LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
+                        LEFT JOIN BOC_USER_SAVED_BOARDS ON BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME != {json.dumps(g.user["username"])}
                     WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1 GROUP BY BOC_BOARDS.BOARD_ID""",
-                "BOARD_ID", ["BOARD_NAME", "D_PUBLISHED", "GAMES_PLAYED", "HANDICAP"],
+                "BOARD_ID", ["BOARD_NAME", "D_PUBLISHED", "GAMES_PLAYED", "SAVED_BY", "HANDICAP"],
                 include_select = False,
-                headers = {"BOARD_NAME" : "Board", "D_PUBLISHED" : "Published", "GAMES_PLAYED" : "# games played", "HANDICAP" : "Handicap"},
-                order_options = [["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"]],
+                headers = {"BOARD_NAME" : "Board", "D_PUBLISHED" : "Published", "GAMES_PLAYED" : "# games played", "SAVED_BY" : "# users saved", "HANDICAP" : "Handicap"},
+                order_options = [["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"], ["SAVED_BY", "# users"]],
                 actions = {"view" : "View", "fork" : "Fork", "hide" : "Hide"},
                 filters = ["BOARD_NAME"],
                 action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
@@ -570,15 +572,19 @@ class PageHome(Page):
         form_public_boards = ActionForm("public_boards", "Public boards", "home")
         form_public_boards.initialise_tabs(["Board marketplace", "Saved boards"])
         form_public_boards.add_ordered_table(0, "board_marketplace_table",
-            f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED, BOC_BOARDS.AUTHOR AS AUTHOR
-            FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
+            f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP, BOC_BOARDS.AUTHOR AS AUTHOR,
+                    COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED,
+                    COUNT(BOC_USER_SAVED_BOARDS.BOARD_ID) AS SAVED_BY
+            FROM BOC_BOARDS
+                LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
+                LEFT JOIN BOC_USER_SAVED_BOARDS ON BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME != {json.dumps(g.user["username"])}
             WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1
             AND NOT EXISTS (
                 SELECT 1 FROM BOC_USER_SAVED_BOARDS WHERE BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = {json.dumps(g.user["username"])})
             GROUP BY BOC_BOARDS.BOARD_ID""",
-            "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "D_PUBLISHED", "HANDICAP"], include_select = False,
-            headers = {"BOARD_NAME" : "Board", "AUTHOR" : "Author", "GAMES_PLAYED" : "# games played", "D_PUBLISHED" : "Published", "HANDICAP" : "Handicap"},
-            order_options = [["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"], ["HANDICAP", "Handicap"]],
+            "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "SAVED_BY", "D_PUBLISHED", "HANDICAP"], include_select = False,
+            headers = {"BOARD_NAME" : "Board", "AUTHOR" : "Author", "GAMES_PLAYED" : "# games played", "SAVED_BY" : "# users saved", "D_PUBLISHED" : "Published", "HANDICAP" : "Handicap"},
+            order_options = [["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"], ["SAVED_BY", "# users"], ["HANDICAP", "Handicap"]],
             actions = {"view" : "View", "save" : "Save"},
             filters = ["BOARD_NAME", "AUTHOR", "D_PUBLISHED"],
             action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
@@ -588,7 +594,8 @@ class PageHome(Page):
                 },
             rows_per_view = 8)
         form_public_boards.add_ordered_table(1, "your_saved_boards",
-            f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_USER_SAVED_BOARDS.D_SAVED AS D_SAVED
+            f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP,
+                    COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_USER_SAVED_BOARDS.D_SAVED AS D_SAVED
                 FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
                                 INNER JOIN BOC_USER_SAVED_BOARDS ON BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = {json.dumps(g.user["username"])}
             WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1
@@ -810,9 +817,13 @@ class PageHome(Page):
         if g.user:
             self.render_content_logged_in()
         else:
-            self.structured_html.append("<section class=\"content\">")
+            self.open_container("logged_out_main_content")
+            self.open_container("logged_out_main_column")
+            self.open_container("logged_out_profile_content", "logged_out_main_column_section")
             self.render_content_logged_out()
-            self.structured_html.append("</section>")
+            self.close_container()
+            self.close_container()
+            self.close_container()
 
 
 

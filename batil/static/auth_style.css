@@ -1,0 +1,120 @@
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  background: white;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: serif;
+  color: #377ba8;
+  margin: 1rem 0;
+}
+
+a {
+  color: #377ba8;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid lightgray;
+}
+
+/* Navbar */
+.navbar {
+  height: 60px;
+  background: #34495e;
+  color: #ecf0f1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.navbar .app_name {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.navbar a {
+  color: #ecf0f1;
+  margin-left: 20px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.navbar a:hover {
+  color: #1abc9c;
+}
+
+/* Container below navbar */
+.container {
+  display: flex;
+  height: calc(100vh - 60px); /* subtract navbar height */
+  min-height: 0;
+}
+
+/* Main Content */
+#main_content {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center; /* horizontal centering */
+  align-items: stretch;    /* let inner fill height */
+  background: #f8f8f8;     /* just to see boundaries */
+  overflow: hidden;        /* prevent scrollbars if content fits */
+}
+
+#main_content > header {
+  border-bottom: 1px solid lightgray;
+  display: flex;
+  align-items: flex-end;
+}
+
+#main_content > header h1 {
+  flex: auto;
+  margin: 1rem 0 0.25rem 0;
+}
+
+#main_content:last-child {
+  margin-bottom: 0;
+}
+
+#main_content form {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+#main_content label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5em;
+    box-sizing: border-box;
+}
+
+#main_content input {
+    margin-bottom: 1em;
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+#main_column {
+  flex: 1 1 auto;           /* let it grow/shrink vertically */
+  flex-direction: column;
+  display: flex;
+  max-width: 1280px;        /* constrain width */
+  width: 100%;              /* take full width up to max */
+  background: white;        /* just demo */
+  overflow-y: auto;         /* scroll vertically if content too tall */
+}
+
+.main_column_section {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+

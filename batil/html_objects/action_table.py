@@ -104,7 +104,7 @@ class ActionTable(HTMLObject):
             else:
                 self.structured_html.append(f"    <tr data-rowid=\"{datum["IDENTIFIER"]}\" class=\"{self.identifier}_row_{datum[row_class_by_col]}\">")
             for column_id in self.headers.keys():
-                if column_id in self.col_links:
+                if column_id in self.col_links.keys():
                     td_content = f"<a href=\"{self.col_links[column_id](datum)}\" target=\"_blank\" class=\"action_table_col_link\">{ datum[column_id] }</a>"
                 else:
                     td_content = datum[column_id]
