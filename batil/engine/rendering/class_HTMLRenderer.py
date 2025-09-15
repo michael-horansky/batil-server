@@ -21,9 +21,10 @@ from batil.engine.rendering.class_Abstract_Output import Abstract_Output
 
 class HTMLRenderer(Renderer):
 
-    def __init__(self, render_object, game_id):
+    def __init__(self, render_object, game_id, client_role):
         super().__init__(render_object)
         self.game_id = game_id
+        self.client_role = client_role
         self.structured_output = []
 
         # ------------------------ Rendering constants ------------------------
@@ -644,6 +645,12 @@ class HTMLRenderer(Renderer):
     def draw_game_log(self):
         self.commit_to_output(f"<div id=\"game_log\">")
         self.commit_to_output(f"  <p id=\"navigation_label\"></p>")
+
+        if self.render_object.game_status == "in_progress":
+            self.draw_command_form()
+        elif self.render_object.game_status == "concluded":
+            self.draw_outcome_message()
+
         self.commit_to_output("</div>")
 
     # ------------------------- Command form methods --------------------------
@@ -676,10 +683,24 @@ class HTMLRenderer(Renderer):
             "</p>"
         ])
 
+    def draw_game_management(self, users_to_link):
+        self.commit_to_output("<div id=\"game_management\">")
+        # View board, relevant users...
+        for user_link in users_to_link:
+            user_url = url_for("user.user", username = user_link)
+            self.commit_to_output([
+                f"<a href=\"{user_url}\" target=\"_blank\">{user_link}</a>"
+                ])
+
+        if self.client_role in ["A", "B"]:
+            # Logged in and in progress: can offer draw, resign...
+            pass
+
+        self.commit_to_output("</div>")
 
     # ---------------------------- Global methods -----------------------------
 
-    def render_game(self):
+    def render_game(self, users_to_link):
         self.open_body()
         self.deposit_contextual_data()
 
@@ -703,10 +724,7 @@ class HTMLRenderer(Renderer):
 
         self.draw_game_control_panel()
         self.draw_game_log()
-        if self.render_object.game_status == "in_progress":
-            self.draw_command_form()
-        elif self.render_object.game_status == "concluded":
-            self.draw_outcome_message()
+        self.draw_game_management(users_to_link)
 
         # Close gameside
         self.close_gameside()

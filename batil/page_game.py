@@ -105,22 +105,31 @@ class PageGame(Page):
 
         # We now identify the user who opened the page
         self.client_role = None
+        self.users_to_link = []
         if g.user is not None:
             if boc_games_row["STATUS"] == "in_progress":
                 if g.user["username"] == boc_games_row["PLAYER_A"]:
                     self.client_role = "A"
+                    self.users_to_link.append(boc_games_row["PLAYER_B"])
                 elif g.user["username"] == boc_games_row["PLAYER_B"]:
                     self.client_role = "B"
+                    self.users_to_link.append(boc_games_row["PLAYER_A"])
                 else:
                     self.client_role = "guest"
+                    self.users_to_link.append(boc_games_row["PLAYER_A"])
+                    self.users_to_link.append(boc_games_row["PLAYER_B"])
+            else:
+                self.client_role = "guest"
+                self.users_to_link.append(boc_games_row["PLAYER_A"])
+                self.users_to_link.append(boc_games_row["PLAYER_B"])
 
 
 
     def prepare_renderer(self):
         # Time for telling the proprietary gamemaster to properly initialise the game with the correct access rights
         self.gm.prepare_for_rendering(self.client_role)
-        self.renderer = HTMLRenderer(self.gm.rendering_output, self.game_id)
-        self.renderer.render_game()
+        self.renderer = HTMLRenderer(self.gm.rendering_output, self.game_id, self.client_role)
+        self.renderer.render_game(self.users_to_link)
 
 
     def render_page(self):
