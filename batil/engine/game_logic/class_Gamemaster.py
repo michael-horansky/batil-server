@@ -2253,6 +2253,8 @@ class Gamemaster():
             self.rendering_output.set_current_turn(self.t_dim * cur_round)
         else:
             self.rendering_output.game_status = "in_progress"
+
+        if self.outcome is None or self.external_game_outcome is not None:
             # First, we save the unfinished round in which current_turn is set
             self.execute_moves(save_to_output = True)
             self.rendering_output.set_current_turn(self.current_turn_index)
@@ -2567,28 +2569,35 @@ class Gamemaster():
             # only setup occured so far
             self.current_turn_index = 1
         else:
-            # We execute all moves except the last one to see if it was finished
-            self.execute_moves(max_turn_index = len(dynamic_data_representation) - 2)
-
-            if self.did_everyone_finish_turn(len(dynamic_data_representation) - 1):
-                self.current_turn_index = len(dynamic_data_representation)
-            else:
+            if self.outcome is not None:
+                # Game is already finished, we do not begin a new turn
                 self.current_turn_index = len(dynamic_data_representation) - 1
+            else:
+                # We execute all moves except the last one to see if it was finished
+                self.execute_moves(max_turn_index = len(dynamic_data_representation) - 2)
+
+                if self.did_everyone_finish_turn(len(dynamic_data_representation) - 1):
+                    self.current_turn_index = len(dynamic_data_representation)
+                else:
+                    self.current_turn_index = len(dynamic_data_representation) - 1
 
         if self.current_turn_index == len(self.flags_by_turn):
             # Prepare new turn
             self.flags_by_turn.append({})
 
-        # If the last turn was also the last in a round, we need to find the scenario for the next round
-        final_round_number, final_active_timeslice = self.round_from_turn(self.current_turn_index)
+        if self.outcome is None:
+            # If the last turn was also the last in a round, we need to find the scenario for the next round
+            final_round_number, final_active_timeslice = self.round_from_turn(self.current_turn_index)
 
-        self.effects_by_round = functions.add_tail_to_list(self.effects_by_round, final_round_number + 1, [])
-        self.causes_by_round = functions.add_tail_to_list(self.causes_by_round, final_round_number + 1, [])
-        for round_number in range(current_round_number + 1, final_round_number + 1):
-            self.print_log(f"Finding scenario for round {round_number}...", 1)
-            round_canon_scenario = self.resolve_causal_consistency(for_which_round = round_number)
-            self.scenarios_by_round.append(round_canon_scenario)
-            self.print_log(f"Effects added this round: {self.effects_by_round[round_number]}...", 2)
+            self.effects_by_round = functions.add_tail_to_list(self.effects_by_round, final_round_number + 1, [])
+            self.causes_by_round = functions.add_tail_to_list(self.causes_by_round, final_round_number + 1, [])
+            for round_number in range(current_round_number + 1, final_round_number + 1):
+                self.print_log(f"Finding scenario for round {round_number}...", 1)
+                round_canon_scenario = self.resolve_causal_consistency(for_which_round = round_number)
+                self.scenarios_by_round.append(round_canon_scenario)
+                self.print_log(f"Effects added this round: {self.effects_by_round[round_number]}...", 2)
+        else:
+            final_round_number = current_round_number
 
         # We now save all the canonised rounds to output
         for round_number in range(final_round_number):
@@ -2609,12 +2618,14 @@ class Gamemaster():
 
 
 
-    def load_from_database(self, static_data_representation, dynamic_data_representation, ruleset_representation):
+    def load_from_database(self, static_data_representation, dynamic_data_representation, ruleset_representation, external_game_outcome = None):
         # This is the big gun. Initializes the Gamemaster instance from a list of rows.
         # static_data_representation is a dictionary with static data.
         # dynamic_data_representation is a list of dictionaries, where the i-th element
         # is a dictionary of moves made in the i-th turn (0 reserved for setup moves).
         # ruleset_representation is a dictionary {rulegroup : rule}
+        # external_game_outcome, if not None, means external circumstances have forced
+        # a particular outcome (e.g. draw offer acceptance, time control etc)
 
         self.static_representation = static_data_representation
         self.dynamic_representation = dynamic_data_representation
@@ -2633,8 +2644,14 @@ class Gamemaster():
             print(f"load_from_database(static, dynamic) attempted initialization from a badly formatted static data string representation: {static_data_representation}")
             return(-1)
 
+
+        self.external_game_outcome = external_game_outcome
+        if external_game_outcome is not None:
+            self.outcome = external_game_outcome
+
         self.load_board_representation(t_dim, x_dim, y_dim, board_representation)
         self.load_flags_from_representation(dynamic_data_representation)
+
 
 
 

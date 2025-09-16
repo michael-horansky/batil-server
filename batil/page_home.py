@@ -825,6 +825,4 @@ class PageHome(Page):
             self.close_container()
             self.close_container()
 
-
-
         return(self.print_html())

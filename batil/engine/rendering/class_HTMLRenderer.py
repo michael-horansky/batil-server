@@ -21,10 +21,11 @@ from batil.engine.rendering.class_Abstract_Output import Abstract_Output
 
 class HTMLRenderer(Renderer):
 
-    def __init__(self, render_object, game_id, client_role):
+    def __init__(self, render_object, game_id, client_role, game_management_status):
         super().__init__(render_object)
         self.game_id = game_id
         self.client_role = client_role
+        self.game_management_status = game_management_status # time control, draw status etc
         self.structured_output = []
 
         # ------------------------ Rendering constants ------------------------
@@ -696,12 +697,32 @@ class HTMLRenderer(Renderer):
     def draw_game_management(self, link_data):
         self.commit_to_output("<div id=\"game_management\">")
         # View board, relevant users...
-        print(self.client_role)
 
         if self.client_role in ["A", "B"]:
             # Logged in and in progress: can offer draw, resign...
+            if self.client_role == "A":
+                opposite_client = "B"
+            else:
+                opposite_client = "A"
+
+            available_draw_offer_status_buttons = {}
+            if self.game_management_status["DRAW_OFFER_STATUS"] == "no_offer":
+                available_draw_offer_status_buttons = {
+                    "offer_draw" : "Offer draw"
+                }
+            elif self.game_management_status["DRAW_OFFER_STATUS"] == f"{self.client_role}_offer":
+                available_draw_offer_status_buttons = {
+                    "withdraw_draw_offer" : "Withdraw draw offer"
+                }
+            elif self.game_management_status["DRAW_OFFER_STATUS"] == f"{opposite_client}_offer":
+                available_draw_offer_status_buttons = {
+                    "accept_draw_offer" : "Accept draw",
+                    "decline_draw_offer" : "Decline draw"
+                }
+
             self.commit_to_output([
-                f"<form id=\"game_management_form\">",
+                f"<form id=\"game_management_form\"  method=\"POST\" action=\"{url_for("game_bp.action_game_management", game_id = self.game_id)}\">",
+                f"  <input type=\"hidden\" name=\"client_role\" value=\"{self.client_role}\">",
                 f"  <table id=\"game_management_table\" class=\"action_table\">",
                 f"    <thead>",
                 f"      <tr>",
@@ -709,7 +730,7 @@ class HTMLRenderer(Renderer):
                 f"        <th class=\"action_table_header\">Player B</th>",
                 f"        <th class=\"action_table_header\">Board</th>",
                 f"        <th class=\"action_table_header\">Time control</th>",
-                f"        <th colspan=\"2\" class=\"action_table_actions_header\">Actions</th>",
+                f"        <th colspan=\"{1 + len(available_draw_offer_status_buttons)}\" class=\"action_table_actions_header\">Actions</th>",
                 f"      </tr>",
                 f"    </thead>",
                 f"    <tbody>",
@@ -717,9 +738,12 @@ class HTMLRenderer(Renderer):
                 f"        <td><a href=\"{url_for("user.user", username = link_data["A"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["A"] }</a></td>",
                 f"        <td><a href=\"{url_for("user.user", username = link_data["B"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["B"] }</a></td>",
                 f"        <td><a href=\"{url_for("board.board", board_id = link_data["board"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["board_name"] }</a></td>",
-                f"        <td>{ 4-2 }</td>",
-                f"        <td><button type=\"submit\" name=\"action_game_management_table\" value=\"offer_draw\" class=\"action_game_management_submit_btn action_table_column_button\">Offer draw</button></td>",
-                f"        <td><button type=\"submit\" name=\"action_game_management_table\" value=\"resign\" class=\"action_game_management_submit_btn action_table_column_button\">Resign</button></td>",
+                f"        <td>{ 4-2 }</td>"
+                ])
+            for key, label in available_draw_offer_status_buttons.items():
+                self.commit_to_output(f"        <td><button type=\"submit\" name=\"action_game_management\" value=\"{key}\" class=\"action_game_management_submit_btn action_table_column_button\">{label}</button></td>")
+            self.commit_to_output([
+                f"        <td><button type=\"submit\" name=\"action_game_management\" value=\"resign\" class=\"action_game_management_submit_btn action_table_column_button\">Resign</button></td>",
                 f"      </tr>",
                 f"    </tbody>",
                 f"  </table>",
@@ -732,7 +756,7 @@ class HTMLRenderer(Renderer):
                 f"  <thead>",
                 f"    <tr>",
                 f"      <th class=\"action_table_header\">Player A</th>",
-                f"      <th class=\"action_table_header\">Pla,yer B</th>",
+                f"      <th class=\"action_table_header\">Player B</th>",
                 f"      <th class=\"action_table_header\">Board</th>",
                 f"      <th class=\"action_table_header\">Time control</th>",
                 f"    </tr>",

@@ -18,6 +18,7 @@ class PageGame(Page):
         super().__init__("Game")
         self.game_id = game_id
         self.game_status = None
+        self.game_management_status = None
 
         self.gm = Gamemaster(display_logs = True)
 
@@ -62,6 +63,37 @@ class PageGame(Page):
 
         db.commit()
 
+    def resolve_action_game_management(self):
+        db = get_db()
+        for key, val in request.form.items():
+            print(f"{key} -> {val}")
+        active_client = request.form.get("client_role")
+        if active_client == "A":
+            opposite_client = "B"
+        else:
+            opposite_client = "A"
+        if request.form.get("action_game_management") == "offer_draw":
+            game_draw_status = db.execute("SELECT DRAW_OFFER_STATUS FROM BOC_GAMES WHERE GAME_ID = ?", (self.game_id,)).fetchone()["DRAW_OFFER_STATUS"]
+            if (active_client == "A" and game_draw_status == "B_offer") or (active_client == "B" and game_draw_status == "A_offer"):
+                # draw accepted
+                db.execute("UPDATE BOC_GAMES SET DRAW_OFFER_STATUS = \"accepted\", OUTCOME = \"draw\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ?", (self.game_id,))
+                db.commit()
+            elif game_draw_status == "no_offer":
+                db.execute(f"UPDATE BOC_GAMES SET DRAW_OFFER_STATUS = \"{active_client}_offer\" WHERE GAME_ID = ?", (self.game_id,))
+                db.commit()
+        elif request.form.get("action_game_management") == "withdraw_draw_offer":
+            db.execute(f"UPDATE BOC_GAMES SET DRAW_OFFER_STATUS = \"no_offer\" WHERE GAME_ID = ? AND DRAW_OFFER_STATUS = \"{active_client}_offer\"", (self.game_id,))
+            db.commit()
+        elif request.form.get("action_game_management") == "decline_draw_offer":
+            db.execute(f"UPDATE BOC_GAMES SET DRAW_OFFER_STATUS = \"no_offer\" WHERE GAME_ID = ? AND DRAW_OFFER_STATUS = \"{opposite_client}_offer\"", (self.game_id,))
+            db.commit()
+        elif request.form.get("action_game_management") == "accept_draw_offer":
+            db.execute(f"UPDATE BOC_GAMES SET DRAW_OFFER_STATUS = \"accepted\", OUTCOME = \"draw\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ? AND DRAW_OFFER_STATUS = \"{opposite_client}_offer\"", (self.game_id,))
+            db.commit()
+
+        elif request.form.get("action_game_management") == "resign":
+            db.execute(f"UPDATE BOC_GAMES SET OUTCOME = \"{opposite_client}\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ?", (self.game_id,))
+            db.commit()
 
 
 
@@ -69,7 +101,7 @@ class PageGame(Page):
         db = get_db()
         # We need to load the static data, the dynamic data, and the ruleset
 
-        boc_games_row = db.execute("SELECT BOC_GAMES.PLAYER_A, BOC_GAMES.PLAYER_B, BOC_GAMES.BOARD_ID, BOC_GAMES.STATUS, BOC_GAMES.DRAW_OFFER_STATUS, BOC_GAMES.OUTCOME, BOC_BOARDS.BOARD_NAME AS BOARD_NAME FROM BOC_GAMES INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE GAME_ID = ?", (self.game_id,)).fetchone()
+        boc_games_row = db.execute("SELECT BOC_GAMES.PLAYER_A AS PLAYER_A, BOC_GAMES.PLAYER_B AS PLAYER_B, BOC_GAMES.BOARD_ID AS BOARD_ID, BOC_GAMES.STATUS AS STATUS, BOC_GAMES.DRAW_OFFER_STATUS AS DRAW_OFFER_STATUS, BOC_GAMES.OUTCOME AS OUTCOME, BOC_BOARDS.BOARD_NAME AS BOARD_NAME FROM BOC_GAMES INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE GAME_ID = ?", (self.game_id,)).fetchone()
         self.game_status = boc_games_row["STATUS"]
         if boc_games_row is None:
             print(f"ERROR: Attempting to load a non-existing game (game-id = {self.game_id})")
@@ -101,7 +133,10 @@ class PageGame(Page):
         for row in ruleset_rows:
             ruleset[row["RULE_GROUP"]] = row["RULE"]
 
-        self.gm.load_from_database(static_data, dynamic_data, ruleset)
+        if self.game_status == "in_progress":
+            self.gm.load_from_database(static_data, dynamic_data, ruleset)
+        else:
+            self.gm.load_from_database(static_data, dynamic_data, ruleset, boc_games_row["OUTCOME"])
 
         # We now identify the user who opened the page
         self.client_role = None
@@ -123,13 +158,17 @@ class PageGame(Page):
             else:
                 self.client_role = "guest"
 
+        self.game_management_status = {
+            "DRAW_OFFER_STATUS" : boc_games_row["DRAW_OFFER_STATUS"]
+            }
+
 
 
 
     def prepare_renderer(self):
         # Time for telling the proprietary gamemaster to properly initialise the game with the correct access rights
         self.gm.prepare_for_rendering(self.client_role)
-        self.renderer = HTMLRenderer(self.gm.rendering_output, self.game_id, self.client_role)
+        self.renderer = HTMLRenderer(self.gm.rendering_output, self.game_id, self.client_role, self.game_management_status)
         self.renderer.render_game(self.link_data)
 
 
@@ -145,38 +184,62 @@ class PageGame(Page):
 
         self.structured_html.append(self.renderer.structured_output)
 
-        if self.gm.rendering_output.did_player_finish_turn and self.game_status == "in_progress":
-            # The client is waiting for his opponent; we will check the page automatically once the game has been updated
-            self.clientside_reloader()
+        if self.game_status == "in_progress":
+            if self.gm.rendering_output.did_player_finish_turn:
+                # The client is waiting for his opponent; we will check the page automatically once the game has been updated
+                self.clientside_reloader(waiting_for_move = True)
+            else:
+                self.clientside_reloader(waiting_for_move = False)
 
         self.structured_html.append("</body>")
 
         return(self.print_html())
 
 
-    def clientside_reloader(self):
+    def clientside_reloader(self, waiting_for_move):
         # Prepares a JS daemon which checks whether to reload the game
-        db = get_db()
-        initial_move_count = current_count = db.execute(
-            "SELECT COUNT(*) AS cnt FROM BOC_MOVES WHERE GAME_ID = ?", (self.game_id,)
-        ).fetchone()["cnt"]
-        self.structured_html.append(f"""
-            <script>
-            let move_count = {initial_move_count};
-            let move_count_url = \"{url_for("game_bp.moves_count", game_id=self.game_id)}\";
+        draw_offer_status = self.game_management_status["DRAW_OFFER_STATUS"]
+        if waiting_for_move:
+            db = get_db()
+            initial_move_count = db.execute("SELECT COUNT(*) AS MOVES_COUNT FROM BOC_MOVES WHERE GAME_ID = ?", (self.game_id,)).fetchone()["MOVES_COUNT"]
+            self.structured_html.append(f"""
+                <script>
+                let draw_offer_status = \"{draw_offer_status}\";
+                let move_count = {initial_move_count};
+                let move_count_url = \"{url_for("game_bp.moves_count", game_id=self.game_id)}\";
 
-            async function poll_moves() {{
-                const resp = await fetch(`${{move_count_url}}?count=${{move_count}}`);
-                const data = await resp.json();
+                async function poll_moves() {{
+                    const resp = await fetch(`${{move_count_url}}?dos=${{draw_offer_status}}&count=${{move_count}}`);
+                    const data = await resp.json();
 
-                if (data.changed) {{
-                    move_count = data.count;
-                    window.location.href = window.location.pathname + \"?last_displayed_turn=\" + encodeURIComponent({self.gm.rendering_output.current_turn});
+                    if (data.changed) {{
+                        move_count = data.count;
+                        window.location.href = window.location.pathname + \"?last_displayed_turn=\" + encodeURIComponent({self.gm.rendering_output.current_turn});
+                    }}
+
+                    setTimeout(poll_moves, 1000);
                 }}
 
-                setTimeout(poll_moves, 1000);
-            }}
+                poll_moves();
+                </script>
+            """)
+        else:
+            self.structured_html.append(f"""
+                <script>
+                let draw_offer_status = \"{draw_offer_status}\";
+                let game_status_url = \"{url_for("game_bp.game_status", game_id=self.game_id)}\";
 
-            poll_moves();
-            </script>
-        """)
+                async function poll_moves() {{
+                    const resp = await fetch(`${{game_status_url}}?dos=${{draw_offer_status}}`);
+                    const data = await resp.json();
+
+                    if (data.changed) {{
+                        window.location.href = window.location.pathname;
+                    }}
+
+                    setTimeout(poll_moves, 1000);
+                }}
+
+                poll_moves();
+                </script>
+            """)
