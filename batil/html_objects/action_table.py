@@ -5,6 +5,7 @@ from flask import (
 )
 
 from batil.html_objects.html_object import HTMLObject
+from batil.aux_funcs import *
 
 class ActionTable(HTMLObject):
 
@@ -57,13 +58,15 @@ class ActionTable(HTMLObject):
 
         self.structured_html.append(f"<table id=\"action_table_{self.identifier}\" class=\"action_table\">")
 
-    def make_head(self, headers, actions = None, action_instructions = {}, col_links = {}):
+    def make_head(self, headers, actions = None, action_instructions = {}, col_links = {}, col_types = {}):
         # Both headers and actions are dictionaries in the form {id : name}
         # col_links[col iden] = link func
+        # col_types = {column_id : magic_kw}
         self.headers = headers
         self.actions = actions
         self.action_instructions = action_instructions
         self.col_links = col_links
+        self.col_types = col_types
         self.structured_html.append([
                 "  <thead>",
                 "    <tr>",
@@ -95,6 +98,7 @@ class ActionTable(HTMLObject):
 
         # include_filters = True (all columns), False (no filters), or list of column ids
         # filter_values = None or {col id : filter value}
+        # row_class_by_col = None or one of the datum keys
         if filter_values is None:
             filter_values = {}
         self.structured_html.append("  <tbody>")
@@ -106,8 +110,16 @@ class ActionTable(HTMLObject):
             for column_id in self.headers.keys():
                 if column_id in self.col_links.keys():
                     td_content = f"<a href=\"{self.col_links[column_id](datum)}\" target=\"_blank\" class=\"action_table_col_link\">{ datum[column_id] }</a>"
+                elif column_id in self.col_types.keys():
+                    if self.col_types[column_id] == "deadline":
+                        # converts seconds to HH:MM:SS
+                        td_content = seconds_to_str(datum[column_id], "No deadline", "Timeout")
+                    else:
+                        # col type not recognised
+                        td_content = datum[column_id]
                 else:
                     td_content = datum[column_id]
+
                 if self.include_select:
                     self.structured_html.append(f"      <td class=\"{self.identifier}_select_row_btn\" data-rowid=\"{ datum["IDENTIFIER"] }\">{ td_content }</td>")
                 else:

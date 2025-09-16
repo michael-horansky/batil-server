@@ -22,6 +22,18 @@ def get_file_extension(file_storage):
         return(PFP_EXTENSIONS.index(ext.lower()))
     return(None)
 
+def seconds_to_str(seconds, val_on_none = "", val_on_neg = ""):
+    if seconds is None:
+        return(val_on_none)
+
+    if seconds < 0:
+        return(val_on_neg)
+
+    hours, remainder = divmod(seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+
+    return(f"{hours}:{minutes:02}:{secs:02}")
+
 
 # --------------------------------- CONSTANTS ---------------------------------
 

@@ -198,14 +198,14 @@ class ActionForm(HTMLObject):
                 ])
         self.add_to_tab(section_i, "footer", button_html)
 
-    def add_ordered_table(self, section_i, table_id, table_query, data_identifier, data_cols, include_select, headers, order_options, actions = None, filters = None, action_instructions = {}, col_links = {}, rows_per_view = 10, enforce_filter_kw = None, row_class_by_col = None):
+    def add_ordered_table(self, section_i, table_id, table_query, data_identifier, data_cols, include_select, headers, order_options, actions = None, filters = None, action_instructions = {}, col_links = {}, rows_per_view = 10, enforce_filter_kw = None, row_class_by_col = None, col_types = {}):
         # Call this after open_section. This also opens section footer, so there can only be this table in the content of this section
         # The ordering and navigation are done through the GET form!
 
         # order_options = [["QUERY FRAGMENT", "label"], ...]
 
         main_table = ActionTable(table_id, include_select)
-        main_table.make_head(headers, actions, action_instructions, col_links)
+        main_table.make_head(headers, actions, action_instructions, col_links, col_types)
 
         if f"{table_id}_order" in request.args:
             try:
@@ -406,5 +406,9 @@ class ActionForm(HTMLObject):
                 }
 
         self.add_ordered_table(section_i, table_id, table_query, data_identifier, data_cols, False, headers, order_options, actions, filters, action_instructions, col_links, rows_per_view, row_class_by_col = "POV_OUTCOME")
+
+    def make_ongoing_games_form(self, username, rows_per_view = 5):
+        # This is special, since it not only displays the tables, but it also checks for timeouts, and, if detected, automatically updates game status
+        pass
 
 

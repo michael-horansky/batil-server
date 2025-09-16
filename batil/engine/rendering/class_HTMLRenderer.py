@@ -90,18 +90,23 @@ class HTMLRenderer(Renderer):
 
     # ---------------------------- Data depositing ----------------------------
 
-    def deposit_datum(self, name, value):
+    def deposit_datum(self, name, value, volatile = False):
+        if volatile:
+            declaration_str = "let"
+        else:
+            declaration_str = "const"
+
         if value is None:
-            self.commit_to_output(f"  const {name} = null;")
+            self.commit_to_output(f"  {declaration_str} {name} = null;")
         elif isinstance(value, bool):
             if value:
-                self.commit_to_output(f"  const {name} = true;")
+                self.commit_to_output(f"  {declaration_str} {name} = true;")
             else:
-                self.commit_to_output(f"  const {name} = false;")
+                self.commit_to_output(f"  {declaration_str} {name} = false;")
         elif isinstance(value, str):
-            self.commit_to_output(f"  const {name} = {json.dumps(value)};")
+            self.commit_to_output(f"  {declaration_str} {name} = {json.dumps(value)};")
         else:
-            self.commit_to_output(f"  const {name} = {value};")
+            self.commit_to_output(f"  {declaration_str} {name} = {value};")
 
     def deposit_list(self, name, value):
         # If there are no dictionaries in the nest, the output of json.dumps is
@@ -111,7 +116,7 @@ class HTMLRenderer(Renderer):
     def deposit_object(self, name, value):
         self.commit_to_output(f"  const {name} = JSON.parse('{json.dumps(value)}');")
 
-    def deposit_contextual_data(self):
+    def deposit_contextual_data(self, seconds_left_to_timeout):
         # This method creates a <script> environment which deposits all data
         # which change between games and which are needed by the JavaScript.
         # This means the main script can be global for all the games :)
@@ -161,6 +166,8 @@ class HTMLRenderer(Renderer):
         # ---------------------- Game status properties -----------------------
         self.deposit_datum("game_status", self.render_object.game_status)
         self.deposit_datum("game_outcome", self.render_object.game_outcome)
+
+        self.deposit_datum("seconds_left_to_timeout", seconds_left_to_timeout, volatile = True)
 
         self.commit_to_output("</script>")
 
@@ -639,28 +646,35 @@ class HTMLRenderer(Renderer):
         next_round_button_text = "<text x=\"287\" y=\"55\" class=\"button_label\" id=\"next_round_button_label\">Next round</text>"
 
         self.commit_to_output([prev_round_button_polygon, prev_round_button_text, active_round_button_object, active_round_button_text, next_round_button_polygon, next_round_button_text])
-        self.commit_to_output("</svg>\n</div>")
+        self.commit_to_output("</svg>")
+
+        if self.render_object.game_status == "in_progress":
+            self.draw_command_form()
+        self.commit_to_output("</div>")
 
     # --------------------------- Game log methods ----------------------------
 
-    def draw_game_log(self):
+    def draw_game_log(self, seconds_left_to_timeout):
         self.commit_to_output([
             f"<div id=\"game_log\">",
             f"  <div id=\"game_log_nav\">",
             f"    <div id=\"game_log_nav_timeslice_label\" class=\"game_log_nav_label\">Timeslice</div>",
             f"    <div id=\"game_log_nav_timeslice_value\" class=\"game_log_nav_label\"></div>",
             f"    <div id=\"game_log_nav_round_label\" class=\"game_log_nav_label\">Round</div>",
-            f"    <div id=\"game_log_nav_round_value\" class=\"game_log_nav_label\"></div>",
-            f"  </div>"
+            f"    <div id=\"game_log_nav_round_value\" class=\"game_log_nav_label\"></div>"
             ])
         #self.commit_to_output(f"  <p id=\"navigation_label\"></p>")
 
-        if self.render_object.game_status == "in_progress":
-            self.draw_command_form()
-        elif self.render_object.game_status == "concluded":
+        if self.render_object.game_status == "in_progress" and seconds_left_to_timeout is not None:
+            self.commit_to_output("  <div id=\"time_countdown_label\"></div>")
+
+        self.commit_to_output("  </div>")
+
+        if self.render_object.game_status == "concluded":
             self.draw_outcome_message()
 
         self.commit_to_output("</div>")
+
 
     # ------------------------- Command form methods --------------------------
 
@@ -777,9 +791,9 @@ class HTMLRenderer(Renderer):
 
     # ---------------------------- Global methods -----------------------------
 
-    def render_game(self, link_data):
+    def render_game(self, link_data, seconds_left_to_timeout):
         self.open_body()
-        self.deposit_contextual_data()
+        self.deposit_contextual_data(seconds_left_to_timeout)
 
         # Initialize boardside
         self.open_boardside()
@@ -800,7 +814,7 @@ class HTMLRenderer(Renderer):
         self.open_gameside()
 
         self.draw_game_control_panel()
-        self.draw_game_log()
+        self.draw_game_log(seconds_left_to_timeout)
         self.draw_game_management(link_data)
 
         # Close gameside

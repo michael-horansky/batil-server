@@ -2472,3 +2472,34 @@ if (last_displayed_turn < current_turn) {
     show_active_timeslice();
 
 }
+
+// If seconds_left_to_timeout is not null, we need to create a countdown.
+function format_time(seconds) {
+    const hours   = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs    = seconds % 60;
+
+    // Hours can be arbitrary length, but minutes and seconds should be 2 digits
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+function update_countdown() {
+    const label = document.getElementById("time_countdown_label");
+    if (seconds_left_to_timeout <= 0) {
+        label.innerText = "Timeout";
+        clearInterval(countdown_daemon);  // stop updating
+        window.location.href = window.location.pathname;
+    }
+
+    label.innerText = format_time(seconds_left_to_timeout);
+    seconds_left_to_timeout--;
+}
+if (seconds_left_to_timeout != null) {
+    update_countdown();
+    if (!did_player_finish_turn) {
+        // Set up countdown daemon
+        const countdown_daemon = setInterval(update_countdown, 1000);
+    }
+}
+
+

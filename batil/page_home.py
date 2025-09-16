@@ -366,7 +366,9 @@ class PageHome(Page):
                 )
                 SELECT
                     BOC_GAMES.GAME_ID
-                FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID
+                FROM
+                    BOC_GAMES
+                    JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID
                 WHERE
                     (BOC_GAMES.PLAYER_A = ? OR BOC_GAMES.PLAYER_B = ?)
                     AND BOC_GAMES.STATUS = \"in_progress\"
@@ -430,6 +432,10 @@ class PageHome(Page):
                         FROM BOC_MOVES
                         JOIN latest L ON L.GAME_ID = BOC_MOVES.GAME_ID AND L.max_turn = BOC_MOVES.TURN_INDEX
                         GROUP BY BOC_MOVES.GAME_ID
+                    ), rules AS (
+                        SELECT GAME_ID, RULE AS deadline_rule
+                        FROM BOC_RULESETS
+                        WHERE RULE_GROUP = 'deadline'
                     )
                     SELECT
                         BOC_GAMES.GAME_ID AS GAME_ID,
@@ -439,8 +445,55 @@ class PageHome(Page):
                         END AS OPPONENT,
                         BOC_GAMES.D_STARTED AS D_STARTED,
                         BOC_BOARDS.BOARD_ID AS BOARD_ID,
-                        BOC_BOARDS.BOARD_NAME AS BOARD_NAME
-                    FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID
+                        BOC_BOARDS.BOARD_NAME AS BOARD_NAME,
+                        CASE
+                            WHEN rules.deadline_rule = 'no_deadline'
+                                THEN NULL
+                            WHEN rules.deadline_rule = 'one_day_per_move'
+                                THEN 86400 - COALESCE(
+                                    strftime('%s','now') - strftime('%s',
+                                        CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                            THEN BOC_GAMES.PLAYER_A_PROMPTED
+                                            ELSE BOC_GAMES.PLAYER_B_PROMPTED END
+                                    ), 0
+                                )
+                            WHEN rules.deadline_rule = 'three_days_per_move'
+                                THEN 259200 - COALESCE(
+                                    strftime('%s','now') - strftime('%s',
+                                        CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                            THEN BOC_GAMES.PLAYER_A_PROMPTED
+                                            ELSE BOC_GAMES.PLAYER_B_PROMPTED END
+                                    ), 0
+                                )
+                            WHEN rules.deadline_rule = 'one_hour_cumulative'
+                                THEN (CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                        THEN BOC_GAMES.PLAYER_A_CUMULATIVE_SECONDS
+                                        ELSE BOC_GAMES.PLAYER_B_CUMULATIVE_SECONDS END)
+                                    - COALESCE(
+                                        strftime('%s','now') - strftime('%s',
+                                            CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                                THEN BOC_GAMES.PLAYER_A_PROMPTED
+                                                ELSE BOC_GAMES.PLAYER_B_PROMPTED END
+                                        ), 0
+                                    )
+                            WHEN rules.deadline_rule = 'one_day_cumulative'
+                                THEN (CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                        THEN BOC_GAMES.PLAYER_A_CUMULATIVE_SECONDS
+                                        ELSE BOC_GAMES.PLAYER_B_CUMULATIVE_SECONDS END)
+                                    - COALESCE(
+                                        strftime('%s','now') - strftime('%s',
+                                            CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                                THEN BOC_GAMES.PLAYER_A_PROMPTED
+                                                ELSE BOC_GAMES.PLAYER_B_PROMPTED END
+                                        ), 0
+                                    )
+                            ELSE NULL
+                        END AS TIME_LEFT_SECONDS
+                    FROM
+                        BOC_GAMES
+                        JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID
+                        INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID
+                        JOIN rules ON rules.GAME_ID = BOC_GAMES.GAME_ID
                     WHERE
                         (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
                         AND BOC_GAMES.STATUS = \"in_progress\"
@@ -449,9 +502,9 @@ class PageHome(Page):
                             OR
                             (BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'B')
                         )
-                    """, "GAME_ID", ["OPPONENT", "BOARD_NAME", "D_STARTED", "BOARD_ID"],
+                    """, "GAME_ID", ["OPPONENT", "BOARD_NAME", "TIME_LEFT_SECONDS", "D_STARTED", "BOARD_ID"],
                     include_select = False,
-                    headers = {"OPPONENT" : "Opponent", "BOARD_NAME" : "Board", "D_STARTED" : "Start date"},
+                    headers = {"OPPONENT" : "Opponent", "BOARD_NAME" : "Board", "TIME_LEFT_SECONDS" : "Time left", "D_STARTED" : "Start date"},
                     order_options = [["D_STARTED", "Start"]],
                     actions = {"open" : "Open game"},
                     filters = False,
@@ -460,7 +513,8 @@ class PageHome(Page):
                         "BOARD_NAME" : (lambda datum : url_for("board.board", board_id = datum["BOARD_ID"])),
                         "OPPONENT" : (lambda datum : url_for("user.user", username = datum["OPPONENT"]))
                         },
-                    rows_per_view = 5
+                    rows_per_view = 5,
+                    col_types = {"TIME_LEFT_SECONDS" : "deadline"}
                     )
                 sections_initialised += 1
             if active_games_not_your_turn_sample is not None:
@@ -476,6 +530,10 @@ class PageHome(Page):
                         FROM BOC_MOVES
                         JOIN latest L ON L.GAME_ID = BOC_MOVES.GAME_ID AND L.max_turn = BOC_MOVES.TURN_INDEX
                         GROUP BY BOC_MOVES.GAME_ID
+                    ), rules AS (
+                        SELECT GAME_ID, RULE AS deadline_rule
+                        FROM BOC_RULESETS
+                        WHERE RULE_GROUP = 'deadline'
                     )
                     SELECT
                         BOC_GAMES.GAME_ID AS GAME_ID,
@@ -485,8 +543,54 @@ class PageHome(Page):
                         END AS OPPONENT,
                         BOC_GAMES.D_STARTED AS D_STARTED,
                         BOC_BOARDS.BOARD_ID AS BOARD_ID,
-                        BOC_BOARDS.BOARD_NAME AS BOARD_NAME
-                    FROM BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID
+                        BOC_BOARDS.BOARD_NAME AS BOARD_NAME,
+                        CASE
+                            WHEN rules.deadline_rule = 'no_deadline'
+                                THEN NULL
+                            WHEN rules.deadline_rule = 'one_day_per_move'
+                                THEN 86400 - COALESCE(
+                                    strftime('%s','now') - strftime('%s',
+                                        CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                            THEN BOC_GAMES.PLAYER_A_PROMPTED
+                                            ELSE BOC_GAMES.PLAYER_B_PROMPTED END
+                                    ), 0
+                                )
+                            WHEN rules.deadline_rule = 'three_days_per_move'
+                                THEN 259200 - COALESCE(
+                                    strftime('%s','now') - strftime('%s',
+                                        CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                            THEN BOC_GAMES.PLAYER_A_PROMPTED
+                                            ELSE BOC_GAMES.PLAYER_B_PROMPTED END
+                                    ), 0
+                                )
+                            WHEN rules.deadline_rule = 'one_hour_cumulative'
+                                THEN (CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                        THEN BOC_GAMES.PLAYER_A_CUMULATIVE_SECONDS
+                                        ELSE BOC_GAMES.PLAYER_B_CUMULATIVE_SECONDS END)
+                                    - COALESCE(
+                                        strftime('%s','now') - strftime('%s',
+                                            CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                                THEN BOC_GAMES.PLAYER_A_PROMPTED
+                                                ELSE BOC_GAMES.PLAYER_B_PROMPTED END
+                                        ), 0
+                                    )
+                            WHEN rules.deadline_rule = 'one_day_cumulative'
+                                THEN (CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                        THEN BOC_GAMES.PLAYER_A_CUMULATIVE_SECONDS
+                                        ELSE BOC_GAMES.PLAYER_B_CUMULATIVE_SECONDS END)
+                                    - COALESCE(
+                                        strftime('%s','now') - strftime('%s',
+                                            CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                                THEN BOC_GAMES.PLAYER_A_PROMPTED
+                                                ELSE BOC_GAMES.PLAYER_B_PROMPTED END
+                                        ), 0
+                                    )
+                            ELSE NULL
+                        END AS TIME_LEFT_SECONDS
+                    FROM
+                        BOC_GAMES JOIN latest_moves LM ON LM.GAME_ID = BOC_GAMES.GAME_ID
+                        INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID
+                        JOIN rules ON rules.GAME_ID = BOC_GAMES.GAME_ID
                     WHERE
                         (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
                         AND BOC_GAMES.STATUS = \"in_progress\"
@@ -495,9 +599,9 @@ class PageHome(Page):
                             OR
                             (BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'B')
                         )
-                    """, "GAME_ID", ["OPPONENT", "BOARD_NAME", "D_STARTED", "BOARD_ID"],
+                    """, "GAME_ID", ["OPPONENT", "BOARD_NAME", "TIME_LEFT_SECONDS", "D_STARTED", "BOARD_ID"],
                     include_select = False,
-                    headers = {"OPPONENT" : "Opponent", "BOARD_NAME" : "Board", "D_STARTED" : "Start date"},
+                    headers = {"OPPONENT" : "Opponent", "BOARD_NAME" : "Board", "TIME_LEFT_SECONDS" : "Time left", "D_STARTED" : "Start date"},
                     order_options = [["D_STARTED", "Start"]],
                     actions = {"open" : "Open game"},
                     filters = False,
@@ -506,7 +610,8 @@ class PageHome(Page):
                         "BOARD_NAME" : (lambda datum : url_for("board.board", board_id = datum["BOARD_ID"])),
                         "OPPONENT" : (lambda datum : url_for("user.user", username = datum["OPPONENT"]))
                         },
-                    rows_per_view = 5
+                    rows_per_view = 5,
+                    col_types = {"TIME_LEFT_SECONDS" : "deadline"}
                     )
             form_existing_games.realise_form()
             self.structured_html.append(form_existing_games.structured_html)

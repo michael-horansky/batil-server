@@ -17,6 +17,8 @@ bp = Blueprint('game_bp', __name__, url_prefix="/game")
 @bp.route('/<regex("[A-Za-z0-9]{16}"):game_id>', methods=['GET'])
 def game(game_id):
     rendered_page = PageGame(game_id)
+    if rendered_page.client_role in ["A", "B"]:
+        rendered_page.resolve_time_control()
     rendered_page.load_game()
     return(rendered_page.render_page())
 

@@ -56,7 +56,12 @@ class CascadeForm(HTMLObject):
                     f"  <button type=\"button\" class=\"cascade_form_explain\" id=\"cascade_form_{self.identifier}_explain_{group["ID"]}\">Explain</button>",
                     f"</div>"
                 ])
-        self.structured_html.append("</div>") # we close the wrapper
+        # We add the div for explanations
+        self.structured_html.append([
+            f"  <h2 id=\"cascade_form_{self.identifier}_elaborate_title\" class=\"cascade_form_elaborate_title\"></h2>",
+            f"  <div id=\"cascade_form_{self.identifier}_elaborate\" class=\"cascade_form_elaborate\"></div>",
+            "</div>"
+            ])
         # Now we make the script where we simply deposit the selection structure
 
         groups_subject_to_restrictions = []
@@ -111,6 +116,11 @@ class CascadeForm(HTMLObject):
                 ])
 
         # Add onclick listeners for explain buttons (and store element descriptions)
+        self.structured_html.append("const element_labels = {")
+        for element in self.elements:
+            self.structured_html.append(f"  \"{element["ID"]}\" : {json.dumps(element["LABEL"])},")
+        self.structured_html[-1] = self.structured_html[-1][:-1]
+        self.structured_html.append("};\n")
         self.structured_html.append("const element_descriptions = {")
         for element in self.elements:
             self.structured_html.append(f"  \"{element["ID"]}\" : {json.dumps(element["DESCRIPTION"])},")
@@ -119,7 +129,10 @@ class CascadeForm(HTMLObject):
         for group in self.groups:
             self.structured_html.append([
                     f"document.getElementById(\"cascade_form_{self.identifier}_explain_{group["ID"]}\").addEventListener(\"click\", function() {{",
-                    f"  alert(element_descriptions[document.getElementById(\"cascade_form_{self.identifier}_selection_group_{group["ID"]}_select\").value]);",
+                    f"  let elaboration_label = element_labels[document.getElementById(\"cascade_form_{self.identifier}_selection_group_{group["ID"]}_select\").value];",
+                    f"  let elaboration = element_descriptions[document.getElementById(\"cascade_form_{self.identifier}_selection_group_{group["ID"]}_select\").value];",
+                    f"  document.getElementById(\"cascade_form_{self.identifier}_elaborate_title\").innerText = elaboration_label;",
+                    f"  document.getElementById(\"cascade_form_{self.identifier}_elaborate\").innerText = elaboration;",
                     "})"
                 ])
         self.structured_html.append("</script>")

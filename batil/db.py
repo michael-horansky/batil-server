@@ -209,7 +209,16 @@ def new_blind_challenge(target_board, challenge_author, ruleset_selection):
             player_b = retrieve_challenge["CHALLENGER"]
 
         # We finally activate the placeholder game
-        cur.execute("UPDATE BOC_GAMES SET PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\" WHERE GAME_ID = ?", (player_a, player_b, target_board_id, retrieve_challenge["RESERVED_GAME_ID"]))
+        if ruleset_selection["deadline"] == "one_hour_cumulative":
+            player_A_cumulative_seconds = 3600
+            player_B_cumulative_seconds = 3600
+        elif ruleset_selection["deadline"] == "one_day_cumulative":
+            player_A_cumulative_seconds = 3600 * 24
+            player_B_cumulative_seconds = 3600 * 24
+        else:
+            player_A_cumulative_seconds = None
+            player_B_cumulative_seconds = None
+        cur.execute("UPDATE BOC_GAMES SET PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\", PLAYER_A_CUMULATIVE_SECONDS = ?, PLAYER_B_CUMULATIVE_SECONDS = ? WHERE GAME_ID = ?", (player_a, player_b, target_board_id, player_A_cumulative_seconds, player_B_cumulative_seconds, retrieve_challenge["RESERVED_GAME_ID"]))
 
         # We also add the initial setup
         target_board_info = cur.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) SELECT ?, 0, 'GM', SETUP_REPRESENTATION, CURRENT_TIMESTAMP FROM BOC_BOARDS WHERE BOARD_ID = ?", (retrieve_challenge["RESERVED_GAME_ID"], target_board_id))
@@ -260,7 +269,17 @@ def accept_challenge(challenge_id):
         player_b = challenge_row["CHALLENGER"]
 
     # We activate the placeholder game
-    db.execute("UPDATE BOC_GAMES SET PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\" WHERE GAME_ID = ?", (player_a, player_b, challenge_row["BOARD_ID"], challenge_row["RESERVED_GAME_ID"]))
+    rule_for_deadline = db.execute("SELECT RULE FROM BOC_RULESETS WHERE GAME_ID = ? AND RULE_GROUP = \"deadline\"", (challenge_row["RESERVED_GAME_ID"],)).fetchone()["RULE"]
+    if rule_for_deadline == "one_hour_cumulative":
+        player_A_cumulative_seconds = 3600
+        player_B_cumulative_seconds = 3600
+    elif rule_for_deadline == "one_day_cumulative":
+        player_A_cumulative_seconds = 3600 * 24
+        player_B_cumulative_seconds = 3600 * 24
+    else:
+        player_A_cumulative_seconds = None
+        player_B_cumulative_seconds = None
+    db.execute("UPDATE BOC_GAMES SET PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\", PLAYER_A_CUMULATIVE_SECONDS = ?, PLAYER_B_CUMULATIVE_SECONDS = ? WHERE GAME_ID = ?", (player_a, player_b, challenge_row["BOARD_ID"], player_A_cumulative_seconds, player_B_cumulative_seconds, challenge_row["RESERVED_GAME_ID"]))
 
     # We also add the initial setup
     target_board_info = db.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) SELECT ?, 0, 'GM', SETUP_REPRESENTATION, CURRENT_TIMESTAMP FROM BOC_BOARDS WHERE BOARD_ID = ?", (challenge_row["RESERVED_GAME_ID"], challenge_row["BOARD_ID"]))

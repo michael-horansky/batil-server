@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 
 from batil.html_objects.page import Page
 from flask import (
@@ -19,8 +20,62 @@ class PageGame(Page):
         self.game_id = game_id
         self.game_status = None
         self.game_management_status = None
+        self.client_role = None
+
+        self.time_countdown = None
 
         self.gm = Gamemaster(display_logs = True)
+
+        # We determine the role
+        db = get_db()
+        self.game_row = db.execute("""
+            SELECT
+                BOC_GAMES.PLAYER_A AS PLAYER_A,
+                BOC_GAMES.PLAYER_B AS PLAYER_B,
+                BOC_GAMES.BOARD_ID AS BOARD_ID,
+                BOC_GAMES.STATUS AS STATUS,
+                BOC_GAMES.DRAW_OFFER_STATUS AS DRAW_OFFER_STATUS,
+                BOC_GAMES.OUTCOME AS OUTCOME,
+                BOC_GAMES.PLAYER_A_PROMPTED AS PLAYER_A_PROMPTED,
+                BOC_GAMES.PLAYER_B_PROMPTED AS PLAYER_B_PROMPTED,
+                BOC_GAMES.PLAYER_A_DEADLINE AS PLAYER_A_DEADLINE,
+                BOC_GAMES.PLAYER_B_DEADLINE AS PLAYER_B_DEADLINE,
+                BOC_GAMES.PLAYER_A_CUMULATIVE_SECONDS AS PLAYER_A_CUMULATIVE_SECONDS,
+                BOC_GAMES.PLAYER_B_CUMULATIVE_SECONDS AS PLAYER_B_CUMULATIVE_SECONDS,
+                BOC_BOARDS.BOARD_NAME AS BOARD_NAME
+            FROM BOC_GAMES INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE GAME_ID = ?
+            """, (self.game_id,)).fetchone()
+        print("------------------------------")
+        for key in ["PLAYER_A_PROMPTED", "PLAYER_B_PROMPTED", "PLAYER_A_DEADLINE", "PLAYER_B_DEADLINE", "PLAYER_A_CUMULATIVE_SECONDS", "PLAYER_B_CUMULATIVE_SECONDS"]:
+            print(f"  {key} -> {self.game_row[key]}")
+        print("------------------------------")
+        self.game_status = self.game_row["STATUS"]
+        self.game_outcome = self.game_row["OUTCOME"]
+        if self.game_row is None:
+            print(f"ERROR: Attempting to load a non-existing game (game-id = {self.game_id})")
+            return(-1)
+
+        # We now identify the user who opened the page
+        self.link_data = {
+            "A" : self.game_row["PLAYER_A"],
+            "B" : self.game_row["PLAYER_B"],
+            "board" : self.game_row["BOARD_ID"],
+            "board_name" : self.game_row["BOARD_NAME"]
+            }
+        if g.user is not None:
+            if self.game_row["STATUS"] == "in_progress":
+                if g.user["username"] == self.game_row["PLAYER_A"]:
+                    self.client_role = "A"
+                elif g.user["username"] == self.game_row["PLAYER_B"]:
+                    self.client_role = "B"
+                else:
+                    self.client_role = "guest"
+            else:
+                self.client_role = "guest"
+
+        self.game_management_status = {
+            "DRAW_OFFER_STATUS" : self.game_row["DRAW_OFFER_STATUS"]
+            }
 
     def resolve_request(self):
         db = get_db()
@@ -32,6 +87,21 @@ class PageGame(Page):
 
     def resolve_command_submission(self):
         db = get_db()
+        # Before we even consider looking at the moves, we check if the game didn't end by timeout.
+        time_control_rule = db.execute("SELECT RULE FROM BOC_RULESETS WHERE GAME_ID = ? AND RULE_GROUP = \"deadline\"", (self.game_id,)).fetchone()["RULE"]
+
+        if time_control_rule != "no_deadline":
+            # We note current time
+            current_time = datetime.utcnow()
+            self.check_for_timeout(time_control_rule, current_time, self.client_role)
+            if self.game_status == "in_progress":
+                # The player managed to submit commands without timing out.
+                # self.time_countdown is now guaranteed to store the time left.
+                # it is type int and is in total seconds.
+                if time_control_rule in ["one_hour_cumulative", "one_day_cumulative"]:
+                    db.execute(f"UPDATE BOC_GAMES SET PLAYER_{self.client_role}_CUMULATIVE_SECONDS = ? WHERE GAME_ID = ?", (self.time_countdown, self.game_id))
+        db.execute(f"UPDATE BOC_GAMES SET PLAYER_{self.client_role}_PROMPTED = NULL WHERE GAME_ID = ?", (self.game_id,))
+
         stones_touched_in_order = [int(x) for x in request.form.get("touch_order").split(",")]
         commands_added = []
         for stone_ID in stones_touched_in_order:
@@ -95,19 +165,162 @@ class PageGame(Page):
             db.execute(f"UPDATE BOC_GAMES SET OUTCOME = \"{opposite_client}\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ?", (self.game_id,))
             db.commit()
 
+    def resolve_time_control(self):
+        db = get_db()
 
+
+        # First, we grab the particular time control ruleset
+        time_control_rule = db.execute("SELECT RULE FROM BOC_RULESETS WHERE GAME_ID = ? AND RULE_GROUP = \"deadline\"", (self.game_id,)).fetchone()["RULE"]
+        if time_control_rule == "no_deadline":
+            # We skip this method
+            return(None)
+
+        # We note current time
+        current_time = datetime.utcnow()
+
+        # Is there a prompt time associated with this player?
+        if self.game_row[f"PLAYER_{self.client_role}_PROMPTED"] is not None:
+            self.check_for_timeout(time_control_rule, current_time, self.client_role)
+        else:
+            # The player has not been prompted. We now check if they just were
+            # prompted, and register the potential prompt and deadline times.
+            is_client_prompted = db.execute("""
+                WITH latest AS (
+                    SELECT MAX(BOC_MOVES.TURN_INDEX) AS max_turn
+                    FROM BOC_MOVES
+                    WHERE GAME_ID = :game_id
+                ),
+                latest_moves AS (
+                    SELECT GROUP_CONCAT(PLAYER) AS players_at_latest
+                    FROM BOC_MOVES, latest
+                    WHERE BOC_MOVES.GAME_ID = :game_id
+                    AND BOC_MOVES.TURN_INDEX = latest.max_turn
+                )
+                SELECT
+                    CASE
+                        WHEN (
+                            (:client_role = 'A' AND players_at_latest = 'A')
+                            OR
+                            (:client_role = 'B' AND players_at_latest = 'B')
+                        )
+                        THEN 0
+                        ELSE 1
+                    END AS IS_THEIR_TURN
+                FROM latest_moves;""", {"game_id" : self.game_id, "client_role" : self.client_role}).fetchone()["IS_THEIR_TURN"] == 1
+            if is_client_prompted:
+                # We save the time of the prompting, and the corresponding deadline if it exists
+                if time_control_rule in ["one_day_per_move", "three_days_per_move"]:
+                    if time_control_rule == "one_day_per_move":
+                        db.execute(f"UPDATE BOC_GAMES SET PLAYER_{self.client_role}_PROMPTED = CURRENT_TIMESTAMP, PLAYER_{self.client_role}_DEADLINE = DATETIME(CURRENT_TIMESTAMP, '+1 day') WHERE GAME_ID = ?", (self.game_id,))
+                        db.commit()
+                        self.time_countdown = 3600 * 24
+                    elif time_control_rule == "three_days_per_move":
+                        db.execute(f"UPDATE BOC_GAMES SET PLAYER_{self.client_role}_PROMPTED = CURRENT_TIMESTAMP, PLAYER_{self.client_role}_DEADLINE = DATETIME(CURRENT_TIMESTAMP, '+3 days') WHERE GAME_ID = ?", (self.game_id,))
+                        db.commit()
+                        self.time_countdown = 3600 * 24 * 3
+                elif time_control_rule in ["one_hour_cumulative", "one_day_cumulative"]:
+                    db.execute(f"UPDATE BOC_GAMES SET PLAYER_{self.client_role}_PROMPTED = CURRENT_TIMESTAMP WHERE GAME_ID = ?", (self.game_id,))
+                    db.commit()
+                    self.time_countdown = int(self.game_row[f"PLAYER_{self.client_role}_CUMULATIVE_SECONDS"])
+            else:
+                # client is not prompted. We want to freeze the timer
+                if time_control_rule in ["one_day_per_move", "three_days_per_move"]:
+                    if time_control_rule == "one_day_per_move":
+                        self.time_countdown = 3600 * 24
+                    elif time_control_rule == "three_days_per_move":
+                        self.time_countdown = 3600 * 24 * 3
+                elif time_control_rule in ["one_hour_cumulative", "one_day_cumulative"]:
+                    self.time_countdown = int(self.game_row[f"PLAYER_{self.client_role}_CUMULATIVE_SECONDS"])
+
+    def check_for_timeout(self, time_control_rule, current_time, client_role):
+        # For when the player has been prompted before,
+        # and they either open the client or submit commands.
+        # We now check for game end by timeout
+        db = get_db()
+
+        if client_role == "A":
+            opposite_client = "B"
+        else:
+            opposite_client = "A"
+
+        client_timeout = False
+        opponent_timeout = False
+
+        d_prompted = self.game_row[f"PLAYER_{client_role}_PROMPTED"]
+        d_deadline = self.game_row[f"PLAYER_{client_role}_DEADLINE"]
+        d_cumulative = self.game_row[f"PLAYER_{client_role}_CUMULATIVE_SECONDS"]
+        d_prompted_opp = self.game_row[f"PLAYER_{opposite_client}_PROMPTED"]
+        d_deadline_opp = self.game_row[f"PLAYER_{opposite_client}_DEADLINE"]
+        d_cumulative_opp = self.game_row[f"PLAYER_{opposite_client}_CUMULATIVE_SECONDS"]
+        if time_control_rule in ["one_day_per_move", "three_days_per_move"]:
+            # We simply check if current time is bigger than the set
+            # deadline. The particular deadline setting occurs elsewhere.
+
+            if d_prompted is not None:
+                d_deadline_value = datetime.fromisoformat(d_deadline)
+                if current_time > d_deadline_value:
+                    client_timeout = True
+                else:
+                    # We note how much time is left for the renderer
+                    self.time_countdown = int((d_deadline_value - current_time).total_seconds())
+            if d_prompted_opp is not None:
+                d_deadline_opp_value = datetime.fromisoformat(d_deadline_opp)
+                if current_time > d_deadline_opp_value:
+                    opponent_timeout = True
+
+
+        elif time_control_rule in ["one_hour_cumulative", "one_day_cumulative"]:
+            # cumulative
+
+            # This player has already been prompted. We load the time that
+            # elapsed since the time at which they were prompted. Note that
+            # this interval is NOT yet applied to the cumulative sum!
+
+            if d_prompted is not None:
+                d_prompted_value = datetime.fromisoformat(d_prompted)
+                d_cumulative_value = int(d_cumulative)
+                time_elapsed_since_prompted = (current_time - d_prompted_value).total_seconds()
+                time_left = d_cumulative_value - time_elapsed_since_prompted
+
+                if time_left < 0:
+                    client_timeout = True
+                else:
+                    # We note how much time is left for the renderer
+                    self.time_countdown = int(time_left)
+            if d_prompted_opp is not None:
+                d_prompted_opp_value = datetime.fromisoformat(d_prompted_opp)
+                d_cumulative_opp_value = int(d_cumulative_opp)
+                time_elapsed_since_prompted_opp = (current_time - d_prompted_opp_value).total_seconds()
+                time_left_opp = d_cumulative_opp_value - time_elapsed_since_prompted_opp
+                if time_left_opp < 0:
+                    opponent_timeout = True
+
+
+        if client_timeout:
+            if opponent_timeout:
+                # draw
+                self.game_status = "concluded"
+                self.game_outcome = "draw"
+                db.execute(f"UPDATE BOC_GAMES SET OUTCOME = \"draw\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ?", (self.game_id,))
+                db.commit()
+            else:
+                # opponent won
+                self.game_status = "concluded"
+                self.game_outcome = opposite_client
+                db.execute(f"UPDATE BOC_GAMES SET OUTCOME = \"{opposite_client}\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ?", (self.game_id,))
+                db.commit()
+        else:
+            if opponent_timeout:
+                # client won
+                self.game_status = "concluded"
+                self.game_outcome = client_role
+                db.execute(f"UPDATE BOC_GAMES SET OUTCOME = \"{client_role}\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ?", (self.game_id,))
+                db.commit()
 
     def load_game(self):
         db = get_db()
         # We need to load the static data, the dynamic data, and the ruleset
-
-        boc_games_row = db.execute("SELECT BOC_GAMES.PLAYER_A AS PLAYER_A, BOC_GAMES.PLAYER_B AS PLAYER_B, BOC_GAMES.BOARD_ID AS BOARD_ID, BOC_GAMES.STATUS AS STATUS, BOC_GAMES.DRAW_OFFER_STATUS AS DRAW_OFFER_STATUS, BOC_GAMES.OUTCOME AS OUTCOME, BOC_BOARDS.BOARD_NAME AS BOARD_NAME FROM BOC_GAMES INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE GAME_ID = ?", (self.game_id,)).fetchone()
-        self.game_status = boc_games_row["STATUS"]
-        if boc_games_row is None:
-            print(f"ERROR: Attempting to load a non-existing game (game-id = {self.game_id})")
-            return(-1)
-
-        static_data_row = db.execute("SELECT T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION FROM BOC_BOARDS WHERE BOARD_ID = ?", (boc_games_row["BOARD_ID"],)).fetchone()
+        static_data_row = db.execute("SELECT T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION FROM BOC_BOARDS WHERE BOARD_ID = ?", (self.game_row["BOARD_ID"],)).fetchone()
         static_data = {
                 "t_dim" : static_data_row["T_DIM"],
                 "x_dim" : static_data_row["X_DIM"],
@@ -136,31 +349,7 @@ class PageGame(Page):
         if self.game_status == "in_progress":
             self.gm.load_from_database(static_data, dynamic_data, ruleset)
         else:
-            self.gm.load_from_database(static_data, dynamic_data, ruleset, boc_games_row["OUTCOME"])
-
-        # We now identify the user who opened the page
-        self.client_role = None
-        self.link_data = {
-            "A" : boc_games_row["PLAYER_A"],
-            "B" : boc_games_row["PLAYER_B"],
-            "board" : boc_games_row["BOARD_ID"],
-            "board_name" : boc_games_row["BOARD_NAME"]
-            }
-        #self.users_to_link = []
-        if g.user is not None:
-            if boc_games_row["STATUS"] == "in_progress":
-                if g.user["username"] == boc_games_row["PLAYER_A"]:
-                    self.client_role = "A"
-                elif g.user["username"] == boc_games_row["PLAYER_B"]:
-                    self.client_role = "B"
-                else:
-                    self.client_role = "guest"
-            else:
-                self.client_role = "guest"
-
-        self.game_management_status = {
-            "DRAW_OFFER_STATUS" : boc_games_row["DRAW_OFFER_STATUS"]
-            }
+            self.gm.load_from_database(static_data, dynamic_data, ruleset, self.game_outcome)
 
 
 
@@ -169,7 +358,7 @@ class PageGame(Page):
         # Time for telling the proprietary gamemaster to properly initialise the game with the correct access rights
         self.gm.prepare_for_rendering(self.client_role)
         self.renderer = HTMLRenderer(self.gm.rendering_output, self.game_id, self.client_role, self.game_management_status)
-        self.renderer.render_game(self.link_data)
+        self.renderer.render_game(self.link_data, self.time_countdown)
 
 
     def render_page(self):
