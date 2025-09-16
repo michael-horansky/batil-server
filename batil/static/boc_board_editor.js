@@ -2,9 +2,6 @@
 // ----------------------------------------------------------------------------
 // --------------------------- Rendering constants ----------------------------
 // ----------------------------------------------------------------------------
-const board_window_width = 800;
-const board_window_height = 700;
-
 const stone_command_btn_width = 140;
 const stone_command_btn_height = 83;
 
@@ -303,6 +300,20 @@ function render_stones(){
 // as the camera moves.
 
 const cameraman = new Object();
+
+// Board window dimensions
+cameraman.board_window = document.getElementById("board_window_svg");
+cameraman.board_dimensions = {"width" : 0, "height" : 0};
+
+
+cameraman.resize_observer = new ResizeObserver(entries => {
+  for (let entry of entries) {
+    cameraman.update_board_dimension();
+  }
+});
+
+cameraman.resize_observer.observe(cameraman.board_window);
+
 cameraman.camera_zoom_status = "idle";
 cameraman.camera_move_keys_pressed = 0;
 cameraman.camera_move_directions = {"w" : false, "d" : false, "s" : false, "a" : false};
@@ -322,19 +333,56 @@ cameraman.cy = 0.5;
 cameraman.fov_coef = 1.0;
 // --------------------------------- Methods ----------------------------------
 
+cameraman.update_board_dimension = function() {
+    const rect = cameraman.board_window.getBoundingClientRect();
+    cameraman.board_dimensions.width = rect.width;
+    cameraman.board_dimensions.height = rect.height;
+
+    // Now for what needs to update.
+    // 1. tripod readjustment
+    cameraman.put_down_tripod();
+    // 2. repositioning of azimuth indicators
+    cameraman.reposition_board_elements();
+    // 3. apply camera
+    cameraman.apply_camera();
+}
+
 cameraman.put_down_tripod = function() {
     // Find the default setting, which just about displays the entire board
-    cameraman.default_width_fov_coef = board_window_width / (x_dim * 100);
-    cameraman.default_height_fov_coef = board_window_height / (y_dim * 100);
-    cameraman.default_fov_coef = Math.min(cameraman.default_width_fov_coef, cameraman.default_height_fov_coef); // This is also the max value!
-    cameraman.max_fov_coef = board_window_width / 400;
+    let default_width_fov_coef = cameraman.board_dimensions.width / (x_dim * 100);
+    let default_height_fov_coef = cameraman.board_dimensions.height / (y_dim * 100);
+    cameraman.default_fov_coef = Math.min(default_width_fov_coef, default_height_fov_coef); // This is also the max value!
+    cameraman.max_fov_coef = Math.max(cameraman.board_dimensions.width / 400, 1.0);
     // Find an offset which places the middle of the board into the middle of the board window
-    cameraman.offset_x = board_window_width * 0.5 - x_dim * 50;
-    cameraman.offset_y = board_window_height * 0.5 - y_dim * 50;
+    cameraman.offset_x = cameraman.board_dimensions.width * 0.5 - x_dim * 50;
+    cameraman.offset_y = cameraman.board_dimensions.height * 0.5 - y_dim * 50;
 
     // Find and store the element which is target to camera's transformations
     cameraman.subject = document.getElementById("camera_subject");
     cameraman.subject.setAttribute("transform-origin", `${x_dim * 50}px ${y_dim * 50}px`);
+}
+
+cameraman.reposition_board_elements = function() {
+    // azimuth indicators
+    const triangle_offset = 0.1;
+    for (azimuth = 0; azimuth < 4; azimuth++) {
+        let offset_x = 0;
+        let offset_y = 0;
+        if (azimuth == 0) {
+            offset_x = cameraman.board_dimensions.width / 2;
+            offset_y = cameraman.board_dimensions.height * triangle_offset;
+        } else if (azimuth == 1) {
+            offset_x = cameraman.board_dimensions.width * (1 - triangle_offset);
+            offset_y = cameraman.board_dimensions.height / 2;
+        } else if (azimuth == 2) {
+            offset_x = cameraman.board_dimensions.width / 2;
+            offset_y = cameraman.board_dimensions.height * (1 - triangle_offset);
+        } else if (azimuth == 3) {
+            offset_x = cameraman.board_dimensions.width * triangle_offset;
+            offset_y = cameraman.board_dimensions.height / 2;
+        }
+        document.getElementById(`azimuth_indicator_${azimuth}`).style.transform = `translate(${offset_x}px,${offset_y}px)`;
+    }
 }
 
 cameraman.apply_camera = function() {
@@ -1371,7 +1419,7 @@ var all_factions = ["GM", "A", "B"];
 var selection_mode = false;
 
 // Set up the camera
-cameraman.put_down_tripod();
+cameraman.update_board_dimension();
 cameraman.reset_camera();
 
 // Set up commander if game in progress

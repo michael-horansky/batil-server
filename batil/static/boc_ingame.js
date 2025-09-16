@@ -190,9 +190,15 @@ function inds(obj, inds, to_str = true) {
 // ---------------------- Graphical attribute management ----------------------
 // ----------------------------------------------------------------------------
 
+function update_game_log_nav(timeslice, round) {
+    document.getElementById("game_log_nav_timeslice_value").textContent = `${timeslice} / ${t_dim - 1}`;
+    document.getElementById("game_log_nav_round_value").textContent = `${round} / ${active_round}`;
+}
+
 function select_timeslice(new_timeslice) {
     selected_timeslice = new_timeslice;
-    document.getElementById("navigation_label").innerText = `Selected timeslice ${selected_timeslice}, selected round ${selected_round}`;
+    //document.getElementById("navigation_label").innerText = `Selected timeslice ${selected_timeslice}, selected round ${selected_round}`;
+    update_game_log_nav(selected_timeslice, selected_round);
 }
 
 function select_round(new_round_n, new_timeslice = null) {
@@ -200,7 +206,8 @@ function select_round(new_round_n, new_timeslice = null) {
     if (new_timeslice != null) {
         selected_timeslice = new_timeslice;
     }
-    document.getElementById("navigation_label").innerText = `Selected timeslice ${selected_timeslice}, selected round ${selected_round}`;
+    //document.getElementById("navigation_label").innerText = `Selected timeslice ${selected_timeslice}, selected round ${selected_round}`;
+    update_game_log_nav(selected_timeslice, selected_round);
 }
 
 function show_canon_board_slice(round_n, timeslice){
@@ -2055,6 +2062,8 @@ inspector.hide_stone_info = function() {
     inspector.display_value_list("stone", "stone_type", []);
     inspector.display_value_list("stone", "startpoint", []);
     inspector.display_value_list("stone", "endpoint", []);
+    // Hide commands
+    inspector.display_stone_commands(null);
 }
 
 // --------------------------- Square info methods ----------------------------

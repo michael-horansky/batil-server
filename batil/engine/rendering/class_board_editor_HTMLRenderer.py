@@ -28,14 +28,6 @@ class BoardEditorHTMLRenderer(Renderer):
         # ------------------------ Rendering constants ------------------------
 
         # Document structure
-        self.board_control_panel_width = 150
-        self.board_control_panel_height = 400
-
-        self.board_window_width = 800
-        self.board_window_height = 700
-
-        self.game_log_width = 400
-        self.game_log_height = 200
 
         self.board_square_empty_color = "#E5E5FF"
         self.unused_TJ_clip_circle_radius = 0.45
@@ -163,10 +155,13 @@ class BoardEditorHTMLRenderer(Renderer):
     def close_boardside(self):
         self.commit_to_output("</div>")
 
+    def draw_board_control_panel(self):
+        self.commit_to_output("<div id=\"board_control_panel\">\n</div>")
+
     def open_board_window(self):
         enclosing_div = "<div id=\"board_window\">"
-        svg_window = f"<svg width=\"{self.board_window_width}\" height=\"{self.board_window_height}\" xmlns=\"http://www.w3.org/2000/svg\" id=\"board_window_svg\">"
-        background_rectangle = f"<rect x=\"0\" y =\"0\" width=\"{self.board_window_width}\" height=\"{self.board_window_height}\" id=\"board_window_background\" />"
+        svg_window = f"<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"board_window_svg\">"
+        background_rectangle = f"<rect x=\"0\" y =\"0\" id=\"board_window_background\" />"
         self.commit_to_output([enclosing_div, svg_window, background_rectangle])
         self.board_window_definitions()
 
@@ -242,7 +237,7 @@ class BoardEditorHTMLRenderer(Renderer):
     def draw_selection_mode_highlights(self):
         # Highlights
         selection_mode_highlights = []
-        selection_mode_highlights.append(f"<g id=\"selection_mode_highlights\" width=\"{self.board_window_width}\" height=\"{self.board_window_height}\" visibility=\"hidden\">")
+        selection_mode_highlights.append(f"<g id=\"selection_mode_highlights\" visibility=\"hidden\">")
         for x in range(self.render_object["x_dim"]):
             for y in range(self.render_object["y_dim"]):
                 selection_mode_highlights.append(f"  <rect width=\"{self.board_square_base_side_length}\" height=\"{self.board_square_base_side_length}\" x=\"{x * self.board_square_base_side_length}\" y=\"{y * self.board_square_base_side_length}\" class=\"selection_mode_highlight\" id=\"selection_mode_highlight_{x}_{y}\" />")
@@ -270,19 +265,7 @@ class BoardEditorHTMLRenderer(Renderer):
             ]
         azimuth_indicators = []
         for azimuth in range(4):
-            if azimuth == 0:
-                offset_x = self.board_window_width / 2
-                offset_y = self.board_window_height * triangle_offset
-            elif azimuth == 1:
-                offset_x = self.board_window_width * (1 - triangle_offset)
-                offset_y = self.board_window_height / 2
-            elif azimuth == 2:
-                offset_x = self.board_window_width / 2
-                offset_y = self.board_window_height * (1 - triangle_offset)
-            elif azimuth == 3:
-                offset_x = self.board_window_width * triangle_offset
-                offset_y = self.board_window_height / 2
-            azimuth_indicators.append(f"  <polygon points=\"{self.get_polygon_points(azimuth_indicator_points[azimuth], (offset_x, offset_y))}\" class=\"azimuth_indicator\" id=\"azimuth_indicator_{azimuth}\" onclick=\"inspector.select_azimuth({azimuth})\" display=\"none\"/>")
+            azimuth_indicators.append(f"  <polygon id=\"azimuth_indicator_{azimuth}\" points=\"{self.get_polygon_points(azimuth_indicator_points[azimuth])}\" class=\"azimuth_indicator\" id=\"azimuth_indicator_{azimuth}\" onclick=\"inspector.select_azimuth({azimuth})\" display=\"none\"/>")
         self.commit_to_output(azimuth_indicators)
 
     def create_board_layer_structure(self, number_of_layers):
@@ -591,75 +574,102 @@ class BoardEditorHTMLRenderer(Renderer):
 
     def draw_element_input_panel(self):
         # game control panel allows one to place new elements onto the boards. Each element is represented by an icon.
-        enclosing_div = "<div id=\"element_input_panel\">"
-        enclosing_svg = "<svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"element_input_svg\">"
-        self.commit_to_output([enclosing_div, enclosing_svg])
+        self.commit_to_output("<div id=\"element_input_panel\">")
+        self.draw_base_input_section()
+        self.draw_neutral_stone_input_section()
+        self.draw_stone_input_section()
+        self.commit_to_output("</div>")
 
-        def get_pos_from_i(i):
-            w = 8
-            x = i % w
-            y = i // w
-            return(x,y)
-
+    def draw_base_input_section(self):
+        self.commit_to_output([
+            "  <div id=\"element_input_panel_base_section\">",
+            "    <svg xmlns=\"http://www.w3.org/2000/svg\" id=\"element_input_panel_base_section_svg\">"
+            ])
         input_icon_index = 0
         for allegiance in ["neutral", "A", "B"]:
-            x, y = get_pos_from_i(input_icon_index)
-            self.commit_to_output(self.create_base({"faction" : allegiance, "x" : x, "y" : y}, "input_icon", "block", f"inspector.select_input_element(\'base\', \'{allegiance}\', null)"))
+            self.commit_to_output(self.create_base({"faction" : allegiance, "x" : input_icon_index, "y" : 0}, "input_icon", "block", f"inspector.select_input_element(\'base\', \'{allegiance}\', null)"))
             input_icon_index += 1
-        for allegiance in self.required_stone_types.keys():
+        self.commit_to_output([
+            "    </svg>",
+            "  </div>"
+            ])
+
+    def draw_neutral_stone_input_section(self):
+        self.commit_to_output([
+            "  <div id=\"element_input_panel_neutral_stone_section\">",
+            "    <svg xmlns=\"http://www.w3.org/2000/svg\" id=\"element_input_panel_neutral_stone_section_svg\">"
+            ])
+        input_icon_index = 0
+        for stone_type in self.required_stone_types["GM"]:
+            self.commit_to_output(self.create_stone({"faction" : "GM", "stone_type" : stone_type, "x" : input_icon_index, "y" : 0}, "input_icon", "block", f"inspector.select_input_element(\'stone\', \'GM\', \'{stone_type}\')"))
+            input_icon_index += 1
+        self.commit_to_output([
+            "    </svg>",
+            "  </div>"
+            ])
+
+    def draw_stone_input_section(self):
+        self.commit_to_output([
+            "  <div id=\"element_input_panel_stone_section\">",
+            "    <svg xmlns=\"http://www.w3.org/2000/svg\" id=\"element_input_panel_stone_section_svg\">"
+            ])
+        allegiance_index = 0
+        for allegiance in ["A", "B"]:
+            input_icon_index = 0
             for stone_type in self.required_stone_types[allegiance]:
-                x, y = get_pos_from_i(input_icon_index)
-                self.commit_to_output(self.create_stone({"faction" : allegiance, "stone_type" : stone_type, "x" : x, "y" : y}, "input_icon", "block", f"inspector.select_input_element(\'stone\', \'{allegiance}\', \'{stone_type}\')"))
+                self.commit_to_output(self.create_stone({"faction" : allegiance, "stone_type" : stone_type, "x" : input_icon_index, "y" : allegiance_index}, "input_icon", "block", f"inspector.select_input_element(\'stone\', \'{allegiance}\', \'{stone_type}\')"))
                 input_icon_index += 1
-        self.commit_to_output("</svg>\n</div>")
+            allegiance_index += 1
+        self.commit_to_output([
+            "    </svg>",
+            "  </div>"
+            ])
 
-    # --------------------------- Game log methods ----------------------------
-
-    def draw_game_log(self):
-        self.commit_to_output(f"<div width=\"{self.game_log_width}px\" height=\"{self.game_log_height}px\" id=\"game_log\">")
-        self.commit_to_output(f"  <p id=\"navigation_label\"></p>")
-        self.commit_to_output("</div>")
 
     # ------------------------- Command form methods --------------------------
 
     def draw_board_edit_form(self):
         board_edit_form = []
         board_edit_form.append(f"<div id=\"board_edit_form_div\">")
-        board_edit_form.append(f"  <form id=\"board_edit_form\" class=\"submission_form\" action=\"{url_for("board.board_edit_submission", board_id=self.board_id)}\" method=\"POST\">")
-        # ------------------------ Invisible elements -------------------------
-        # Fieldset Header: t_dim, x_dim, y_dim, total number of bases/stones
-        board_edit_form.append(f"    <fieldset id=\"header_data\" class=\"board_edit_data_field\">")
-        board_edit_form.append(f"      <input type=\"hidden\" name=\"h_t_dim\" id=\"h_t_dim\" value=\"{self.render_object["t_dim"]}\">")
-        board_edit_form.append(f"      <input type=\"hidden\" name=\"h_x_dim\" id=\"h_x_dim\" value=\"{self.render_object["x_dim"]}\">")
-        board_edit_form.append(f"      <input type=\"hidden\" name=\"h_y_dim\" id=\"h_y_dim\" value=\"{self.render_object["y_dim"]}\">")
-        board_edit_form.append(f"      <input type=\"hidden\" name=\"h_number_of_bases\" id=\"h_number_of_bases\" value=\"{len(self.render_object["bases"])}\">")
-        board_edit_form.append(f"      <input type=\"hidden\" name=\"h_number_of_stones\" id=\"h_number_of_stones\" value=\"{len(self.render_object["stones"])}\">")
-        board_edit_form.append(f"    </fieldset>")
-        # Fieldset Squares: For each square its type
-        board_edit_form.append(f"    <fieldset id=\"squares_data\" class=\"board_edit_data_field\">")
-        for y in range(self.render_object["y_dim"]):
-            for x in range(self.render_object["x_dim"]):
-                board_edit_form.append(f"      <input type=\"hidden\" name=\"square_{x}_{y}\" id=\"square_{x}_{y}\" value=\"{self.render_object["board_static"][x][y]}\">")
-        board_edit_form.append(f"    </fieldset>")
-        # Fieldset Bases: For each base its position and allegiance
-        board_edit_form.append(f"    <fieldset id=\"bases_data\" class=\"board_edit_data_field\">")
-        for base_i in range(len(self.render_object["bases"])):
-            for kw in self.element_keywords["bases"]:
-                board_edit_form.append(f"      <input type=\"hidden\" name=\"base_{base_i}_{kw}\" id=\"base_{base_i}_{kw}\" value=\"{self.render_object["bases"][base_i][kw]}\" >")
-        board_edit_form.append(f"    </fieldset>")
-        # Fieldset Stones: For each stone its allegiance, type, position, and azimuth
-        board_edit_form.append(f"    <fieldset id=\"stones_data\" class=\"board_edit_data_field\">")
-        for stone_i in range(len(self.render_object["stones"])):
-            for kw in self.element_keywords["stones"]:
-                board_edit_form.append(f"      <input type=\"hidden\" name=\"stone_{stone_i}_{kw}\" id=\"stone_{stone_i}_{kw}\" value=\"{self.render_object["stones"][stone_i][kw]}\" >")
-        board_edit_form.append(f"    </fieldset>")
+        if self.render_object["client_action"] == "edit":
+            board_edit_form.append(f"  <form id=\"board_edit_form\" class=\"submission_form\" action=\"{url_for("board.board_edit_submission", board_id=self.board_id)}\" method=\"POST\">")
+            # ------------------------ Invisible elements -------------------------
+            # Fieldset Header: t_dim, x_dim, y_dim, total number of bases/stones
+            board_edit_form.append(f"    <fieldset id=\"header_data\" class=\"board_edit_data_field\">")
+            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_t_dim\" id=\"h_t_dim\" value=\"{self.render_object["t_dim"]}\">")
+            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_x_dim\" id=\"h_x_dim\" value=\"{self.render_object["x_dim"]}\">")
+            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_y_dim\" id=\"h_y_dim\" value=\"{self.render_object["y_dim"]}\">")
+            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_number_of_bases\" id=\"h_number_of_bases\" value=\"{len(self.render_object["bases"])}\">")
+            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_number_of_stones\" id=\"h_number_of_stones\" value=\"{len(self.render_object["stones"])}\">")
+            board_edit_form.append(f"    </fieldset>")
+            # Fieldset Squares: For each square its type
+            board_edit_form.append(f"    <fieldset id=\"squares_data\" class=\"board_edit_data_field\">")
+            for y in range(self.render_object["y_dim"]):
+                for x in range(self.render_object["x_dim"]):
+                    board_edit_form.append(f"      <input type=\"hidden\" name=\"square_{x}_{y}\" id=\"square_{x}_{y}\" value=\"{self.render_object["board_static"][x][y]}\">")
+            board_edit_form.append(f"    </fieldset>")
+            # Fieldset Bases: For each base its position and allegiance
+            board_edit_form.append(f"    <fieldset id=\"bases_data\" class=\"board_edit_data_field\">")
+            for base_i in range(len(self.render_object["bases"])):
+                for kw in self.element_keywords["bases"]:
+                    board_edit_form.append(f"      <input type=\"hidden\" name=\"base_{base_i}_{kw}\" id=\"base_{base_i}_{kw}\" value=\"{self.render_object["bases"][base_i][kw]}\" >")
+            board_edit_form.append(f"    </fieldset>")
+            # Fieldset Stones: For each stone its allegiance, type, position, and azimuth
+            board_edit_form.append(f"    <fieldset id=\"stones_data\" class=\"board_edit_data_field\">")
+            for stone_i in range(len(self.render_object["stones"])):
+                for kw in self.element_keywords["stones"]:
+                    board_edit_form.append(f"      <input type=\"hidden\" name=\"stone_{stone_i}_{kw}\" id=\"stone_{stone_i}_{kw}\" value=\"{self.render_object["stones"][stone_i][kw]}\" >")
+            board_edit_form.append(f"    </fieldset>")
 
-        # ------------------------- Visible elements --------------------------
-        board_edit_form.append(f"    <input type=\"text\" name=\"board_name\" id=\"board_name\" required value=\"{self.render_object["board_name"]}\" >")
+            # ------------------------- Visible elements --------------------------
+            board_edit_form.append(f"    <input type=\"text\" name=\"board_name\" id=\"board_name\" required value=\"{self.render_object["board_name"]}\" >")
 
 
-        board_edit_form.append(f"    <button type=\"submit\" name=\"board_submission\" value=\"submit\" id=\"save_board_button\">Save board</button>")
-        board_edit_form.append(f"  </form>")
+            board_edit_form.append(f"    <button type=\"submit\" name=\"board_submission\" value=\"submit\" id=\"save_board_button\">Save board</button>")
+            board_edit_form.append(f"  </form>")
+        else:
+            # Link to author
+            board_edit_form.append(f"  <a href=\"{url_for("user.user", username = self.render_object["author"])}\" target=\"_blank\" class=\"action_table_col_link\">{ self.render_object["author"] }</a>")
         board_edit_form.append(f"</div>")
         self.commit_to_output(board_edit_form)
 
@@ -679,6 +689,42 @@ class BoardEditorHTMLRenderer(Renderer):
         self.commit_to_output("  </svg>")
         self.commit_to_output("</div>")
 
+    # --------------------------- guest info table ----------------------------
+
+    def draw_gameside_info_table(self):
+        self.commit_to_output([
+            f"  <table id=\"gameside_info_table\" class=\"action_table\">",
+            f"    <thead>",
+            f"      <tr>",
+            f"        <th class=\"action_table_header\">Board name</th>",
+            f"        <th class=\"action_table_header\">Author</th>",
+            f"        <th class=\"action_table_header\">Timeslices</th>",
+            f"        <th class=\"action_table_header\">Width</th>",
+            f"        <th class=\"action_table_header\">Height</th>",
+            f"        <th class=\"action_table_header\"># of games played on board</th>",
+            f"        <th class=\"action_table_header\"># of users who saved board</th>",
+            f"        <th class=\"action_table_header\">Handicap</th>",
+            f"        <th class=\"action_table_header\">Published</th>",
+            f"        <th colspan=\"1\" class=\"action_table_actions_header\">Actions</th>",
+            f"      </tr>",
+            f"    </thead>",
+            f"    <tbody>",
+            f"      <tr>",
+            f"        <td>{self.render_object["board_name"]}</td>",
+            f"        <td><a href=\"{url_for("user.user", username = self.render_object["author"])}\" target=\"_blank\" class=\"action_table_col_link\">{ self.render_object["author"] }</a></td>",
+            f"        <td>{self.render_object["t_dim"]}</td>",
+            f"        <td>{self.render_object["x_dim"]}</td>",
+            f"        <td>{self.render_object["y_dim"]}</td>",
+            f"        <td>{self.render_object["games_played"]}</td>",
+            f"        <td>{self.render_object["saved_by"]}</td>",
+            f"        <td>{self.render_object["handicap"]}</td>",
+            f"        <td>{self.render_object["d_published"]}</td>",
+            f"        <td><button type=\"submit\" name=\"action_game_management_table\" value=\"save_board\" class=\"action_game_management_submit_btn action_table_column_button\">Save board</button></td>",
+            f"      </tr>",
+            f"    </tbody>",
+            f"  </table>"
+            ])
+
 
     # ---------------------------- Global methods -----------------------------
 
@@ -688,6 +734,9 @@ class BoardEditorHTMLRenderer(Renderer):
 
         # Initialize boardside
         self.open_boardside()
+
+        # Draw the board control panel
+        self.draw_board_control_panel()
 
         # Draw the static board as a set of timeslices
         self.draw_board()
@@ -704,6 +753,8 @@ class BoardEditorHTMLRenderer(Renderer):
         if self.render_object["client_action"] == "edit":
             self.draw_element_input_panel()
             self.draw_board_edit_form() # Don't draw this if board is just for viewing!
+        else:
+            self.draw_gameside_info_table()
 
         # Close gameside
         self.close_gameside()

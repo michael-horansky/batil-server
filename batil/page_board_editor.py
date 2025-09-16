@@ -78,7 +78,31 @@ class PageBoardEditor(Page):
 
     def load_board(self):
         db = get_db()
-        board_row = db.execute("SELECT T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, BOARD_NAME, AUTHOR, IS_PUBLIC FROM BOC_BOARDS WHERE BOARD_ID = ?", (self.board_id,)).fetchone()
+        #board_row = db.execute("SELECT T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, BOARD_NAME, AUTHOR, IS_PUBLIC FROM BOC_BOARDS WHERE BOARD_ID = ?", (self.board_id,)).fetchone()
+        board_row = db.execute("""
+            SELECT
+                BOC_BOARDS.BOARD_ID AS BOARD_ID,
+                BOC_BOARDS.T_DIM AS T_DIM,
+                BOC_BOARDS.X_DIM AS X_DIM,
+                BOC_BOARDS.Y_DIM AS Y_DIM,
+                BOC_BOARDS.STATIC_REPRESENTATION AS STATIC_REPRESENTATION,
+                BOC_BOARDS.SETUP_REPRESENTATION AS SETUP_REPRESENTATION,
+                BOC_BOARDS.BOARD_NAME AS BOARD_NAME,
+                BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED,
+                BOC_BOARDS.HANDICAP AS HANDICAP,
+                BOC_BOARDS.AUTHOR AS AUTHOR,
+                BOC_BOARDS.IS_PUBLIC AS IS_PUBLIC,
+                COUNT(DISTINCT BOC_GAMES.GAME_ID) AS GAMES_PLAYED,
+                COUNT(DISTINCT BOC_USER_SAVED_BOARDS.USERNAME) AS SAVED_BY
+            FROM BOC_BOARDS
+            LEFT JOIN BOC_GAMES
+                ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID
+            AND BOC_GAMES.STATUS = "concluded"
+            LEFT JOIN BOC_USER_SAVED_BOARDS
+                ON BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID
+            WHERE BOC_BOARDS.BOARD_ID = ?
+            GROUP BY BOC_BOARDS.BOARD_ID;
+            """, (self.board_id,)).fetchone()
         static_representation = board_row["STATIC_REPRESENTATION"]
         setup_representation = board_row["SETUP_REPRESENTATION"]
 
@@ -118,6 +142,11 @@ class PageBoardEditor(Page):
                 "stones" : stones,
                 "bases" : bases,
                 "board_name" : board_row["BOARD_NAME"],
+                "author" : board_row["AUTHOR"],
+                "d_published" : board_row["d_published"],
+                "handicap" : board_row["HANDICAP"],
+                "games_played" : board_row["games_played"],
+                "saved_by" : board_row["saved_by"],
                 "client_action" : client_action
             }
 

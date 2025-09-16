@@ -232,7 +232,7 @@ class HTMLRenderer(Renderer):
     def draw_board_control_panel(self):
         # board control panel allows one to traverse timeslices, and toggle camera controls.
         enclosing_div = "<div id=\"board_control_panel\">"
-        enclosing_svg = "<svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"board_control_panel_svg\">"
+        enclosing_svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"board_control_panel_svg\">"
         self.commit_to_output([enclosing_div, enclosing_svg])
 
         # Next timeslice button
@@ -620,7 +620,7 @@ class HTMLRenderer(Renderer):
     def draw_game_control_panel(self):
         # game control panel allows one to traverse rounds, as well as change the game status (resign, offer draw, submit commands, request paradox viewing...).
         enclosing_div = "<div id=\"game_control_panel\">"
-        enclosing_svg = "<svg width=\"100%\" height=\"100%\" xmlns=\"http://www.w3.org/2000/svg\" id=\"board_control_panel_svg\">"
+        enclosing_svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"game_control_panel_svg\">"
         self.commit_to_output([enclosing_div, enclosing_svg])
 
         # Previous round button
@@ -643,8 +643,16 @@ class HTMLRenderer(Renderer):
     # --------------------------- Game log methods ----------------------------
 
     def draw_game_log(self):
-        self.commit_to_output(f"<div id=\"game_log\">")
-        self.commit_to_output(f"  <p id=\"navigation_label\"></p>")
+        self.commit_to_output([
+            f"<div id=\"game_log\">",
+            f"  <div id=\"game_log_nav\">",
+            f"    <div id=\"game_log_nav_timeslice_label\" class=\"game_log_nav_label\">Timeslice</div>",
+            f"    <div id=\"game_log_nav_timeslice_value\" class=\"game_log_nav_label\"></div>",
+            f"    <div id=\"game_log_nav_round_label\" class=\"game_log_nav_label\">Round</div>",
+            f"    <div id=\"game_log_nav_round_value\" class=\"game_log_nav_label\"></div>",
+            f"  </div>"
+            ])
+        #self.commit_to_output(f"  <p id=\"navigation_label\"></p>")
 
         if self.render_object.game_status == "in_progress":
             self.draw_command_form()
@@ -677,30 +685,75 @@ class HTMLRenderer(Renderer):
     # ------------------------ Outcome message methods ------------------------
 
     def draw_outcome_message(self):
-        self.commit_to_output([
-            "<p id=\"outcome_message_paragraph\">",
-            f"Player {self.render_object.game_outcome} won the game!",
-            "</p>"
-        ])
+        self.commit_to_output(f"<div id=\"game_log_outcome\">")
+        if self.render_object.game_outcome in self.render_object.factions:
+            self.commit_to_output(f"Pl. <span id=\"game_log_win_{self.render_object.game_outcome}\">{self.render_object.game_outcome}</span> won!")
+        else:
+            if self.render_object.game_outcome == "draw":
+                self.commit_to_output(f"<span id=\"game_log_draw\">Draw</span>")
+        self.commit_to_output("</div>")
 
-    def draw_game_management(self, users_to_link):
+    def draw_game_management(self, link_data):
         self.commit_to_output("<div id=\"game_management\">")
         # View board, relevant users...
-        for user_link in users_to_link:
-            user_url = url_for("user.user", username = user_link)
-            self.commit_to_output([
-                f"<a href=\"{user_url}\" target=\"_blank\">{user_link}</a>"
-                ])
+        print(self.client_role)
 
         if self.client_role in ["A", "B"]:
             # Logged in and in progress: can offer draw, resign...
-            pass
+            self.commit_to_output([
+                f"<form id=\"game_management_form\">",
+                f"  <table id=\"game_management_table\" class=\"action_table\">",
+                f"    <thead>",
+                f"      <tr>",
+                f"        <th class=\"action_table_header\">Player A</th>",
+                f"        <th class=\"action_table_header\">Player B</th>",
+                f"        <th class=\"action_table_header\">Board</th>",
+                f"        <th class=\"action_table_header\">Time control</th>",
+                f"        <th colspan=\"2\" class=\"action_table_actions_header\">Actions</th>",
+                f"      </tr>",
+                f"    </thead>",
+                f"    <tbody>",
+                f"      <tr>",
+                f"        <td><a href=\"{url_for("user.user", username = link_data["A"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["A"] }</a></td>",
+                f"        <td><a href=\"{url_for("user.user", username = link_data["B"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["B"] }</a></td>",
+                f"        <td><a href=\"{url_for("board.board", board_id = link_data["board"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["board_name"] }</a></td>",
+                f"        <td>{ 4-2 }</td>",
+                f"        <td><button type=\"submit\" name=\"action_game_management_table\" value=\"offer_draw\" class=\"action_game_management_submit_btn action_table_column_button\">Offer draw</button></td>",
+                f"        <td><button type=\"submit\" name=\"action_game_management_table\" value=\"resign\" class=\"action_game_management_submit_btn action_table_column_button\">Resign</button></td>",
+                f"      </tr>",
+                f"    </tbody>",
+                f"  </table>",
+                f"</form>"
+                ])
+        else:
+            self.commit_to_output([
+                f"<form id=\"game_management_form\">",
+                f"<table id=\"game_management_table\" class=\"action_table\">",
+                f"  <thead>",
+                f"    <tr>",
+                f"      <th class=\"action_table_header\">Player A</th>",
+                f"      <th class=\"action_table_header\">Pla,yer B</th>",
+                f"      <th class=\"action_table_header\">Board</th>",
+                f"      <th class=\"action_table_header\">Time control</th>",
+                f"    </tr>",
+                f"  </thead>",
+                f"  <tbody>",
+                f"    <tr>",
+                f"      <td><a href=\"{url_for("user.user", username = link_data["A"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["A"] }</a></td>",
+                f"      <td><a href=\"{url_for("user.user", username = link_data["B"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["B"] }</a></td>",
+                f"      <td><a href=\"{url_for("board.board", board_id = link_data["board"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["board_name"] }</a></td>",
+                f"      <td>{ 4-2 }</td>",
+                f"    </tr>",
+                f"  </tbody>",
+                f"</table>",
+                f"</form>"
+                ])
 
         self.commit_to_output("</div>")
 
     # ---------------------------- Global methods -----------------------------
 
-    def render_game(self, users_to_link):
+    def render_game(self, link_data):
         self.open_body()
         self.deposit_contextual_data()
 
@@ -724,7 +777,7 @@ class HTMLRenderer(Renderer):
 
         self.draw_game_control_panel()
         self.draw_game_log()
-        self.draw_game_management(users_to_link)
+        self.draw_game_management(link_data)
 
         # Close gameside
         self.close_gameside()

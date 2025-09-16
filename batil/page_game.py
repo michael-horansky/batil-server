@@ -69,7 +69,7 @@ class PageGame(Page):
         db = get_db()
         # We need to load the static data, the dynamic data, and the ruleset
 
-        boc_games_row = db.execute("SELECT PLAYER_A, PLAYER_B, BOARD_ID, STATUS, DRAW_OFFER_STATUS, OUTCOME FROM BOC_GAMES WHERE GAME_ID = ?", (self.game_id,)).fetchone()
+        boc_games_row = db.execute("SELECT BOC_GAMES.PLAYER_A, BOC_GAMES.PLAYER_B, BOC_GAMES.BOARD_ID, BOC_GAMES.STATUS, BOC_GAMES.DRAW_OFFER_STATUS, BOC_GAMES.OUTCOME, BOC_BOARDS.BOARD_NAME AS BOARD_NAME FROM BOC_GAMES INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE GAME_ID = ?", (self.game_id,)).fetchone()
         self.game_status = boc_games_row["STATUS"]
         if boc_games_row is None:
             print(f"ERROR: Attempting to load a non-existing game (game-id = {self.game_id})")
@@ -105,23 +105,24 @@ class PageGame(Page):
 
         # We now identify the user who opened the page
         self.client_role = None
-        self.users_to_link = []
+        self.link_data = {
+            "A" : boc_games_row["PLAYER_A"],
+            "B" : boc_games_row["PLAYER_B"],
+            "board" : boc_games_row["BOARD_ID"],
+            "board_name" : boc_games_row["BOARD_NAME"]
+            }
+        #self.users_to_link = []
         if g.user is not None:
             if boc_games_row["STATUS"] == "in_progress":
                 if g.user["username"] == boc_games_row["PLAYER_A"]:
                     self.client_role = "A"
-                    self.users_to_link.append(boc_games_row["PLAYER_B"])
                 elif g.user["username"] == boc_games_row["PLAYER_B"]:
                     self.client_role = "B"
-                    self.users_to_link.append(boc_games_row["PLAYER_A"])
                 else:
                     self.client_role = "guest"
-                    self.users_to_link.append(boc_games_row["PLAYER_A"])
-                    self.users_to_link.append(boc_games_row["PLAYER_B"])
             else:
                 self.client_role = "guest"
-                self.users_to_link.append(boc_games_row["PLAYER_A"])
-                self.users_to_link.append(boc_games_row["PLAYER_B"])
+
 
 
 
@@ -129,7 +130,7 @@ class PageGame(Page):
         # Time for telling the proprietary gamemaster to properly initialise the game with the correct access rights
         self.gm.prepare_for_rendering(self.client_role)
         self.renderer = HTMLRenderer(self.gm.rendering_output, self.game_id, self.client_role)
-        self.renderer.render_game(self.users_to_link)
+        self.renderer.render_game(self.link_data)
 
 
     def render_page(self):

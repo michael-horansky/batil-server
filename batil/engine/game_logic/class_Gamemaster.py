@@ -2155,21 +2155,22 @@ class Gamemaster():
     def submit_commands(self, player, commands):
         # Function to be called by client
 
-        # First we check if it's the player's turn
-        self.bring_board_to_turn(self.current_turn_index)
-        current_round, active_timeslice = self.round_from_turn(self.current_turn_index)
+        # We check if player is in factions. If not, it is probably a guest
+        if player in self.factions:
+            # First we check if it's the player's turn
+            self.bring_board_to_turn(self.current_turn_index)
+            current_round, active_timeslice = self.round_from_turn(self.current_turn_index)
 
-        if self.did_player_finish_turn(player, self.current_turn_index):
-            # This player has already submitted their moves
-            self.print_heading_message(f"ERROR: Player {player} has already finished their turn, and is waiting for their opponent.", 2)
-            # In case key does not exist, we go ahead and populate with empty string
-            if player not in self.flags_by_turn[self.current_turn_index].keys():
-                print("WARNING: Mismatch detected: Player finished his turn, but no relevant key detected in dynamical representation.")
-                self.commit_commands([], self.current_turn_index, player)
-            return(Message("error", f"ERROR: Player {player} has already finished their turn, and is waiting for their opponent."))
+            if self.did_player_finish_turn(player, self.current_turn_index):
+                # This player has already submitted their moves
+                self.print_heading_message(f"ERROR: Player {player} has already finished their turn, and is waiting for their opponent.", 2)
+                # In case key does not exist, we go ahead and populate with empty string
+                if player not in self.flags_by_turn[self.current_turn_index].keys():
+                    print("WARNING: Mismatch detected: Player finished his turn, but no relevant key detected in dynamical representation.")
+                    self.commit_commands([], self.current_turn_index, player)
+                return(Message("error", f"ERROR: Player {player} has already finished their turn, and is waiting for their opponent."))
 
-        # TODO: Unwrap commands, check if all stones are causally free, and commit commands
-        self.commit_commands(commands, self.current_turn_index, player)
+            self.commit_commands(commands, self.current_turn_index, player)
 
         # For every player that didn't play their turn yet, but has no causally
         # free stones, an empty command is added
@@ -2271,7 +2272,7 @@ class Gamemaster():
         self.rendering_output.record_bases(self.bases)
 
         # Now, we record the actions which the prompted player can take
-        if prompted_player is not None:
+        if prompted_player is not None and prompted_player in self.factions and self.outcome is None:
             self.rendering_output.did_player_finish_turn = self.did_player_finish_turn(prompted_player, self.current_turn_index)
             if not self.rendering_output.did_player_finish_turn:
                 self.rendering_output.stones_to_be_commanded = self.causally_free_stones_at_time_by_player(active_timeslice, prompted_player)

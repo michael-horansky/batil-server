@@ -50,6 +50,14 @@ hr {
     width: 150px;
     flex-shrink: 0;
     border-right: 2px solid #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#board_control_panel_svg {
+    width: 150px;
+    height: 300px;
 }
 
 .board_control_panel_button {
@@ -167,9 +175,60 @@ hr {
 
 /* Gameside children */
 #game_log {
-  width: 200px;
-  flex-shrink: 0;
-  border-right: 2px solid #ccc;
+    width: 200px;
+    flex-shrink: 0;
+    border-left: 2px solid #ccc;
+    border-right: 2px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    padding-top: 7px;
+}
+
+/* game log */
+
+#game_log_nav {
+    flex: 0 0 auto;
+    text-align: center;
+}
+#game_log_nav_timeslice_label {
+    font-size: 20px;
+}
+#game_log_nav_timeslice_value {
+    font-size: 30px;
+}
+#game_log_nav_round_label {
+    font-size: 20px;
+}
+#game_log_nav_round_value {
+    font-size: 30px;
+}
+#command_form_div {
+    flex: 1;
+    display: flex;
+    padding: 5px;
+}
+#command_form {
+    flex: 1;
+    display: flex;
+}
+#submit_commands_button {
+    width: 100%;
+    flex: 1;
+    font-size: 20px;
+}
+#game_log_outcome {
+    flex: 1;
+    text-align: center;
+    font-size: 30px;
+}
+#game_log_win_A {
+    color: green;
+}
+#game_log_win_B {
+    color: red;
+}
+#game_log_draw {
+    font-size: 30px;
 }
 
 #game_control_panel,
@@ -178,6 +237,21 @@ hr {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+#game_control_panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game_control_panel_svg {
+    height: 104px;
+    width: 400px;
+}
+
+#game_management {
+    overflow: auto;
 }
 
 /* --------------------------------- */
@@ -687,3 +761,91 @@ hr {
     display : none;
 }
 
+/* --------------------------------- */
+/* -- Game management form style --- */
+/* --------------------------------- */
+
+#game_management_form {
+    width: 100%;
+    height: 100%;
+}
+.action_table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: inherit;
+  /*margin-top: 1em;*/
+  box-shadow: 0 2px 8px rgba(80,80,80,0.07);
+  background: #fff;
+  /*border-radius: 8px;*/
+  overflow: hidden;
+}
+.action_table thead tr {
+  background-color: #eee;
+  color: #222;
+  font-weight: bold;
+  border-bottom: 2px solid #bbb;
+}
+.action_table_header, .action_table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ececec;
+  position: relative;
+}
+.action_table tbody tr:last-child td {
+  border-bottom: none;
+}
+.action_table tbody tr {
+  transition: background 0.2s;
+}
+.action_table tbody tr.selected,
+.action_table tbody tr[data-selected="true"] {
+  background-color: #ffeeba;
+}
+.action_table_button {
+  font-family: inherit;
+  font-size: 1em;
+  padding: 6px 16px;
+  margin: 0 2px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.action_table_column_button {
+  font-family: inherit;
+  font-size: 1em;
+  padding: 6px 16px;
+  margin: 2px 2px;
+  border-radius: 6px;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.action_table_column_button:disabled {
+  pointer-events: none;
+}
+.action_table_actions_header {
+    text-align: center;
+    font-weight: 500;
+    border-left: 1px solid #ddd; /* faint separator */
+    /*background: #fafafa;         /* matches subtle header look */
+}
+.action_table_col_link {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  text-decoration: none;
+  text-align: left;
+  color: inherit;
+  padding: 12px 16px;
+}
+.action_table_col_link:hover {
+  background: #f0f0f0;
+}

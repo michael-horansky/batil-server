@@ -1,6 +1,26 @@
 *{
-padding: 0;
-margin: 0;
+    padding: 0;
+    margin: 0;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column; /* stack boardside on top, gameside at bottom */
+    background: white;
+    overflow: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: serif;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid lightgray;
 }
 
 .button_label {
@@ -13,33 +33,32 @@ margin: 0;
 /* --------------------------------- */
 
 #boardside {
-    position : absolute;
-    left : 0px;
-    top : 0px;
-    width : 950px;
-    height : 700px;
+    flex: 1; /* take up leftover vertical space */
+    display: flex;
+    flex-direction: row; /* sidebar | board_window | inspectors */
+    min-height: 0; /* prevents overflow issues */
 }
 
 #gameside {
-    position : absolute;
-    left : 0px;
-    top : 700px;
-    width : 1450px;
-    height : 200px;
+    height: 200px;
+    display: flex;
+    flex-direction: row;
+    border-top: 2px solid #ccc;
 }
 
 
 #board_control_panel {
-    width : 150px;
-    height : 400px;
-    float : left;
-    margin-top : 150px;
+    width: 150px;
+    flex-shrink: 0;
+    border-right: 2px solid #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-#element_input_panel {
-    width : 800px;
-    height : 200px;
-    float : left;
+#board_control_panel_svg {
+    width: 150px;
+    height: 300px;
 }
 
 .board_control_panel_button {
@@ -99,26 +118,212 @@ margin: 0;
 }
 
 #board_window {
-    float : left;
+  flex: 1; /* fills remaining space */
+  display: flex;
+}
+
+#board_window > svg {
+  flex: 1; /* makes SVG fill parent */
+  width: 100%;
+  height: 100%;
 }
 
 #inspectors {
-    position : absolute;
-    top : 0;
-    left : 950px;
+  width: 500px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid #ccc;
 }
 
+/* Inspector children */
+#tracking_inspector {
+    height: 100px;
+    flex-shrink: 0;
+    border-bottom: 1px solid #eee;
+    background-color : AntiqueWhite;
+    overflow: hidden;
+}
+
+#stone_inspector, #square_inspector {
+  flex: 1; /* split remaining height equally */
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #eee;
+}
+#square_inspector { border-bottom: none; }
+
+
 #stone_inspector {
-    width : 500px;
-    height : 300px;
     background-color : grey;
 }
 
-
 #square_inspector {
+    background-color : lightblue;
+}
+
+#choice_selector {
+    width : 500px;
+    height : 100px;
+    background-color : AntiqueWhite;
+}
+
+#swap_effect_selector {
     width : 500px;
     height : 300px;
     background-color : lightblue;
+}
+
+/* Gameside children */
+#game_log {
+    width: 200px;
+    flex-shrink: 0;
+    border-left: 2px solid #ccc;
+    border-right: 2px solid #ccc;
+    display: flex;
+    flex-direction: column;
+}
+
+/* game log */
+
+#game_log_nav {
+    flex: 0 0 auto;
+    text-align: center;
+}
+#game_log_nav_timeslice_label {
+    font-size: 20px;
+}
+#game_log_nav_timeslice_value {
+    font-size: 30px;
+}
+#game_log_nav_round_label {
+    font-size: 20px;
+}
+#game_log_nav_round_value {
+    font-size: 30px;
+}
+#command_form_div {
+    flex: 1;
+    display: flex;
+    padding: 5px;
+}
+#command_form {
+    flex: 1;
+    display: flex;
+}
+#submit_commands_button {
+    width: 100%;
+    flex: 1;
+    font-size: 20px;
+}
+#game_log_outcome {
+    flex: 1;
+    text-align: center;
+    font-size: 30px;
+}
+#game_log_win_A {
+    color: green;
+}
+#game_log_win_B {
+    color: red;
+}
+#game_log_draw {
+    font-size: 30px;
+}
+
+#game_control_panel,
+#game_management {
+  flex: 1; /* share remaining width equally */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#game_control_panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game_control_panel_svg {
+    height: 104px;
+    width: 400px;
+}
+
+#game_management {
+    overflow: auto;
+}
+
+
+#element_input_panel {
+    width : 1000px;
+    height : 200px;
+    display: flex;
+}
+
+#element_input_panel_base_section {
+    height: 200px;
+    width: 300px;
+    flex-shrink: 0;
+}
+#element_input_panel_base_section_svg {
+    height: 200px;
+    width: 300px;
+}
+
+#element_input_panel_neutral_stone_section {
+    height: 200px;
+    width: 200px;
+    flex-shrink: 0;
+}
+#element_input_panel_neutral_stone_section_svg {
+    height: 200px;
+    width: 200px;
+}
+
+#element_input_panel_stone_section {
+    height: 200px;
+    width: 500px;
+    flex-shrink: 0;
+}
+#element_input_panel_stone_section_svg {
+    height: 200px;
+    width: 500px;
+}
+
+/* --------------------------------- */
+/* ----- Board edit form style ----- */
+/* --------------------------------- */
+
+#board_edit_form_div {
+    flex: 1;
+    height : 200px;
+    padding : 20px;
+    box-sizing : border-box;
+}
+
+#board_edit_form {
+    display: flex;
+    align-items: stretch; /* make items the same height */
+    gap: 0.5rem;          /* optional spacing */
+}
+
+#board_name {
+    width: 100%;
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 0.2rem;
+}
+
+#save_board_button {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.2rem;
+  flex: 0 0 auto;   /* auto width by default */
+}
+
+.board_edit_data_field {
+    display : none;
 }
 
 
@@ -126,8 +331,30 @@ margin: 0;
 /* ------ Board window style ------- */
 /* --------------------------------- */
 
+#board_window_svg {
+    width : 100%;
+    height : 100%;
+}
+
 #board_window_background {
     fill : black;
+    width : 100%;
+    height : 100%;
+}
+
+#selection_mode_highlights {
+    width : 100%;
+    height : 100%;
+}
+
+#board_animation_overlay {
+    width : 100%;
+    height : 100%;
+}
+
+#board_animation_overlay_bg {
+    width : 100%;
+    height : 100%;
 }
 
 /* --------- Board squares --------- */
@@ -673,44 +900,6 @@ margin: 0;
 }
 
 
-/* --------------------------------- */
-/* ----- Board edit form style ----- */
-/* --------------------------------- */
-
-
-
-#board_edit_form_div {
-    width : 500px;
-    height : 100px;
-    margin-left : 950px;
-    padding : 20px;
-    box-sizing : border-box;
-}
-
-#board_edit_form {
-    display: flex;
-    align-items: stretch; /* make items the same height */
-    gap: 0.5rem;          /* optional spacing */
-}
-
-#board_name {
-  font-family: inherit;
-  font-size: 1rem;
-  padding: 0.2rem;
-  flex: 1; /* take up remaining space */
-}
-
-#save_board_button {
-  font-family: inherit;
-  font-size: 1rem;
-  padding: 0.2rem;
-  flex: 0 0 auto;   /* auto width by default */
-}
-
-.board_edit_data_field {
-    display : none;
-}
-
 
 
 
@@ -742,4 +931,85 @@ margin: 0;
 
 .input_icon_shadow.active{
     display: block;
+}
+
+
+.action_table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: inherit;
+  font-size : 20px;
+  /*margin-top: 1em;*/
+  box-shadow: 0 2px 8px rgba(80,80,80,0.07);
+  background: #fff;
+  /*border-radius: 8px;*/
+  overflow: hidden;
+}
+.action_table thead tr {
+  background-color: #eee;
+  color: #222;
+  font-weight: bold;
+  border-bottom: 2px solid #bbb;
+}
+.action_table_header, .action_table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ececec;
+  position: relative;
+}
+.action_table tbody tr:last-child td {
+  border-bottom: none;
+}
+.action_table tbody tr {
+  transition: background 0.2s;
+}
+.action_table tbody tr.selected,
+.action_table tbody tr[data-selected="true"] {
+  background-color: #ffeeba;
+}
+.action_table_button {
+  font-family: inherit;
+  padding: 6px 16px;
+  margin: 0 2px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.action_table_column_button {
+  font-family: inherit;
+  padding: 6px 16px;
+  margin: 2px 2px;
+  border-radius: 6px;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.action_table_column_button:disabled {
+  pointer-events: none;
+}
+.action_table_actions_header {
+    text-align: center;
+    font-weight: 500;
+    border-left: 1px solid #ddd; /* faint separator */
+    /*background: #fafafa;         /* matches subtle header look */
+}
+.action_table_col_link {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  text-decoration: none;
+  text-align: left;
+  color: inherit;
+  padding: 12px 16px;
+}
+.action_table_col_link:hover {
+  background: #f0f0f0;
 }
