@@ -92,29 +92,6 @@ class CascadeForm(HTMLObject):
         self.structured_html[-1] = self.structured_html[-1][:-1]
         self.structured_html.append("};\n")
 
-        # Now we add the change listeners to groups which are subject to restrictions
-        for i in groups_subject_to_restrictions:
-            self.structured_html.append([
-                    f"document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[i-1]["ID"]}_select\").addEventListener(\"change\", function() {{",
-                    f"  const value = this.value;",
-                    f"  const affected = document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[i]["ID"]}_select\");",
-                    f"  let selection_update_pending = true",
-                    f"  Array.from(affected.options).forEach(opt => {{",
-                    f"    if (restrictions[\"{self.groups[i]["ID"]}\"][value].includes(opt.value)) {{",
-                    f"      opt.hidden = false;",
-                    f"      opt.disabled = false;",
-                    f"      if (selection_update_pending) {{",
-                    f"        affected.value = opt.value;",
-                    f"        selection_update_pending = false;",
-                    f"      }}"
-                    f"    }} else {{",
-                    f"      opt.hidden = true;",
-                    f"      opt.disabled = true;",
-                    f"    }}",
-                    f"  }});",
-                    f"}});"
-                ])
-
         # Add onclick listeners for explain buttons (and store element descriptions)
         self.structured_html.append("const element_labels = {")
         for element in self.elements:
@@ -126,14 +103,45 @@ class CascadeForm(HTMLObject):
             self.structured_html.append(f"  \"{element["ID"]}\" : {json.dumps(element["DESCRIPTION"])},")
         self.structured_html[-1] = self.structured_html[-1][:-1]
         self.structured_html.append("};\n")
+
+        self.structured_html.append([
+            f"function elaborate_on_that(group_id) {{",
+            f"  let elaboration_label = element_labels[document.getElementById(`cascade_form_{self.identifier}_selection_group_${{group_id}}_select`).value];",
+            f"  let elaboration = element_descriptions[document.getElementById(`cascade_form_{self.identifier}_selection_group_${{group_id}}_select`).value];",
+            f"  document.getElementById(\"cascade_form_{self.identifier}_elaborate_title\").innerText = elaboration_label;",
+            f"  document.getElementById(\"cascade_form_{self.identifier}_elaborate\").innerText = elaboration;",
+            f"}}",
+            ])
+
+        # Now we add the change listeners to groups which are subject to restrictions
+        for i in range(1, len(self.groups)):
+            if i in groups_subject_to_restrictions:
+                self.structured_html.append([
+                        f"document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[i-1]["ID"]}_select\").addEventListener(\"change\", function() {{",
+                        f"  const value = this.value;",
+                        f"  const affected = document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[i]["ID"]}_select\");",
+                        f"  let selection_update_pending = true",
+                        f"  Array.from(affected.options).forEach(opt => {{",
+                        f"    if (restrictions[\"{self.groups[i]["ID"]}\"][value].includes(opt.value)) {{",
+                        f"      opt.hidden = false;",
+                        f"      opt.disabled = false;",
+                        f"      if (selection_update_pending) {{",
+                        f"        affected.value = opt.value;",
+                        f"        selection_update_pending = false;",
+                        f"      }}"
+                        f"    }} else {{",
+                        f"      opt.hidden = true;",
+                        f"      opt.disabled = true;",
+                        f"    }}",
+                        f"  }});",
+                        f"  elaborate_on_that(\"{self.groups[i-1]["ID"]}\");",
+                        f"}});"
+                    ])
+            else:
+                self.structured_html.append(f"document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[i-1]["ID"]}_select\").addEventListener(\"change\", () => elaborate_on_that(\"{self.groups[i-1]["ID"]}\"));")
+        self.structured_html.append(f"document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[-1]["ID"]}_select\").addEventListener(\"change\", () => elaborate_on_that(\"{self.groups[-1]["ID"]}\"));") # the last group is never restricting another group
+
         for group in self.groups:
-            self.structured_html.append([
-                    f"document.getElementById(\"cascade_form_{self.identifier}_explain_{group["ID"]}\").addEventListener(\"click\", function() {{",
-                    f"  let elaboration_label = element_labels[document.getElementById(\"cascade_form_{self.identifier}_selection_group_{group["ID"]}_select\").value];",
-                    f"  let elaboration = element_descriptions[document.getElementById(\"cascade_form_{self.identifier}_selection_group_{group["ID"]}_select\").value];",
-                    f"  document.getElementById(\"cascade_form_{self.identifier}_elaborate_title\").innerText = elaboration_label;",
-                    f"  document.getElementById(\"cascade_form_{self.identifier}_elaborate\").innerText = elaboration;",
-                    "})"
-                ])
+            self.structured_html.append(f"document.getElementById(\"cascade_form_{self.identifier}_explain_{group["ID"]}\").addEventListener(\"click\", () => elaborate_on_that(\"{group["ID"]}\"));")
         self.structured_html.append("</script>")
 
