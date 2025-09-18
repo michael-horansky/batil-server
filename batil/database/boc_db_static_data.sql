@@ -52,7 +52,17 @@ INSERT INTO BOC_RULES VALUES( 'saturation', 'unlock_tagscreen_behaviour', 'The d
 
 INSERT INTO BOC_TREE_DOCUMENTS (LABEL, CONTENT, VIEWER, PARENT_CHAPTER) VALUES ('Welcome', '<p>Welcome to Batil (BAttle in TIme Loops)!</p><p>This guide is divided into two parts. The first will teach you how to navigate the Batil website and how to start playing the game right away. The second is a complete rulebook for Batil, including example scenarios which you can explore in-game by clicking on the interactive links inside the tutorial text.</p><p>If you''re reading this, the first ''beta'' version of the game has been deployed to a live server. Please keep track of any issues, wanted features, unwanted bugs, unclear explanations, or comments regarding the rules of the game that you might have and send them to me either via this (TODO LINK) feedback submission form (/TODO) or via my e-mail address michael.horansky@gmail.com. If you won''t, I will send you unsolicited emails on the address you provided during registration, where I will spam you with tedious multi-page feedback forms. Thank you for being a cooperating test subject.</p><p>Enjoy the game!</p>', 'tutorial_guide', NULL);
 
+/* Initialise rating model */
 
+INSERT INTO BOC_RATING_PARAMETERS (PARAMETER_NAME, PARAMETER_VALUE) VALUES ('INITIAL_RATING', 1000.0);
+INSERT INTO BOC_RATING_PARAMETERS (PARAMETER_NAME, PARAMETER_VALUE) VALUES ('RATING_DIFFERENCE_SCALE', 400.0);
+INSERT INTO BOC_RATING_PARAMETERS (PARAMETER_NAME, PARAMETER_VALUE) VALUES ('INITIAL_ESTIMATE_DRAW_PROBABILITY', 0.1);
+INSERT INTO BOC_RATING_PARAMETERS (PARAMETER_NAME, PARAMETER_VALUE) VALUES ('INITIAL_ESTIMATE_HANDICAP_STD', 120.0);
+INSERT INTO BOC_RATING_PARAMETERS (PARAMETER_NAME, PARAMETER_VALUE) VALUES ('RATING_ADJUSTMENT_STEP_SCALE', 32.0);
+INSERT INTO BOC_RATING_PARAMETERS (PARAMETER_NAME, PARAMETER_VALUE) VALUES ('RIGIDITY', 10.0);
+INSERT INTO BOC_RATING_PARAMETERS (PARAMETER_NAME, PARAMETER_VALUE) VALUES ('FREEZING_CONDITION', NULL);
+
+INSERT INTO BOC_HOUSEKEEPING_LOGS (D_PERFORMED) VALUES ('SCHEDULED');
 
 
 
