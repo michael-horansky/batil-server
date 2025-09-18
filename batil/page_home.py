@@ -128,7 +128,15 @@ class PageHome(Page):
             if request.form.get("action_your_boards") == "create_new_board":
                 # Create a new element in BOC_BOARDS and also open the board in editor in new tab
                 # The new board is set to the default board
-                db.execute("INSERT INTO BOC_BOARDS (T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, HANDICAP, BOARD_NAME) VALUES (?, ?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.0, ?)", (self.board_template["T_DIM"], self.board_template["X_DIM"], self.board_template["Y_DIM"], self.board_template["STATIC_REPRESENTATION"], self.board_template["SETUP_REPRESENTATION"], g.user["username"], self.board_template["BOARD_NAME"]))
+                db.execute("""
+                    INSERT INTO BOC_BOARDS
+                        (T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, HANDICAP, BOARD_NAME,
+                        HANDICAP, HANDICAP_STD, KAPPA, STEP_SIZE)
+                    VALUES
+                        (?, ?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.0, ?,
+                        0.0, (SELECT PARAMETER_VALUE FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_ESTIMATE_HANDICAP_STD\"),
+                        (SELECT 2 * PARAMETER_VALUE / (1 - PARAMETER_VALUE) FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_ESTIMATE_DRAW_PROBABILITY\"), 0.0)
+                    """, (self.board_template["T_DIM"], self.board_template["X_DIM"], self.board_template["Y_DIM"], self.board_template["STATIC_REPRESENTATION"], self.board_template["SETUP_REPRESENTATION"], g.user["username"], self.board_template["BOARD_NAME"]))
                 db.commit()
         elif "action_your_boards_unpublished" in request.form.keys():
             # row action on an unpublished board
@@ -146,7 +154,14 @@ class PageHome(Page):
                 # published boards are always shown from BOC_USER_SAVED_BOARDS, this just deletes the relational line
                 hide_board(g.user["username"], action_board_id)
             elif request.form.get("action_your_boards_published") == "fork":
-                db.execute("INSERT INTO BOC_BOARDS (T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, HANDICAP, BOARD_NAME) SELECT T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.0, BOARD_NAME || \" (fork)\" FROM BOC_BOARDS WHERE BOARD_ID = ?", (g.user["username"], action_board_id))
+                db.execute("""
+                    INSERT INTO BOC_BOARDS
+                        (T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, HANDICAP, BOARD_NAME,
+                        HANDICAP, HANDICAP_STD, KAPPA, STEP_SIZE)
+                    SELECT T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.0, BOARD_NAME || \" (fork)\",
+                        0.0, (SELECT PARAMETER_VALUE FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_ESTIMATE_HANDICAP_STD\"),
+                        (SELECT 2 * PARAMETER_VALUE / (1 - PARAMETER_VALUE) FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_ESTIMATE_DRAW_PROBABILITY\"), 0.0
+                    FROM BOC_BOARDS WHERE BOARD_ID = ?""", (g.user["username"], action_board_id))
                 db.commit()
 
 

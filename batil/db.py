@@ -44,9 +44,20 @@ def init_db():
     with current_app.open_resource('database/boc_db_static_data.sql') as f:
         cur.executescript(f.read().decode('utf8'))
     # Default admin user
-    cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS, PROFILE_PICTURE_EXTENSION) VALUES( 'batil', 'dvojka@110zbor.sk', '{generate_password_hash('loopinsohard')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE', 1 )")
-    cur.execute(f"INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS, PROFILE_PICTURE_EXTENSION) VALUES( 'dvojka110', 'dvojka@110zbor.sk', '{generate_password_hash('Allegro4Ever')}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE', 2 )")
-    #cur.execute("INSERT INTO BOC_USER_RELATIONSHIPS (USER_1, USER_2, STATUS, D_STATUS) VALUES('batil', 'dvojka110', 'friends', CURRENT_TIMESTAMP)")
+    cur.execute(f"""
+        INSERT INTO BOC_USER
+            (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS, PROFILE_PICTURE_EXTENSION,
+             RATING)
+        VALUES( 'batil', 'dvojka@110zbor.sk', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE', 1,
+               (SELECT PARAMETER_VALUE FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_RATING\")
+               )""", (generate_password_hash('loopinsohard'), ))
+    cur.execute(f"""
+        INSERT INTO BOC_USER
+            (USERNAME, EMAIL, PASSWORD, D_CREATED, D_CHANGED, PRIVILEGE, STATUS, PROFILE_PICTURE_EXTENSION,
+             RATING)
+        VALUES( 'dvojka110', 'dvojka@110zbor.sk', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ADMIN', 'ACTIVE', 2,
+               (SELECT PARAMETER_VALUE FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_RATING\")
+               )""", (generate_password_hash('Allegro4Ever'), ))
 
     # Add default boards
     default_boards_file = current_app.open_resource("database/default_boards.json")
@@ -112,9 +123,12 @@ def add_default_board_script(default_board):
     #return(f"WITH new_board AS (INSERT INTO BOC_BOARDS (T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, D_PUBLISHED, BOARD_NAME ) VALUES ({default_board["T_DIM"]}, {default_board["X_DIM"]}, {default_board["Y_DIM"]}, {json.dumps(default_board["STATIC_REPRESENTATION"])}, {json.dumps(default_board["SETUP_REPRESENTATION"])}, {json.dumps(default_board["AUTHOR"])}, {default_board["IS_PUBLIC"]}, {json.dumps(default_board["D_CREATED"])}, {json.dumps(default_board["D_CHANGED"])}, {json.dumps(default_board["D_PUBLISHED"])}, {json.dumps(default_board["BOARD_NAME"])})  RETURNING BOARD_ID) INSERT INTO BOC_USER_SAVED_BOARDS (BOARD_ID, USERNAME, D_SAVED) SELECT new_board.BOARD_ID, u.USERNAME, CURRENT_TIMESTAMP FROM BOC_USER u, new_board;")
     sql = """
         INSERT INTO BOC_BOARDS (
-            T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, D_PUBLISHED, BOARD_NAME
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """
+            T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, D_PUBLISHED, BOARD_NAME,
+            HANDICAP, HANDICAP_STD, KAPPA, STEP_SIZE
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            0.0, (SELECT PARAMETER_VALUE FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_ESTIMATE_HANDICAP_STD\"),
+            (SELECT 2 * PARAMETER_VALUE / (1 - PARAMETER_VALUE) FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_ESTIMATE_DRAW_PROBABILITY\"), 0.0
+        )"""
     params = (
         default_board["T_DIM"], default_board["X_DIM"], default_board["Y_DIM"],
         default_board["STATIC_REPRESENTATION"], default_board["SETUP_REPRESENTATION"],
@@ -129,9 +143,14 @@ def add_user(username, email, password):
     length = 32
     random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-    db.execute(
-        "INSERT INTO BOC_USER (USERNAME, EMAIL, PASSWORD, AUTH_CODE, N_FAILS, D_CREATED, D_CHANGED, PRIVILEGE, STATUS) VALUES (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, \'USER\', \'PENDING\')",
-        (username, email, generate_password_hash(password), random_string),
+    db.execute("""
+        INSERT INTO BOC_USER
+            (USERNAME, EMAIL, PASSWORD, AUTH_CODE, N_FAILS, D_CREATED, D_CHANGED, PRIVILEGE, STATUS,
+            RATING)
+        VALUES
+            (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, \'USER\', \'PENDING\',
+            (SELECT PARAMETER_VALUE FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_RATING\"))
+        """, (username, email, generate_password_hash(password), random_string),
     )
 
     # We check default boards
@@ -218,7 +237,10 @@ def new_blind_challenge(target_board, challenge_author, ruleset_selection):
         else:
             player_A_cumulative_seconds = None
             player_B_cumulative_seconds = None
-        cur.execute("UPDATE BOC_GAMES SET PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\", PLAYER_A_CUMULATIVE_SECONDS = ?, PLAYER_B_CUMULATIVE_SECONDS = ? WHERE GAME_ID = ?", (player_a, player_b, target_board_id, player_A_cumulative_seconds, player_B_cumulative_seconds, retrieve_challenge["RESERVED_GAME_ID"]))
+        cur.execute("""
+            UPDATE BOC_GAMES SET
+                PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\", PLAYER_A_CUMULATIVE_SECONDS = ?, PLAYER_B_CUMULATIVE_SECONDS = ?, R_A_ADJUSTMENT = NULL
+            WHERE GAME_ID = ?""", (player_a, player_b, target_board_id, player_A_cumulative_seconds, player_B_cumulative_seconds, retrieve_challenge["RESERVED_GAME_ID"]))
 
         # We also add the initial setup
         target_board_info = cur.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) SELECT ?, 0, 'GM', SETUP_REPRESENTATION, CURRENT_TIMESTAMP FROM BOC_BOARDS WHERE BOARD_ID = ?", (retrieve_challenge["RESERVED_GAME_ID"], target_board_id))
@@ -279,7 +301,7 @@ def accept_challenge(challenge_id):
     else:
         player_A_cumulative_seconds = None
         player_B_cumulative_seconds = None
-    db.execute("UPDATE BOC_GAMES SET PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\", PLAYER_A_CUMULATIVE_SECONDS = ?, PLAYER_B_CUMULATIVE_SECONDS = ? WHERE GAME_ID = ?", (player_a, player_b, challenge_row["BOARD_ID"], player_A_cumulative_seconds, player_B_cumulative_seconds, challenge_row["RESERVED_GAME_ID"]))
+    db.execute("UPDATE BOC_GAMES SET PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\", PLAYER_A_CUMULATIVE_SECONDS = ?, PLAYER_B_CUMULATIVE_SECONDS = ?, R_A_ADJUSTMENT = NULL WHERE GAME_ID = ?", (player_a, player_b, challenge_row["BOARD_ID"], player_A_cumulative_seconds, player_B_cumulative_seconds, challenge_row["RESERVED_GAME_ID"]))
 
     # We also add the initial setup
     target_board_info = db.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) SELECT ?, 0, 'GM', SETUP_REPRESENTATION, CURRENT_TIMESTAMP FROM BOC_BOARDS WHERE BOARD_ID = ?", (challenge_row["RESERVED_GAME_ID"], challenge_row["BOARD_ID"]))

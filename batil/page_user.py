@@ -40,6 +40,9 @@ class PageUser(Page):
         return(get_args)
 
     def resolve_action_profile_form(self):
+        db = get_db()
+        for key, val in request.form.items():
+            print(f"  {key} --> {val} ({type(val)})")
         if "action_profile_form" in request.form:
             if request.form.get("action_profile_form") == "unfriend":
                 unfriend_user(g.user["username"], self.username)
@@ -55,6 +58,19 @@ class PageUser(Page):
                 unblock_user(g.user["username"], self.username)
             if request.form.get("action_profile_form") == "block":
                 block_user(g.user["username"], self.username)
+
+        elif "action_profile_boards" in request.form:
+            action_board_id = int(request.form.get("action_table_profile_boards_selected_row"))
+            if request.form.get("action_profile_boards") == "fork":
+                db.execute("""
+                    INSERT INTO BOC_BOARDS
+                        (T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, HANDICAP, BOARD_NAME,
+                        HANDICAP, HANDICAP_STD, KAPPA, STEP_SIZE)
+                    SELECT T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.0, BOARD_NAME || \" (fork)\",
+                        0.0, (SELECT PARAMETER_VALUE FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_ESTIMATE_HANDICAP_STD\"),
+                        (SELECT 2 * PARAMETER_VALUE / (1 - PARAMETER_VALUE) FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_ESTIMATE_DRAW_PROBABILITY\"), 0.0
+                    FROM BOC_BOARDS WHERE BOARD_ID = ?""", (g.user["username"], action_board_id))
+                db.commit()
 
 
     def render_profile_header(self):

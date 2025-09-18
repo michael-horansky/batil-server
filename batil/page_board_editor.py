@@ -73,7 +73,7 @@ class PageBoardEditor(Page):
 
         db = get_db()
 
-        db.execute("UPDATE BOC_BOARDS SET T_DIM = ?, X_DIM = ?, Y_DIM = ?, STATIC_REPRESENTATION = ?, SETUP_REPRESENTATION = ?, D_CHANGED = CURRENT_TIMESTAMP, BOARD_NAME = ? WHERE BOARD_ID = ?", (t_dim, x_dim, y_dim, static_rep, setup_rep, board_name, self.board_id))
+        db.execute("UPDATE BOC_BOARDS SET T_DIM = ?, X_DIM = ?, Y_DIM = ?, STATIC_REPRESENTATION = ?, SETUP_REPRESENTATION = ?, D_CHANGED = CURRENT_TIMESTAMP, BOARD_NAME = ? WHERE BOARD_ID = ? AND IS_PUBLIC = 0", (t_dim, x_dim, y_dim, static_rep, setup_rep, board_name, self.board_id))
         db.commit()
 
     def load_board(self):
