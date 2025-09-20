@@ -1,4 +1,3 @@
-
 html, body {
   height: 100%;
   width: 100%;
@@ -7,6 +6,7 @@ html, body {
   display: flex;
   flex-direction: column;
 }
+
 
 h1, h2, h3, h4, h5, h6 {
   font-family: serif;
@@ -58,178 +58,115 @@ hr {
   min-height: 0;
 }
 
-/* Main Content */
-#main_content {
-  flex: 1 1 auto;
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  min-width: 220px;        /* ensures it doesn’t shrink */
+  max-width: 220px;        /* ensures it doesn’t expand */
+  box-sizing: border-box;  /* padding included in width */
+  justify-content: space-between;
+  background: #2c3e50;
+  color: #ecf0f1;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
   display: flex;
-  justify-content: center; /* horizontal centering */
-  align-items: stretch;    /* let inner fill height */
-  background: #f8f8f8;     /* just to see boundaries */
-  overflow: hidden;        /* prevent scrollbars if content fits */
+  flex-direction: column;
 }
 
-#main_content > header {
+.sidebar_title {
+  margin: 0 0 20px 20px;
+  font-size: 18px;
+  color: #bdc3c7;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar ul li {
+  margin-bottom: 10px;
+}
+
+.sidebar ul li a {
+  display: block;
+  padding: 12px 20px;
+  color: #ecf0f1;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.sidebar ul li a:hover,
+.sidebar ul li a.active {
+  background: #34495e;
+  border-left-color: #1abc9c;
+}
+
+.sidebar_pfp {
+  text-align: center; /* centers horizontally */
+  margin-top: 1em;
+}
+
+.sidebar_pfp_username {
+  font-size: 25px;
+  margin-bottom: 12px;
+}
+
+.sidebar_pfp img {
+  width: 200px;       /* scale as needed */
+  height: 200px;
+  object-fit: cover;
+  border-radius: 50%;  /* makes it round */
+  border: 2px solid #bbb;
+  background-color: white;
+}
+
+/* Main Content */
+.main_content {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* height: calc(100vh - 60px); */
+  padding: 30px;
+  box-sizing: border-box;
+  background: #fff;
+  min-height: 0;
+}
+
+.main_content > header {
   border-bottom: 1px solid lightgray;
   display: flex;
   align-items: flex-end;
 }
 
-#main_content > header h1 {
+.main_content > header h1 {
   flex: auto;
   margin: 1rem 0 0.25rem 0;
 }
 
-#main_content:last-child {
+.main_content:last-child {
   margin-bottom: 0;
 }
 
-#main_content form {
+.main_content form {
   height: 100%;
   box-sizing: border-box;
 }
 
-#main_content label {
+.main_content label {
   font-weight: bold;
   margin-bottom: 0.5em;
 }
 
-#main_content input, #main_content textarea {
+.main_content input, .main_content textarea {
   margin-bottom: 1em;
 }
 
-#main_content textarea {
+.main_content textarea {
   min-height: 12em;
   resize: vertical;
-}
-
-#main_column {
-  flex: 1 1 auto;           /* let it grow/shrink vertically */
-  flex-direction: column;
-  display: flex;
-  max-width: 1280px;        /* constrain width */
-  width: 100%;              /* take full width up to max */
-  background: white;        /* just demo */
-  overflow-y: auto;         /* scroll vertically if content too tall */
-}
-
-.main_column_section {
-  width: 100%;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-
-#profile_header {
-
-  padding-left: 300px;
-  display: flex;
-  align-items: center;   /* vertical centering */
-  gap: 1em;              /* spacing between image and text */
-}
-
-#profile_header img {
-  max-height: 200px;     /* or whatever makes sense */
-  width: auto;
-}
-
-#profile_header_username {
-  flex: 1;
-  font-size: 25px;
-  margin-left: 100px;
-
-}
-
-#profile_content {
-  flex: 1;
-  flex-direction: column;
-  display: flex;
-}
-
-#action_form_profile_form_container {
-  flex: 1;
-  flex-direction: column;
-  display: flex;
-}
-
-#action_form_profile_form {
-  flex: 1;
-  flex-direction: column;
-  display: flex;
-}
-
-/* Profile picture */
-
-#business_card {
-  display: flex;              /* make children sit side by side */
-  flex-direction: row;        /* default, but explicit */
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-  background: #fafafa;
-  font-family: system-ui, sans-serif;
-  margin: 0 auto;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-#profile_head {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.profile_picture {
-  width: 256px;
-  height: 256px;
-  border: 2px solid #ccc;
-  background: #fff;
-}
-
-.profile_picture_tag {
-  margin-top: 12px;
-  font-size: 1.2em;
-  font-weight: 500;
-  color: #333;
-  text-align: center;
-}
-
-
-/* Static table */
-
-.static_table_container {
-  max-width: 400px;
-  background: #fff;
-  border: 2px solid #bbb;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  padding: 1em 1.5em;
-  margin: 1em auto;
-}
-
-.static_table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95em;
-  color: #333;
-}
-
-.static_table .stats_header {
-  text-align: left;
-  padding: 0.5em 0.75em 0.5em 0;
-  font-weight: 600;
-  color: #555;
-  white-space: nowrap;
-}
-
-.static_table .stats_val {
-  text-align: right;
-  padding: 0.5em 0;
-  color: #222;
-}
-
-.static_table tr + tr td {
-  border-top: 1px solid #eee;
 }
 
 /* Tab Content */
@@ -388,6 +325,9 @@ input[type=submit] {
   transition: background 0.2s, box-shadow 0.2s;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
+.action_form_button:disabled {
+  pointer-events: none;
+}
 .action_form_button_label {
     align-self: center;
     font-size: 1em;
@@ -405,107 +345,22 @@ label { display: block; margin-bottom: .5em; }
 input, textarea, select { width: 100%; padding: 8px; }
 .action_form_actions { margin-top: 2em; }
 
-#play_forms_container {
-  display: flex;
-  height : 100%;
-  width : 100%;
-  gap: 20px;        /* space between the forms */
-  /*flex-wrap: wrap;  // let them wrap on small screens
-  justify-content: flex-start;
-  align-items: stretch;*/
-}
-
-#action_form_new_game_container {
-  width : 50%;
-}
-
-#play_forms_right {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-#play_forms_right form {
-  flex: 1;               /* split vertical space equally */
-  display: flex;
-  flex-direction: column;
-  /* overflow: hidden; */
-}
-
-#action_form_new_game {
-  flex: 1;
-  min-width : 50%;
-  display: flex;
-  flex-direction: column;
-}
-
-#action_form_existing_games_container {
-  flex: 1;
-  min-height: 0;
-}
-
-#action_form_your_boards {
-  display: flex;
-  flex-direction: column;
-}
-
-#action_form_your_boards_container {
+#action_form_system_log_form_container {
   flex: 1;
 }
 
+#action_form_system_log_form {
+  display: flex;
+  flex-direction: column;
+}
 
-#action_form_public_boards_container {
+#action_form_rating_model_container {
   flex: 1;
 }
 
-#action_form_public_boards {
+#action_form_rating_model {
   display: flex;
   flex-direction: column;
-}
-
-#action_form_users_container {
-  flex: 1;
-}
-
-#action_form_users {
-  display: flex;
-  flex-direction: column;
-}
-
-#your_profile_forms_container {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
-
-#action_form_pending_friend_requests_container {
-  flex: 1;
-  width: 100%;
-}
-
-#action_form_your_profile_container {
-  flex: 1 1 auto;      /* grow to fill height */
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-#action_form_your_profile {
-  /*flex: 1 1 auto;      /* grow to fill height */
-  display: flex;
-  flex-direction: column;
-}
-
-#action_form_your_profile_section_0 input {
-  width: 250px;
-  padding: 4px 4px 4px 4px;
-  box-sizing: border-box;
-
-}
-#action_form_your_profile_section_0 select {
-  width: 250px;
 }
 
 
@@ -648,24 +503,245 @@ input, textarea, select { width: 100%; padding: 8px; }
 }
 
 
-
-.profile_archive_row_win {
+.your_archive_row_win {
   background-color: #e6f4ea;
 }
-.profile_archive_row_loss {
+.your_archive_row_loss {
   background-color: #fdecea;
 }
-.profile_archive_row_draw {
+.your_archive_row_draw {
   background-color: #f9f9f9;
 }
 
-.profile_archive_with_you_row_win {
+.leaderboard_row_0 {
   background-color: #e6f4ea;
 }
-.profile_archive_with_you_row_loss {
-  background-color: #fdecea;
+
+
+/* Tree document viewer */
+
+.tdv_container {
+  display: flex;
+  flex-direction: row;
+  font-family: system-ui, sans-serif;
+  background: #fafafa;
+  border: 2px solid #bbb;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 99%;
 }
-.profile_archive_with_you_row_draw {
-  background-color: #f9f9f9;
+
+/* Sidebars */
+.tdv_sidebar {
+  flex: 0 0 220px;
+  background: #f0f0f0;
+  border-right: 1px solid #ccc;
+  padding: 1em;
+  overflow-y: auto;
 }
+
+.tdv_right_sidebar {
+  border-left: 1px solid #ccc;
+  border-right: none;
+}
+
+.tdv_sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tdv_sidebar li {
+  margin-bottom: 0.5em;
+}
+
+.tdv_sidebar a {
+  text-decoration: none;
+  color: #0066cc;
+  font-weight: 500;
+}
+
+.tdv_sidebar a:hover {
+  text-decoration: underline;
+}
+
+/* Main content */
+.tdv_main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tdv_form {
+  flex: 1 1 auto;              /* behave like a flex item */
+  display: flex;               /* pass flex layout to its children */
+  flex-direction: column;      /* stack children vertically */
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Tabs */
+.tdv_tabs {
+  display: flex;
+  border-bottom: 2px solid #bbb;
+  background: #eee;
+}
+
+.tdv_tab {
+  padding: 10px 20px;
+  border: 2px solid #bbb;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  margin-right: 5px;
+  cursor: pointer;
+  background: #eee;
+  font-weight: normal;
+}
+
+.tdv_tab.active {
+  background: #fff;
+  border-bottom: 2px solid #fff;
+  font-weight: bold;
+  z-index: 2;
+}
+
+/* Section container */
+.tdv_section_container {
+  overflow-y: auto;
+  background: #fff;
+  padding: 1em;
+  border-top: 2px solid #fff;
+  flex: 1 1 auto;
+  display: flex;        /* distribute space across sections */
+  flex-direction: column;
+  min-width: 0;         /* <-- crucial for flexbox width issues */
+  min-height: 0;
+}
+
+#tutorial_guide_container.tdv_container {
+  align-self: stretch;   /* if parent is flex, force this child to stretch */
+  width: 100%;
+  min-width: 0;          /* prevents flex-shrink collapsing */
+}
+
+.tdv_section {
+  display: none;
+  flex: 1 1 auto;      /* let section expand to fill container */
+  min-width: 0;        /* prevent flexbox shrinking bug */
+  min-height: 0;
+  flex-direction: column;
+}
+
+.tdv_section.active {
+  display: flex;
+}
+
+.tdv_section_content {
+  flex: 1 1 auto;      /* fill remaining space inside section */
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.tdv_section_content p {
+  text-indent: 2em;   /* adjust to taste */
+  margin-top: 0.5em;  /* space before */
+  margin-bottom: 0.5em; /* space after */
+}
+
+.tdv_edit_label {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  resize: none;
+}
+
+.tdv_edit_textarea {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 90%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  resize: none;
+}
+
+/* Bottom action bar */
+.tdv_action_footer {
+  flex: 0 0 auto;
+  border-top: 1px solid #eee;
+  background: #fafafa;
+  padding: 0.75em 1em;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5em;
+}
+
+.tdv_action_button {
+  font-family: inherit;
+  font-size: 1em;
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #ddd;
+  transition: background 0.2s;
+}
+
+.tdv_action_button:hover {
+  background: #ccc;
+}
+
+/* Logged out main Content */
+#logged_out_main_content {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center; /* horizontal centering */
+  align-items: stretch;    /* let inner fill height */
+  background: #f8f8f8;     /* just to see boundaries */
+  overflow: hidden;        /* prevent scrollbars if content fits */
+}
+
+#logged_out_main_content > header {
+  border-bottom: 1px solid lightgray;
+  display: flex;
+  align-items: flex-end;
+}
+
+#logged_out_main_content > header h1 {
+  flex: auto;
+  margin: 1rem 0 0.25rem 0;
+}
+
+#logged_out_main_content:last-child {
+  margin-bottom: 0;
+}
+
+#logged_out_main_content form {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+#logged_out_main_column {
+  flex: 1 1 auto;           /* let it grow/shrink vertically */
+  flex-direction: column;
+  display: flex;
+  max-width: 1280px;        /* constrain width */
+  width: 100%;              /* take full width up to max */
+  background: white;        /* just demo */
+  overflow-y: auto;         /* scroll vertically if content too tall */
+}
+
+.logged_out_main_column_section {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+
 

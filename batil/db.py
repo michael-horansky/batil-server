@@ -2,6 +2,9 @@ import os
 import json
 import random
 import string
+import numpy as np
+from scipy.optimize import minimize
+from cubature import cubature
 import sqlite3
 from datetime import datetime
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -237,10 +240,18 @@ def new_blind_challenge(target_board, challenge_author, ruleset_selection):
         else:
             player_A_cumulative_seconds = None
             player_B_cumulative_seconds = None
+
+        # Read the initial ratings of the two players
+        player_a_rating = cur.execute("SELECT RATING FROM BOC_USER WHERE USERNAME = ?", (player_a,)).fetchone()["RATING"]
+        player_b_rating = cur.execute("SELECT RATING FROM BOC_USER WHERE USERNAME = ?", (player_b,)).fetchone()["RATING"]
+
         cur.execute("""
             UPDATE BOC_GAMES SET
-                PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\", PLAYER_A_CUMULATIVE_SECONDS = ?, PLAYER_B_CUMULATIVE_SECONDS = ?, R_A_ADJUSTMENT = NULL
-            WHERE GAME_ID = ?""", (player_a, player_b, target_board_id, player_A_cumulative_seconds, player_B_cumulative_seconds, retrieve_challenge["RESERVED_GAME_ID"]))
+                PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\", PLAYER_A_CUMULATIVE_SECONDS = ?, PLAYER_B_CUMULATIVE_SECONDS = ?,
+                R_A_INIT = ?,
+                R_B_INIT = ?,
+                R_A_ADJUSTMENT = NULL
+            WHERE GAME_ID = ?""", (player_a, player_b, target_board_id, player_A_cumulative_seconds, player_B_cumulative_seconds, player_a_rating, player_b_rating, retrieve_challenge["RESERVED_GAME_ID"]))
 
         # We also add the initial setup
         target_board_info = cur.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) SELECT ?, 0, 'GM', SETUP_REPRESENTATION, CURRENT_TIMESTAMP FROM BOC_BOARDS WHERE BOARD_ID = ?", (retrieve_challenge["RESERVED_GAME_ID"], target_board_id))
@@ -301,7 +312,12 @@ def accept_challenge(challenge_id):
     else:
         player_A_cumulative_seconds = None
         player_B_cumulative_seconds = None
-    db.execute("UPDATE BOC_GAMES SET PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\", PLAYER_A_CUMULATIVE_SECONDS = ?, PLAYER_B_CUMULATIVE_SECONDS = ?, R_A_ADJUSTMENT = NULL WHERE GAME_ID = ?", (player_a, player_b, challenge_row["BOARD_ID"], player_A_cumulative_seconds, player_B_cumulative_seconds, challenge_row["RESERVED_GAME_ID"]))
+
+    # Read the initial ratings of the two players
+    player_a_rating = cur.execute("SELECT RATING FROM BOC_USER WHERE USERNAME = ?", (player_a,)).fetchone()["RATING"]
+    player_b_rating = cur.execute("SELECT RATING FROM BOC_USER WHERE USERNAME = ?", (player_b,)).fetchone()["RATING"]
+
+    db.execute("UPDATE BOC_GAMES SET PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\", PLAYER_A_CUMULATIVE_SECONDS = ?, PLAYER_B_CUMULATIVE_SECONDS = ?, R_A_INIT = ?, R_B_INIT = ?, R_A_ADJUSTMENT = NULL WHERE GAME_ID = ?", (player_a, player_b, challenge_row["BOARD_ID"], player_A_cumulative_seconds, player_B_cumulative_seconds, player_a_rating, player_b_rating, challenge_row["RESERVED_GAME_ID"]))
 
     # We also add the initial setup
     target_board_info = db.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) SELECT ?, 0, 'GM', SETUP_REPRESENTATION, CURRENT_TIMESTAMP FROM BOC_BOARDS WHERE BOARD_ID = ?", (challenge_row["RESERVED_GAME_ID"], challenge_row["BOARD_ID"]))
@@ -433,5 +449,268 @@ def tdv_add_child(parent_chapter_id):
 
     cur.execute("UPDATE BOC_TREE_DOCUMENTS SET FIRST_SUBCHAPTER = ? WHERE CHAPTER_ID = ?", (new_chapter_id, parent_chapter_id))
     db.commit()
+
+# -----------------------------------------------------------------------------
+# ------------------------ Game conclusion and rating -------------------------
+# -----------------------------------------------------------------------------
+
+def conclude_and_rate_game(game_id, outcome, draw_offer_status = None, draw_offer_condition = None):
+    # outcome is A, B, or draw
+    db = get_db()
+
+    # Load game properties
+    game_properties = db.execute("SELECT PLAYER_A, PLAYER_B, (R_A_INIT - R_B_INIT) AS DELTA_R, BOARD_ID FROM BOC_GAMES WHERE GAME_ID = ?", (game_id,)).fetchone()
+
+    # rate the game
+    r_a_adj, new_h, new_h_std, new_kappa, new_K = rate_game(game_id, game_properties["BOARD_ID"], game_properties["PLAYER_A"], game_properties["PLAYER_B"], game_properties["DELTA_R"], outcome)
+
+    # Update the database
+    player_A_rating_now = db.execute("SELECT RATING FROM BOC_USER WHERE USERNAME = ?", (game_properties["PLAYER_A"],)).fetchone()["RATING"]
+    player_B_rating_now = db.execute("SELECT RATING FROM BOC_USER WHERE USERNAME = ?", (game_properties["PLAYER_B"],)).fetchone()["RATING"]
+    db.execute("UPDATE BOC_USER SET RATING = ? WHERE USERNAME = ?", (player_A_rating_now + r_a_adj, game_properties["PLAYER_A"]))
+    db.execute("UPDATE BOC_USER SET RATING = ? WHERE USERNAME = ?", (player_B_rating_now - r_a_adj, game_properties["PLAYER_B"]))
+
+    db.execute("UPDATE BOC_BOARDS SET HANDICAP = ?, HANDICAP_STD = ?, KAPPA = ?, STEP_SIZE = ? WHERE BOARD_ID = ?", (new_h, new_h_std, new_kappa, new_K, game_properties["BOARD_ID"]))
+
+    # mark game as concluded
+    if draw_offer_status is None:
+        db.execute("UPDATE BOC_GAMES SET D_FINISHED = CURRENT_TIMESTAMP, STATUS = \"concluded\", OUTCOME = ?, R_A_ADJUSTMENT = ? WHERE GAME_ID = ?", (outcome, r_a_adj, game_id))
+    else:
+        db.execute("UPDATE BOC_GAMES SET DRAW_OFFER_STATUS = ?, D_FINISHED = CURRENT_TIMESTAMP, STATUS = \"concluded\", OUTCOME = ?, R_A_ADJUSTMENT = ? WHERE GAME_ID = ? AND DRAW_OFFER_STATUS = ?", (draw_offer_status, outcome, r_a_adj, game_id, draw_offer_condition))
+
+    db.commit()
+
+def safe_power_sum(x, kappa):
+    # calculates log (np.power(10, x) + np.power(10, -x) + kappa) safely
+    if kappa < 0:
+        return(safe_power_sum(x, 0))
+    if x > 4:
+        return(x * np.log(10))
+    elif x < -4:
+        return(-x * np.log(10))
+    else:
+        #print(x, kappa,np.power(10, x) + np.power(10, -x) + kappa + 0.1, np.log(np.power(10, x) + np.power(10, -x) + kappa + 0.1))
+        return(np.log(np.power(10, x) + np.power(10, -x) + kappa + 0.1))
+
+def r_sigma(x, kappa):
+    #return( np.power(10, x) / ( np.power(10, x) + np.power(10, -x) + kappa ))
+    if kappa < 0:
+        return(r_sigma(x, 0.0))
+
+    return( np.exp(x * np.log(10) - safe_power_sum(x, kappa)) )
+
+def rate_game(game_id, board_id, player_A, player_B, delta_R, outcome):
+    # This function does NOT update the database, instead it returns a tuple:
+    # (player A's rating adjustment, new h, new h_std, new kappa, new step size)
+
+    db = get_db()
+
+
+    # 1. Load rating model parameters
+    rm_params_raw = db.execute("SELECT PARAMETER_NAME, PARAMETER_VALUE FROM BOC_RATING_PARAMETERS").fetchall()
+    rm_params = {}
+    for rm_param_raw in rm_params_raw:
+        rm_params[rm_param_raw["PARAMETER_NAME"]] = rm_param_raw["PARAMETER_VALUE"]
+
+    # 2. Load board hot parameters and prior game ratings
+    board_hot_raw = db.execute("SELECT HANDICAP, HANDICAP_STD, KAPPA FROM BOC_BOARDS WHERE BOARD_ID = ?", (board_id,)).fetchone()
+    board_hot = {
+            "h" : board_hot_raw["HANDICAP"],
+            "h_std" : board_hot_raw["HANDICAP_STD"],
+            "kappa" : board_hot_raw["KAPPA"],
+            "p_draw" : board_hot_raw["KAPPA"] / (board_hot_raw["KAPPA"] + 2.0),
+        }
+
+
+    board_prior_games = db.execute("SELECT (R_A_INIT - R_B_INIT) AS DELTA_R, OUTCOME FROM BOC_GAMES WHERE STATUS = \"concluded\" AND BOARD_ID = ? AND GAME_ID != ?", (board_id, game_id)).fetchall()
+
+    # calculate the game counts and the step size
+    N = db.execute("SELECT COUNT(*) AS N FROM BOC_GAMES WHERE BOC_GAMES.STATUS = \"concluded\" AND BOC_GAMES.BOARD_ID = ?", (board_id,)).fetchone()["N"]
+    N_d = db.execute("SELECT COUNT(*) AS N FROM BOC_GAMES WHERE BOC_GAMES.STATUS = \"concluded\" AND BOC_GAMES.OUTCOME = \"draw\" AND BOC_GAMES.BOARD_ID = ?", (board_id,)).fetchone()["N"]
+    step_size = rm_params["RATING_ADJUSTMENT_STEP_SCALE"] * N / (N + rm_params["RIGIDITY"])
+
+    # 3. Load player parameters -- i.e. rating
+
+    # 4. Prior estimates
+    p_prior = (rm_params["INITIAL_ESTIMATE_DRAW_PROBABILITY"] + N * board_hot["p_draw"] / rm_params["RIGIDITY"]) / (1.0 + N / rm_params["RIGIDITY"])
+    h_prior = N * board_hot["h"] / (N + rm_params["RIGIDITY"])
+    h_std_prior = (rm_params["INITIAL_ESTIMATE_HANDICAP_STD"] + N * board_hot["h_std"] / rm_params["RIGIDITY"]) / (1.0 + N / rm_params["RIGIDITY"])
+
+    print("Priors", p_prior, h_prior, h_std_prior)
+
+    log_regularisation = 0.01
+
+    try:
+        # 5. log-prior
+        def log_prior(h, kappa):
+            if kappa < 0:
+                return -np.inf
+            h_term = -0.5 * ((h - h_prior) / h_std_prior) * ((h - h_prior) / h_std_prior)
+            print()
+            kappa_term = N * p_prior * np.log(kappa + log_regularisation) - (N + 2) * np.log(kappa + 2) #regularised
+            return(h_term + kappa_term)
+
+        # 6. log-likelihood
+        def log_likelihood(h, kappa):
+            if kappa < 0:
+                return(log_likelihood(h, 0.0))
+            res_sum = 0.0
+            for prior_game in board_prior_games:
+                x = (prior_game["DELTA_R"] + h) / rm_params["RATING_DIFFERENCE_SCALE"]
+                #power_of_x = np.power(10, x)
+                #res_sum -= np.log(power_of_x + 1 / power_of_x + kappa + log_regularisation)
+                res_sum -= safe_power_sum(x, kappa)
+                if prior_game["OUTCOME"] == "A":
+                    res_sum += x * np.log(10)
+                elif prior_game["OUTCOME"] == "B":
+                    res_sum -= x * np.log(10)
+            return(res_sum)
+
+        # 7. maximum of log posterior
+        def log_posterior(params):
+
+            h, kappa = params
+            return(log_prior(h, kappa) + log_likelihood(h, kappa))
+        max_res = minimize(
+                lambda params: -log_posterior(params),
+                x0 = [h_prior, 2 * p_prior / (1.0 - p_prior)],
+                bounds = [(None, None), (0, None)]
+            )
+        h_max, kappa_max = max_res.x
+        log_post_max = log_posterior(max_res.x)
+
+        # 8. Finding bounds around the max
+        bounds_factor = 5.0
+        h_bounds_min = h_max - bounds_factor * h_std_prior
+        h_bounds_max = h_max + bounds_factor * h_std_prior
+        # we calculate approximate kappa_std from the Beta distribution properties
+        kappa_std = 2 * p_prior / (N + 1)
+        kappa_bounds_max = kappa_max + bounds_factor * kappa_std
+
+        # 9. unnormalised posterior
+        def unnorm_posterior(params):
+            h, kappa = params
+            return(np.exp( log_prior(h, kappa) + log_likelihood(h, kappa) - log_post_max ))
+
+        # 10. Find the normalisation coefficient
+        Z_raw, Z_err_raw = cubature(unnorm_posterior,
+                2, 1,
+                np.array([h_bounds_min, 0]), np.array([h_bounds_max, kappa_bounds_max])
+            )
+        Z = Z_raw[0]
+        Z_err = Z_err_raw[0]
+
+        # 11. Find the functions for all the expectation values you want to calculate
+        def func_A_win(params):
+            h, kappa = params
+            x = (delta_R + h) / rm_params["RATING_DIFFERENCE_SCALE"]
+            return( unnorm_posterior(params) * r_sigma(x, kappa) / Z)
+
+        def func_draw(params):
+            h, kappa = params
+            if kappa < 0:
+                return(func_draw(h, 0))
+            x = (delta_R + h) / rm_params["RATING_DIFFERENCE_SCALE"]
+            return( unnorm_posterior(params) * kappa / (Z * ( np.power(10, x) + np.power(10, -x) + kappa )))
+
+        def func_h(params):
+            h, kappa = params
+            return( unnorm_posterior(params) * h / Z)
+
+        def func_h_sq(params):
+            h, kappa = params
+            return( unnorm_posterior(params) * h * h / Z)
+
+        def func_kappa(params):
+            h, kappa = params
+            return( unnorm_posterior(params) * kappa / Z)
+
+        # 12. Find the expectationp_draw_std values
+        exp_A_win_raw, exp_A_win_err_raw = cubature(func_A_win,
+                2, 1,
+                np.array([h_bounds_min, 0]), np.array([h_bounds_max, kappa_bounds_max])
+            )
+        exp_A_win = exp_A_win_raw[0]
+        exp_A_win_err = exp_A_win_err_raw[0]
+
+        exp_draw_raw, exp_draw_err_raw = cubature(func_draw,
+                2, 1,
+                np.array([h_bounds_min, 0]), np.array([h_bounds_max, kappa_bounds_max])
+            )
+        exp_draw = exp_draw_raw[0]
+        exp_draw_err = exp_draw_err_raw[0]
+
+        exp_h_raw, exp_h_err_raw = cubature(func_h,
+                2, 1,
+                np.array([h_bounds_min, 0]), np.array([h_bounds_max, kappa_bounds_max])
+            )
+        exp_h = exp_h_raw[0]
+        exp_h_err = exp_h_err_raw[0]
+
+        exp_h_sq_raw, exp_h_sq_err_raw = cubature(func_h_sq,
+                2, 1,
+                np.array([h_bounds_min, 0]), np.array([h_bounds_max, kappa_bounds_max])
+            )
+        exp_h_sq = exp_h_sq_raw[0]
+        exp_h_sq_err = exp_h_sq_err_raw[0]
+
+        exp_kappa_raw, exp_kappa_err_raw = cubature(func_kappa,
+                2, 1,
+                np.array([h_bounds_min, 0]), np.array([h_bounds_max, kappa_bounds_max])
+            )
+        exp_kappa = exp_kappa_raw[0]
+        exp_kappa_err = exp_kappa_err_raw[0]
+
+        exp_S_A = exp_A_win + 0.5 * exp_draw
+
+        new_h_std = np.sqrt(exp_h_sq - exp_h * exp_h)
+
+        # 13. Calculate the score of player A and their rating adjustment
+
+        if outcome == "A":
+            S_A = 1.0
+        elif outcome == "B":
+            S_A = 0.0
+        elif outcome == "draw":
+            S_A = 0.5
+
+        R_A_adjustment = step_size * (S_A - exp_S_A)
+
+        # 14. Log the routine and return the new values
+        log_msg = f"Game rated with h_max = {h_max}, kappa_max = {kappa_max}, h bounds ({h_bounds_min}:{h_bounds_max}), kappa bounds (0:{kappa_bounds_max}), log_post_max = {log_post_max}, Z = {Z} pm {Z_err}, exp_A_win = {exp_A_win} pm {exp_A_win_err}, exp_draw = {exp_draw} pm {exp_draw_err}, exp_h = {exp_h} pm {exp_h_err}, exp_h_sq = {exp_h_sq} pm {exp_h_sq_err}, exp_kappa = {exp_kappa} pm {exp_kappa_err}; calc. result is R_A_ADJ = {R_A_adjustment}, new h = {exp_h} pm {new_h_std}, new kappa = {exp_kappa}, new step size = {step_size}"
+        db.execute("INSERT INTO BOC_SYSTEM_LOGS (PRIORITY, ORIGIN, MESSAGE) VALUES (9, \"db.rate_game\", ?)", (log_msg, ))
+        db.commit()
+
+        return(R_A_adjustment, exp_h, new_h_std, exp_kappa, step_size)
+
+
+
+
+    except Exception as e:
+        db.execute("INSERT INTO BOC_SYSTEM_LOGS (PRIORITY, ORIGIN, MESSAGE) VALUES (4, \"db.rate_game\", ?)", (str(e),))
+        db.commit()
+
+        # We calculate the rating adjustment naively, without adjusting the handicap
+        x = (delta_R + board_hot["h"]) / rm_params["RATING_DIFFERENCE_SCALE"]
+        exp_S_A = ( np.power(10, x) + board_hot["kappa"] / 2.0 ) / ( np.power(10, x) + np.power(10, -x) + board_hot["kappa"] )
+
+        if outcome == "A":
+            S_A = 1.0
+        elif outcome == "B":
+            S_A = 0.0
+        elif outcome == "draw":
+            S_A = 0.5
+
+        return(step_size * (S_A - exp_S_A), board_hot["h"], board_hot["h_std"], board_hot["kappa"], step_size)
+
+
+
+
+
+
+
+
+
+
 
 

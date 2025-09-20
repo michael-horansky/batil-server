@@ -28,12 +28,6 @@ class PageHome(Page):
         self.board_template = json.load(board_template_file)
         board_template_file.close()
 
-    def resolve_request(self):
-        if request.method == 'POST':
-            # We check what action is happening
-            for key, val in request.form.items():
-                print(f"  {key} --> {val} ({type(val)})")
-
     def resolve_dynamic_get_form(self):
         # Table navigation GET preparation
         get_args = {}
@@ -929,7 +923,6 @@ class PageHome(Page):
 
 
     def render_page(self):
-        self.resolve_request()
         self.html_open("style")
         self.html_navbar()
 

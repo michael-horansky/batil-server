@@ -69,6 +69,10 @@ def create_app(test_config=None):
     from .routes import user
     app.register_blueprint(user.bp)
 
+    # Admin access point blueprint
+    from .routes import admin
+    app.register_blueprint(admin.bp)
+
     # Home blueprint
     from .routes import home
     app.register_blueprint(home.bp)

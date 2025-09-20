@@ -19,6 +19,11 @@ class Page(HTMLObject):
         else:
             self.default_section = 0
 
+        self.client_row = None
+        if g.user:
+            db = get_db()
+            self.client_row = db.execute("SELECT PRIVILEGE FROM BOC_USER WHERE USERNAME = ?", (g.user["username"],)).fetchone()
+
     def resolve_request(self):
         if request.method == 'POST':
             pass
@@ -46,6 +51,10 @@ class Page(HTMLObject):
             navlist.append([
                     f"    <a href=\"{ url_for('auth.logout') }\">Log Out</a>"
                 ])
+            if self.client_row["PRIVILEGE"] == "ADMIN":
+                navlist.append([
+                        f"    <a href=\"{ url_for('admin.admin') }\">Admin</a>"
+                    ])
         else:
             # logged out
             navlist.append([

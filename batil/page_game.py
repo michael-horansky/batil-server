@@ -6,7 +6,7 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for
 )
 
-from batil.db import get_db, get_table_as_list_of_dicts
+from batil.db import get_db, get_table_as_list_of_dicts, conclude_and_rate_game
 
 from batil.engine.game_logic.class_Gamemaster import Gamemaster
 from batil.engine.rendering.class_HTMLRenderer import HTMLRenderer
@@ -128,7 +128,7 @@ class PageGame(Page):
                 db.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)", (self.game_id, turn_index, commander, command_rep))
 
         if output_message.header == "concluded":
-            db.execute("UPDATE BOC_GAMES SET D_FINISHED = CURRENT_TIMESTAMP, STATUS = \"concluded\", OUTCOME = ? WHERE GAME_ID = ?", (output_message.msg, self.game_id))
+            conclude_and_rate_game(self.game_id, output_message.msg)
             self.game_status = "concluded"
 
         db.commit()
@@ -146,7 +146,7 @@ class PageGame(Page):
             game_draw_status = db.execute("SELECT DRAW_OFFER_STATUS FROM BOC_GAMES WHERE GAME_ID = ?", (self.game_id,)).fetchone()["DRAW_OFFER_STATUS"]
             if (active_client == "A" and game_draw_status == "B_offer") or (active_client == "B" and game_draw_status == "A_offer"):
                 # draw accepted
-                db.execute("UPDATE BOC_GAMES SET DRAW_OFFER_STATUS = \"accepted\", OUTCOME = \"draw\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ?", (self.game_id,))
+                conclude_and_rate_game(self.game_id, "draw", "accepted", f"{opposite_client}_offer")
                 db.commit()
             elif game_draw_status == "no_offer":
                 db.execute(f"UPDATE BOC_GAMES SET DRAW_OFFER_STATUS = \"{active_client}_offer\" WHERE GAME_ID = ?", (self.game_id,))
@@ -158,11 +158,11 @@ class PageGame(Page):
             db.execute(f"UPDATE BOC_GAMES SET DRAW_OFFER_STATUS = \"no_offer\" WHERE GAME_ID = ? AND DRAW_OFFER_STATUS = \"{opposite_client}_offer\"", (self.game_id,))
             db.commit()
         elif request.form.get("action_game_management") == "accept_draw_offer":
-            db.execute(f"UPDATE BOC_GAMES SET DRAW_OFFER_STATUS = \"accepted\", OUTCOME = \"draw\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ? AND DRAW_OFFER_STATUS = \"{opposite_client}_offer\"", (self.game_id,))
+            conclude_and_rate_game(self.game_id, "draw", "accepted", f"{opposite_client}_offer")
             db.commit()
 
         elif request.form.get("action_game_management") == "resign":
-            db.execute(f"UPDATE BOC_GAMES SET OUTCOME = \"{opposite_client}\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ?", (self.game_id,))
+            conclude_and_rate_game(self.game_id, opposite_client)
             db.commit()
 
     def resolve_time_control(self):
@@ -301,20 +301,20 @@ class PageGame(Page):
                 # draw
                 self.game_status = "concluded"
                 self.game_outcome = "draw"
-                db.execute(f"UPDATE BOC_GAMES SET OUTCOME = \"draw\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ?", (self.game_id,))
+                conclude_and_rate_game(self.game_id, self.game_outcome)
                 db.commit()
             else:
                 # opponent won
                 self.game_status = "concluded"
                 self.game_outcome = opposite_client
-                db.execute(f"UPDATE BOC_GAMES SET OUTCOME = \"{opposite_client}\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ?", (self.game_id,))
+                conclude_and_rate_game(self.game_id, self.game_outcome)
                 db.commit()
         else:
             if opponent_timeout:
                 # client won
                 self.game_status = "concluded"
                 self.game_outcome = client_role
-                db.execute(f"UPDATE BOC_GAMES SET OUTCOME = \"{client_role}\", STATUS = \"concluded\", D_FINISHED = CURRENT_TIMESTAMP WHERE GAME_ID = ?", (self.game_id,))
+                conclude_and_rate_game(self.game_id, self.game_outcome)
                 db.commit()
 
     def load_game(self):
