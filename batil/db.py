@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import time
 import string
 import numpy as np
 from scipy.optimize import minimize
@@ -720,11 +721,24 @@ def rate_game(game_id, board_id, player_A, player_B, delta_R, outcome):
         # 14. Log the routine and return the new values
         log_msg = f"Game rated with h_max = {h_max}, kappa_max = {kappa_max}, h bounds ({h_bounds_min}:{h_bounds_max}), kappa bounds (0:{kappa_bounds_max}), log_post_max = {log_post_max}, Z = {Z} pm {Z_err}, exp_A_win = {exp_A_win} pm {exp_A_win_err}, exp_draw = {exp_draw} pm {exp_draw_err}, exp_h = {exp_h} pm {exp_h_err}, exp_h_sq = {exp_h_sq} pm {exp_h_sq_err}, exp_kappa = {exp_kappa} pm {exp_kappa_err}; calc. result is R_A_ADJ = {R_A_adjustment}, new h = {exp_h} pm {new_h_std}, new kappa = {exp_kappa}, new step size = {step_size}"
         db.execute("INSERT INTO BOC_SYSTEM_LOGS (PRIORITY, ORIGIN, MESSAGE) VALUES (9, \"db.rate_game\", ?)", (log_msg, ))
+
+        # 15. If not frozen, mark the date of the earliest game on the board
+        update_earliest_date = False
+        if rm_params["FREEZING_CONDITION"] is None:
+            update_earliest_date = True
+        elif N < rm_params["FREEZING_CONDITION"]:
+            update_earliest_date = True
+
+        if update_earliest_date:
+            db.execute("""
+                UPDATE BOC_HOUSEKEEPING_LOGS
+                    SET D_EARLIEST_RECALC = (SELECT MIN(D_FINISHED) FROM BOC_GAMES WHERE BOARD_ID = ?)
+                WHERE D_PERFORMED = \"SCHEDULED\"
+                """, (board_id,))
+
+
         db.commit()
-
         return(R_A_adjustment, exp_h, new_h_std, exp_kappa, step_size)
-
-
 
 
     except Exception as e:
@@ -746,8 +760,159 @@ def rate_game(game_id, board_id, player_A, player_B, delta_R, outcome):
 
 
 
+def rating_housekeeping():
+    db = get_db()
 
+    try:
+        # Start timing benchmark
+        start_time = time.monotonic()
 
+        # Find the scheduled housekeeping row
+        scheduled_housekeeping_row = db.execute("SELECT PROCESS_ID, D_EARLIEST_RECALC FROM BOC_HOUSEKEEPING_LOGS WHERE D_PERFORMED = \"SCHEDULED\" LIMIT 1").fetchone()
+
+        if scheduled_housekeeping_row is None:
+            # This should never happen
+            db.execute("INSERT INTO BOC_SYSTEM_LOGS (PRIORITY, ORIGIN, MESSAGE) VALUES (2, \"db.rating_housekeeping\", \"The housekeeping daemon found no job scheduled. A housekeeping job is being scheduled automatically.\")")
+            db.execute("INSERT INTO BOC_HOUSEKEEPING_LOGS (D_PERFORMED) VALUES (\"SCHEDULED\")")
+            db.commit()
+            close_db()
+            return(-1)
+
+        # Select the total number of games, boards, and users, for stats.
+        total_games = db.execute("SELECT COUNT(*) AS COUNT_GAMES FROM BOC_GAMES WHERE STATUS = \"concluded\"").fetchone()["COUNT_GAMES"]
+        total_boards = db.execute("SELECT COUNT(*) AS COUNT_BOARDS FROM BOC_BOARDS WHERE IS_PUBLIC = 1").fetchone()["COUNT_BOARDS"]
+        total_users = db.execute("SELECT COUNT(*) AS COUNT_USERS FROM BOC_USER WHERE STATUS = \"active\"").fetchone()["COUNT_USERS"]
+
+        if scheduled_housekeeping_row["D_EARLIEST_RECALC"] is None:
+            # No user interaction warranted any recalculations (possibly due to zero game submissions). This is fine.
+            db.execute("INSERT INTO BOC_SYSTEM_LOGS (PRIORITY, ORIGIN, MESSAGE) VALUES (9, \"db.rating_housekeeping\", \"No user interaction warranted any recalculations (possibly due to zero game submissions). This is fine.\")")
+            db.execute("UPDATE BOC_HOUSEKEEPING_LOGS SET D_PERFORMED = CURRENT_TIMESTAMP, TIME_TAKEN = 0, GAMES_AFFECTED = 0, USERS_AFFECTED = 0, BOARDS_AFFECTED = 0, GAMES_TOTAL = ?, USERS_TOTAL = ?, BOARDS_TOTAL = ? WHERE PROCESS_ID = ?", (total_games, total_users, total_boards, scheduled_housekeeping_row["PROCESS_ID"]))
+            # Schedule the next job
+            db.execute("INSERT INTO BOC_HOUSEKEEPING_LOGS (D_PERFORMED) VALUES (\"SCHEDULED\")")
+            db.commit()
+            close_db()
+            return(0)
+
+        # Now we know there is a job scheduled which asks for a recalculation. Let's go.
+        count_affected_games = db.execute("SELECT COUNT(*) AS AFFECTED_GAMES FROM BOC_GAMES WHERE STATUS = \"concluded\" AND D_FINISHED > :d_recalc", {"d_recalc" : scheduled_housekeeping_row["D_EARLIEST_RECALC"]}).fetchone()["AFFECTED_GAMES"]
+        if count_affected_games == 0:
+            # No game was affected
+            db.execute("INSERT INTO BOC_SYSTEM_LOGS (PRIORITY, ORIGIN, MESSAGE) VALUES (9, \"db.rating_housekeeping\", \"No game was affected by scheduled recalculation. This is fine.\")")
+            db.execute("UPDATE BOC_HOUSEKEEPING_LOGS SET D_PERFORMED = CURRENT_TIMESTAMP, TIME_TAKEN = 0, GAMES_AFFECTED = 0, USERS_AFFECTED = 0, BOARDS_AFFECTED = 0, GAMES_TOTAL = ?, USERS_TOTAL = ?, BOARDS_TOTAL = ? WHERE PROCESS_ID = ?", (total_games, total_users, total_boards, scheduled_housekeeping_row["PROCESS_ID"]))
+            # Schedule the next job
+            db.execute("INSERT INTO BOC_HOUSEKEEPING_LOGS (D_PERFORMED) VALUES (\"SCHEDULED\")")
+            db.commit()
+            close_db()
+            return(0)
+
+        # We create a temp table of affected users
+        initial_rating = db.execute("SELECT PARAMETER_VALUE FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_RATING\"").fetchone()["PARAMETER_VALUE"]
+        db.execute("DROP TABLE IF EXISTS HK_USERS")
+        db.execute("""
+            CREATE TEMP TABLE HK_USERS (
+                USERNAME TEXT PRIMARY KEY,
+                RATING REAL
+            )
+            """)
+        db.execute("""
+            INSERT INTO HK_USERS (USERNAME, RATING)
+            SELECT DISTINCT username, NULL
+            FROM (
+                SELECT PLAYER_A AS username
+                FROM BOC_GAMES
+                WHERE STATUS = \"concluded\"
+                AND D_FINISHED > :d_recalc
+                UNION
+                SELECT PLAYER_B AS username
+                FROM BOC_GAMES
+                WHERE STATUS = \"concluded\"
+                AND D_FINISHED > :d_recalc
+            )
+            """, {"d_recalc" : scheduled_housekeeping_row["D_EARLIEST_RECALC"]})
+
+        count_affected_users = db.execute("SELECT COUNT(*) AS AFFECTED_USERS FROM HK_USERS").fetchone()["AFFECTED_USERS"]
+
+        # We now sum up all the rating differences from games which are NOT to be recalculated, to reach the "snapshotted" hot values of player rating for affected players
+        db.execute("""
+            WITH RATING_ADJUSTMENTS AS (
+                SELECT PLAYER_A AS USERNAME, IFNULL(SUM(R_A_ADJUSTMENT), 0) AS TOTAL
+                FROM BOC_GAMES
+                WHERE STATUS = \"concluded\" AND D_FINISHED <= :d_recalc
+                GROUP BY PLAYER_A
+                UNION ALL
+                SELECT PLAYER_B AS USERNAME, IFNULL(SUM(-R_A_ADJUSTMENT), 0) AS TOTAL
+                FROM BOC_GAMES
+                WHERE STATUS = \"concluded\" AND D_FINISHED <= :d_recalc
+                GROUP BY PLAYER_B
+            ),
+            AGGREGATED_ADJUSTMENT AS (
+                SELECT USERNAME, SUM(TOTAL) AS TOTAL
+                FROM RATING_ADJUSTMENTS
+                GROUP BY USERNAME
+            )
+            UPDATE HK_USERS
+            SET RATING = (:r_init
+                + COALESCE((SELECT TOTAL FROM AGGREGATED_ADJUSTMENT WHERE AGGREGATED_ADJUSTMENT.USERNAME = HK_USERS.USERNAME), 0)
+            )
+            """, {"r_init" : initial_rating, "d_recalc" : scheduled_housekeeping_row["D_EARLIEST_RECALC"]})
+
+        # now we loop through affected games ordered by D_FINISHED and calculate the new rating adjustments
+        affected_games = db.execute("""
+            SELECT
+                BOC_GAMES.GAME_ID AS GAME_ID, BOC_GAMES.PLAYER_A AS PLAYER_A, BOC_GAMES.PLAYER_B AS PLAYER_B, BOC_GAMES.OUTCOME AS OUTCOME,
+                BOC_BOARDS.HANDICAP AS HANDICAP, BOC_BOARDS.KAPPA AS KAPPA, BOC_BOARDS.STEP_SIZE AS STEP_SIZE
+            FROM
+                BOC_GAMES
+                INNER JOIN BOC_BOARDS ON BOC_BOARDS.BOARD_ID = BOC_GAMES.BOARD_ID
+            WHERE BOC_GAMES.STATUS = \"concluded\" AND BOC_GAMES.D_FINISHED > :d_recalc
+            ORDER BY D_FINISHED ASC
+            """, {"d_recalc" : scheduled_housekeeping_row["D_EARLIEST_RECALC"]}).fetchall()
+
+        count_affected_boards = db.execute("SELECT COUNT(DISTINCT BOARD_ID) AS AFFECTED_BOARDS FROM BOC_GAMES WHERE BOC_GAMES.STATUS = \"concluded\" AND BOC_GAMES.D_FINISHED > :d_recalc", {"d_recalc" : scheduled_housekeeping_row["D_EARLIEST_RECALC"]}).fetchone()["AFFECTED_BOARDS"]
+
+        # Initialise dicts for intermediate updates
+        dict_hk_users = {row["USERNAME"] : row["RATING"] for row in db.execute("SELECT USERNAME, RATING FROM HK_USERS").fetchall()}
+        dict_game_updates = {}
+
+        rating_difference_scale = db.execute("SELECT PARAMETER_VALUE FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"RATING_DIFFERENCE_SCALE\"").fetchone()["PARAMETER_VALUE"]
+
+        for affected_game in affected_games:
+            # We calculate the new rating
+            delta_R = dict_hk_users[affected_game["PLAYER_A"]] - dict_hk_users[affected_game["PLAYER_B"]]
+            x = (delta_R + affected_game["HANDICAP"]) / rating_difference_scale
+            exp_S_A = ( np.power(10, x) + affected_game["KAPPA"] / 2.0 ) / ( np.power(10, x) + np.power(10, -x) + affected_game["KAPPA"] )
+
+            S_A = {"A": 1.0, "B": 0.0, "draw": 0.5}[affected_game["OUTCOME"]]
+
+            new_rating_adj = affected_game["STEP_SIZE"] * (S_A - exp_S_A)
+            dict_game_updates[affected_game["GAME_ID"]] = new_rating_adj
+            dict_hk_users[affected_game["PLAYER_A"]] += new_rating_adj
+            dict_hk_users[affected_game["PLAYER_B"]] -= new_rating_adj
+
+        db.executemany(
+            "UPDATE BOC_USER SET RATING = ? WHERE USERNAME = ?",
+            [(r, u) for u, r in dict_hk_users.items()]
+        )
+        db.executemany(
+            "UPDATE BOC_GAMES SET R_A_ADJUSTMENT = ? WHERE GAME_ID = ?",
+            [(r, g) for g, r in dict_game_updates.items()]
+        )
+
+        # Note down benchmark time
+        end_time = time.monotonic()
+        elapsed_ms = int((end_time - start_time) * 1000)
+
+        # Now update the log and schedule a new job
+        db.execute("UPDATE BOC_HOUSEKEEPING_LOGS SET D_PERFORMED = CURRENT_TIMESTAMP, TIME_TAKEN = ?, GAMES_AFFECTED = ?, USERS_AFFECTED = ?, BOARDS_AFFECTED = ?, GAMES_TOTAL = ?, USERS_TOTAL = ?, BOARDS_TOTAL = ? WHERE PROCESS_ID = ?", (elapsed_ms, count_affected_games, count_affected_users, count_affected_boards, total_games, total_users, total_boards, scheduled_housekeeping_row["PROCESS_ID"]))
+        db.execute("INSERT INTO BOC_HOUSEKEEPING_LOGS (D_PERFORMED) VALUES (\"SCHEDULED\")")
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        db.execute("INSERT INTO BOC_SYSTEM_LOGS (PRIORITY, ORIGIN, MESSAGE) VALUES (2, \"db.rating_housekeeping\", ?)", (str(e),))
+        db.commit()
+
+    close_db()
+    return(0)
 
 
 
