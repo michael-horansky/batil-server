@@ -6,6 +6,7 @@ html, body {
   background: white;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -56,6 +57,7 @@ hr {
   display: flex;
   height: calc(100vh - 60px); /* subtract navbar height */
   min-height: 0;
+  min-width: 0;
 }
 
 /* Main Content */
@@ -66,6 +68,7 @@ hr {
   align-items: stretch;    /* let inner fill height */
   background: #f8f8f8;     /* just to see boundaries */
   overflow: hidden;        /* prevent scrollbars if content fits */
+  min-width: 0;
 }
 
 #main_content > header {
@@ -108,6 +111,7 @@ hr {
   display: flex;
   max-width: 1280px;        /* constrain width */
   width: 100%;              /* take full width up to max */
+  min-width: 0;
   background: white;        /* just demo */
   overflow-y: auto;         /* scroll vertically if content too tall */
 }
@@ -116,6 +120,7 @@ hr {
   width: 100%;
   padding: 20px;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 
@@ -288,6 +293,7 @@ input[type=submit] {
 
 .action_form_container {
   padding: 0 0 1em 0;
+  min-width: 0;
 }
 
 .action_form_tabs {
@@ -337,6 +343,7 @@ input[type=submit] {
     font-size: 1.05em;
     font-weight: 500;
     color: #333;
+    overflow-x: auto;
 }
 .action_form_section {
   display: none;
@@ -387,6 +394,9 @@ input[type=submit] {
   cursor: pointer;
   transition: background 0.2s, box-shadow 0.2s;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.action_form_button:disabled {
+  pointer-events: none;
 }
 .action_form_button_label {
     align-self: center;

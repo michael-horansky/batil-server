@@ -6,7 +6,7 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, current_app
 )
 
-from batil.db import get_db, get_pfp_source, send_friend_request, accept_friend_request, decline_friend_request, withdraw_friend_request, unfriend_user, block_user, unblock_user
+from batil.db import get_db, get_table_as_list_of_dicts, create_new_tutorial
 
 from batil.aux_funcs import *
 
@@ -27,6 +27,10 @@ class PageAdmin(Page):
         get_args.update(ActionTable.get_navigation_keywords("system_logs", ["D_LOGGED", "PRIORITY", "ORIGIN", "MESSAGE"]))
         get_args.update(ActionForm.get_args("rating_model"))
         get_args.update(ActionTable.get_navigation_keywords("housekeeping_logs", ["D_PERFORMED"]))
+        get_args.update(ActionForm.get_args("new_tutorial"))
+        get_args.update(ActionTable.get_navigation_keywords("select_board_for_new_tutorial", ["BOARD_NAME"]))
+        get_args.update(ActionForm.get_args("edit_tutorials"))
+        get_args.update(ActionTable.get_navigation_keywords("your_tutorials", ["BOARD_NAME"]))
 
         return(get_args)
 
@@ -53,6 +57,27 @@ class PageAdmin(Page):
         system_log_form.realise_form()
         self.structured_html.append(system_log_form.structured_html)
 
+    def resolve_action_new_tutorial(self):
+        db = get_db()
+        for key, val in request.form.items():
+            print(f"{key} -> {val}")
+        if "action_new_tutorial" in request.form:
+            if request.form.get("action_new_tutorial") == "create_tutorial":
+                ruleset_selection = {}
+                all_rulegroups_raw = db.execute("SELECT RULE_GROUP FROM BOC_RULEGROUPS").fetchall()
+                all_rulegroups = []
+                for rulegroup_row in all_rulegroups_raw:
+                    if request.form.get(rulegroup_row["RULE_GROUP"]) is None:
+                        raise Exception("Missing selection in ruleset table")
+                    else:
+                        ruleset_selection[rulegroup_row["RULE_GROUP"]] = request.form.get(rulegroup_row["RULE_GROUP"])
+                selected_board_id = int(request.form.get("action_table_select_board_for_new_tutorial_selected_row"))
+                create_new_tutorial(g.user["username"], selected_board_id, ruleset_selection)
+
+    def resolve_action_edit_tutorials(self):
+        for key, val in request.form.items():
+            print(f"{key} -> {val}")
+
     def render_section_stats(self):
         self.structured_html.append("<p>statistics about number of users, games, challenges, etc.</p>")
 
@@ -74,13 +99,73 @@ class PageAdmin(Page):
         housekeeping_form.realise_form()
         self.structured_html.append(housekeeping_form.structured_html)
 
+    def render_section_tutorials(self):
+        # Here you can make tutorials for any of your boards (they don't have to be public)
+        db = get_db()
+
+        # Create a new tutorial
+
+        new_tutorial_form = ActionForm("new_tutorial", "New tutorial", "admin")
+        new_tutorial_form.initialise_tabs(["Select rules", "Select board"])
+
+        select_rules_dataset = get_table_as_list_of_dicts("SELECT RULE AS ID, RULE_GROUP AS \"GROUP\", DESCRIPTION, \"ORDER\", RESTRICTION, REQUIREMENT, LABEL FROM BOC_RULES", "ID", ["ID", "GROUP", "DESCRIPTION", "ORDER", "RESTRICTION", "REQUIREMENT", "LABEL"])
+        select_rulegroups_dataset = get_table_as_list_of_dicts("SELECT RULE_GROUP AS ID, DESCRIPTION, \"ORDER\" FROM BOC_RULEGROUPS", "ID", ["ID", "DESCRIPTION", "ORDER"])
+        select_rules_form = CascadeForm("select_rules_form", select_rulegroups_dataset, select_rules_dataset)
+        new_tutorial_form.add_to_tab(0, "content", select_rules_form.structured_html)
+
+        new_tutorial_form.add_ordered_table(1, "select_board_for_new_tutorial",
+            f"""SELECT BOARD_ID, BOARD_NAME
+            FROM BOC_BOARDS
+            WHERE AUTHOR = {json.dumps(g.user["username"])}""",
+            "BOARD_ID", ["BOARD_NAME"],
+            include_select = True,
+            headers = {"BOARD_NAME" : "Board"},
+            order_options = [["BOARD_NAME", "Board"]],
+            actions = {"view" : "View"},
+            filters = ["BOARD_NAME"],
+            action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
+            rows_per_view = 6
+            )
+
+        new_tutorial_form.add_button(1, "submit", "create_tutorial", "Create new tutorial", selection_condition = "action_table_select_board_for_new_tutorial_selected_row_input")
+
+        new_tutorial_form.realise_form()
+        self.structured_html.append(new_tutorial_form.structured_html)
+
+        # Edit existing tutorials
+
+        edit_tutorials_form = ActionForm("edit_tutorials", "Edit tutorials", "admin")
+        edit_tutorials_form.initialise_tabs(["Your tutorials"])
+        # TODO also number of moves
+        edit_tutorials_form.add_ordered_table(0, "your_tutorials", f"""
+            SELECT BOC_TUTORIALS.TUTORIAL_ID AS TUTORIAL_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.BOARD_ID AS BOARD_ID, BOC_TUTORIALS.STATUS AS STATUS, BOC_TUTORIALS.OUTCOME AS OUTCOME, BOC_TUTORIALS.D_CREATED AS D_CREATED, BOC_TUTORIALS.D_CHANGED AS D_CHANGED
+            FROM BOC_TUTORIALS
+                INNER JOIN BOC_BOARDS ON BOC_BOARDS.BOARD_ID = BOC_TUTORIALS.BOARD_ID
+            WHERE BOC_TUTORIALS.AUTHOR = {json.dumps(g.user["username"])}
+            """,
+            "TUTORIAL_ID", ["BOARD_ID", "BOARD_NAME", "STATUS", "OUTCOME", "D_CREATED", "D_CHANGED"],
+            include_select = False,
+            headers = {"BOARD_NAME" : "Board", "STATUS" : "Status", "OUTCOME" : "O.", "D_CREATED" : "Created", "D_CHANGED" : "Changed"},
+            order_options = [["D_CHANGED", "Changed"], ["D_CREATED", "Created"]],
+            actions = {"edit" : "Edit"},
+            action_instructions = {"edit" : {"type" : "link", "url_func" : (lambda datum : url_for("tutorial.tutorial", tutorial_id = datum["IDENTIFIER"]))}},
+            col_links = {"BOARD_NAME" : (lambda datum : url_for("board.board", board_id = datum["BOARD_ID"]))},
+            filters = ["BOARD_NAME"],
+            rows_per_view = 8)
+
+        edit_tutorials_form.realise_form()
+        self.structured_html.append(edit_tutorials_form.structured_html)
+
+
     def render_content_logged_in(self):
-        self.initialise_sections({"system_logs" : "System logs", "stats" : "Stats", "rating_model" : "Rating model"})
+        self.initialise_sections({"system_logs" : "System logs", "stats" : "Stats", "rating_model" : "Rating model", "tutorials" : "Tutorials"})
         self.render_section_system_logs()
         self.open_next_section()
         self.render_section_stats()
         self.open_next_section()
         self.render_section_rating_model()
+        self.open_next_section()
+        self.render_section_tutorials()
         self.close_sections()
 
     def render_content_logged_out(self):

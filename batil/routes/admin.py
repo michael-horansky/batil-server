@@ -38,3 +38,23 @@ def action_rating_model():
         return(redirect(url_for("admin.admin", section=2)))
     else:
         return(redirect(url_for("admin.admin", section=2, **get_args)))
+
+@bp.route('/action_new_tutorial', methods=['POST'])
+def action_new_tutorial():
+    rendered_page = PageAdmin()
+    rendered_page.resolve_action_new_tutorial()
+    get_args = rendered_page.resolve_dynamic_get_form()
+    if get_args is None:
+        return(redirect(url_for("admin.admin", section=3)))
+    else:
+        return(redirect(url_for("admin.admin", section=3, **get_args)))
+
+@bp.route('/action_edit_tutorials', methods=['POST'])
+def action_edit_tutorials():
+    rendered_page = PageAdmin()
+    rendered_page.resolve_action_edit_tutorials()
+    get_args = rendered_page.resolve_dynamic_get_form()
+    if get_args is None:
+        return(redirect(url_for("admin.admin", section=3)))
+    else:
+        return(redirect(url_for("admin.admin", section=3, **get_args)))

@@ -5,6 +5,7 @@ html, body {
   background: white;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 
@@ -56,6 +57,7 @@ hr {
   display: flex;
   height: calc(100vh - 60px); /* subtract navbar height */
   min-height: 0;
+  min-width: 0;
 }
 
 /* Sidebar */
@@ -133,6 +135,7 @@ hr {
   box-sizing: border-box;
   background: #fff;
   min-height: 0;
+  min-width: 0;
 }
 
 .main_content > header {
@@ -225,6 +228,7 @@ input[type=submit] {
 
 .action_form_container {
   padding: 0 0 1em 0;
+  min-width: 0;
 }
 
 .action_form_tabs {
@@ -274,6 +278,7 @@ input[type=submit] {
     font-size: 1.05em;
     font-weight: 500;
     color: #333;
+    overflow-x: auto;
 }
 .action_form_section {
   display: none;
@@ -359,6 +364,34 @@ input, textarea, select { width: 100%; padding: 8px; }
 }
 
 #action_form_rating_model {
+  display: flex;
+  flex-direction: column;
+}
+
+#tutorials {
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+#action_form_new_tutorial_container {
+  flex: 0 0 40%;    /* 0 grow, 0 shrink, basis 50% */
+  max-width: 40%;
+  min-width: 0;
+}
+
+#action_form_new_tutorial {
+  display: flex;
+  flex-direction: column;
+}
+
+#action_form_edit_tutorials_container {
+  flex: 1;
+  min-width: 0;
+}
+
+#action_form_edit_tutorials {
   display: flex;
   flex-direction: column;
 }

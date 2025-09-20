@@ -382,6 +382,22 @@ def decline_challenge(challenge_id):
     db.execute("UPDATE BOC_CHALLENGES SET STATUS = 'resolved' WHERE CHALLENGE_ID = ?", (challenge_id,))
     db.commit()
 
+# Just the same but for tutorials
+
+def create_new_tutorial(author, board_id, ruleset_selection):
+    db = get_db()
+    cur = db.cursor()
+    print("New tutorial by", author, board_id, ruleset_selection)
+    cur.execute("INSERT INTO BOC_TUTORIALS (BOARD_ID, AUTHOR, STATUS) VALUES (?, ?, 'in_progress')", (board_id, author))
+    new_tutorial_id = cur.lastrowid
+
+    for rg_name, rule_val in ruleset_selection.items():
+        cur.execute("INSERT INTO BOC_TUTORIAL_RULESETS (TUTORIAL_ID, RULE_GROUP, RULE) VALUES (?, ?, ?)", (new_tutorial_id, rg_name, rule_val))
+    db.commit()
+
+
+
+
 # User relationship management
 
 def send_friend_request(sender, receiver):

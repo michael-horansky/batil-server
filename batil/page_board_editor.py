@@ -15,6 +15,7 @@ class PageBoardEditor(Page):
     def __init__(self, board_id):
         super().__init__("Board")
         self.board_id = board_id
+        self.board_does_not_exist = True
 
         self.load_board()
 
@@ -104,6 +105,11 @@ class PageBoardEditor(Page):
             WHERE BOC_BOARDS.BOARD_ID = ? AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
             GROUP BY BOC_BOARDS.BOARD_ID;
             """, (self.board_id,)).fetchone()
+        if board_row is None:
+            self.board_does_not_exist = True
+            return(None)
+        self.board_does_not_exist = False
+
         static_representation = board_row["STATIC_REPRESENTATION"]
         setup_representation = board_row["SETUP_REPRESENTATION"]
 
@@ -157,6 +163,9 @@ class PageBoardEditor(Page):
         self.renderer.render_board()
 
     def render_page(self):
+        if self.board_does_not_exist:
+            return("ERROR: Board does not exist.")
+
         self.prepare_renderer()
 
         self.html_open("boc_board_editor")

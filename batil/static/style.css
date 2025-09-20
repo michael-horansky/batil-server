@@ -5,6 +5,7 @@ html, body {
   background: white;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 
@@ -56,6 +57,7 @@ hr {
   display: flex;
   height: calc(100vh - 60px); /* subtract navbar height */
   min-height: 0;
+  min-width: 0;
 }
 
 /* Sidebar */
@@ -133,6 +135,7 @@ hr {
   box-sizing: border-box;
   background: #fff;
   min-height: 0;
+  min-width: 0;
 }
 
 .main_content > header {
@@ -176,6 +179,7 @@ hr {
   overflow-y: hidden;
   display: none;
   min-height: 0;
+  min-width: 0;
 }
 
 .tab_content.active {
@@ -225,6 +229,7 @@ input[type=submit] {
 
 .action_form_container {
   padding: 0 0 1em 0;
+  min-width: 0;
 }
 
 .action_form_tabs {
@@ -274,6 +279,7 @@ input[type=submit] {
     font-size: 1.05em;
     font-weight: 500;
     color: #333;
+    overflow-x: auto;
 }
 .action_form_section {
   display: none;
@@ -349,6 +355,7 @@ input, textarea, select { width: 100%; padding: 8px; }
   display: flex;
   height : 100%;
   width : 100%;
+  min-width: 0;
   gap: 20px;        /* space between the forms */
   /*flex-wrap: wrap;  // let them wrap on small screens
   justify-content: flex-start;
@@ -356,7 +363,9 @@ input, textarea, select { width: 100%; padding: 8px; }
 }
 
 #action_form_new_game_container {
-  width : 50%;
+  flex: 0 0 50%;    /* 0 grow, 0 shrink, basis 50% */
+  max-width: 50%;
+  min-width: 0;
 }
 
 #play_forms_right {
@@ -364,6 +373,7 @@ input, textarea, select { width: 100%; padding: 8px; }
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
 }
 
 #play_forms_right form {

@@ -5,6 +5,8 @@
 # Navigation inside the viewer is done through links and GET tokens,
 # so that links to particular chapters are persistent.
 
+import re
+
 from batil.db import get_db
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for
@@ -94,6 +96,12 @@ class TreeDocumentViewer(HTMLObject):
             f"  </nav>"
             ])
 
+    def parse_content_for_display(self, content_text):
+        # This function allows us to add not just html objects, but also dynamical python-calculated objects, such as links with URL_FOR
+        parsed_content_text = content_text
+
+        return(parsed_content_text)
+
     def make_main_content(self):
         if self.client_privilege == "ADMIN":
             self.structured_html.append([
@@ -106,7 +114,7 @@ class TreeDocumentViewer(HTMLObject):
                 f"      <div id=\"{self.iden}_section_container\" class=\"tdv_section_container\">",
                 f"        <div id=\"{self.iden}_section_read\" class=\"tdv_section_read tdv_section active\">",
                 f"          <div id=\"{self.iden}_section_read_content\" class=\"tdv_section_content\">",
-                self.display_element["CONTENT"],
+                self.parse_content_for_display(self.display_element["CONTENT"]),
                 f"          </div>",
                 f"        </div>",
                 f"        <div id=\"{self.iden}_section_edit\" class=\"tdv_section_edit tdv_section\">",
@@ -136,7 +144,7 @@ class TreeDocumentViewer(HTMLObject):
                 f"    <div id=\"{self.iden}_section_container\" class=\"tdv_section_container\">",
                 f"      <div id=\"{self.iden}_section_read\" class=\"tdv_section_read tdv_section active\">",
                 f"        <div id=\"{self.iden}_section_read_content\" class=\"tdv_section_content\">",
-                self.display_element["CONTENT"],
+                self.parse_content_for_display(self.display_element["CONTENT"]),
                 f"        </div>",
                 f"      </div>",
                 f"    </div>",
