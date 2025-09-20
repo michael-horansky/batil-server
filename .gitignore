@@ -1,4 +1,5 @@
 .venv/
+config_prod.py
 
 *.pyc
 __pycache__/

@@ -22,14 +22,14 @@ def create_app(test_config=None):
     )
 
     # Initialise mail server
-    app.config.update(
+    """app.config.update(
         MAIL_SERVER='smtp.gmail.com',
         MAIL_PORT=587,
         MAIL_USE_TLS=True,
         MAIL_USERNAME='noreply@batil.com',
         MAIL_PASSWORD='loopinsohard',
         MAIL_DEFAULT_SENDER=('Batil', 'noreply@batil.com')
-    )
+    )"""
 
     #mail.init_app(app)
 

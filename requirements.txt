@@ -1,0 +1,8 @@
+Flask
+gunicorn
+sqlite3
+jinja2
+werkzeug
+numpy
+scipy
+cubature
