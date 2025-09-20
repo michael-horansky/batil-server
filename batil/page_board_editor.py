@@ -90,17 +90,18 @@ class PageBoardEditor(Page):
                 BOC_BOARDS.BOARD_NAME AS BOARD_NAME,
                 BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED,
                 BOC_BOARDS.HANDICAP AS HANDICAP,
+                BOC_BOARDS.KAPPA / (BOC_BOARDS.KAPPA + 2) AS P_DRAW,
                 BOC_BOARDS.AUTHOR AS AUTHOR,
                 BOC_BOARDS.IS_PUBLIC AS IS_PUBLIC,
                 COUNT(DISTINCT BOC_GAMES.GAME_ID) AS GAMES_PLAYED,
-                COUNT(DISTINCT BOC_USER_SAVED_BOARDS.USERNAME) AS SAVED_BY
+                COUNT(DISTINCT BOC_USER_BOARD_RELATIONSHIPS.USERNAME) AS SAVED_BY
             FROM BOC_BOARDS
             LEFT JOIN BOC_GAMES
                 ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID
             AND BOC_GAMES.STATUS = "concluded"
-            LEFT JOIN BOC_USER_SAVED_BOARDS
-                ON BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID
-            WHERE BOC_BOARDS.BOARD_ID = ?
+            LEFT JOIN BOC_USER_BOARD_RELATIONSHIPS
+                ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID
+            WHERE BOC_BOARDS.BOARD_ID = ? AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
             GROUP BY BOC_BOARDS.BOARD_ID;
             """, (self.board_id,)).fetchone()
         static_representation = board_row["STATIC_REPRESENTATION"]
@@ -145,6 +146,7 @@ class PageBoardEditor(Page):
                 "author" : board_row["AUTHOR"],
                 "d_published" : board_row["d_published"],
                 "handicap" : board_row["HANDICAP"],
+                "p_draw" : board_row["P_DRAW"],
                 "games_played" : board_row["games_played"],
                 "saved_by" : board_row["saved_by"],
                 "client_action" : client_action

@@ -11,18 +11,5 @@
         "D_CHANGED" : "2025-03-19 15:58:35",
         "D_PUBLISHED" : "2025-03-19 15:58:35",
         "BOARD_NAME" : "Ambush"
-    },
-    {
-        "T_DIM" : 6,
-        "X_DIM" : 6,
-        "Y_DIM" : 6,
-        "STATIC_REPRESENTATION" : "XXXXXXX    XX    XX    XX    XXXXXXX",
-        "SETUP_REPRESENTATION" : "[{\"type\": \"add_stone\", \"faction\": \"A\", \"stone_type\": \"tank\", \"x\": 1, \"y\": 1, \"a\": 1}, {\"type\": \"add_stone\", \"faction\": \"A\", \"stone_type\": \"tank\", \"x\": 4, \"y\": 1, \"a\": 2}]",
-        "AUTHOR" : "batil",
-        "IS_PUBLIC" : 1,
-        "D_CREATED" : "2025-08-27 15:58:35",
-        "D_CHANGED" : "2025-08-27 15:58:35",
-        "D_PUBLISHED" : "2025-08-27 15:58:35",
-        "BOARD_NAME" : "Time travel test"
     }
 ]

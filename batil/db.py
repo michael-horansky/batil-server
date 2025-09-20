@@ -74,7 +74,7 @@ def init_db():
         users = cur.execute("SELECT USERNAME FROM BOC_USER").fetchall()
         for (username,) in users:
             cur.execute(
-                "INSERT INTO BOC_USER_SAVED_BOARDS (BOARD_ID, USERNAME, D_SAVED) VALUES (?, ?, CURRENT_TIMESTAMP)",
+                "INSERT INTO BOC_USER_BOARD_RELATIONSHIPS (BOARD_ID, USERNAME, STATUS, D_STATUS) VALUES (?, ?, \"saved\", CURRENT_TIMESTAMP)",
                 (board_id, username)
             )
 
@@ -112,10 +112,6 @@ def get_table_as_list_of_dicts(query, identifier, columns):
     for row in rows:
         raw_row_dict = dict(row)
         row_dict = {}
-        #row_identifier_list = []
-        #for identifier in identifiers:
-        #    row_identifier_list.append(f"{identifier} = {raw_row_dict[identifier]}")
-        #row_dict["IDENTIFIER"] = " AND ".join(row_identifier_list)
         row_dict["IDENTIFIER"] = raw_row_dict[identifier]
         for col in columns:
             row_dict[col] = raw_row_dict[col]
@@ -123,7 +119,6 @@ def get_table_as_list_of_dicts(query, identifier, columns):
     return(dict_rows)
 
 def add_default_board_script(default_board):
-    #return(f"WITH new_board AS (INSERT INTO BOC_BOARDS (T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, D_PUBLISHED, BOARD_NAME ) VALUES ({default_board["T_DIM"]}, {default_board["X_DIM"]}, {default_board["Y_DIM"]}, {json.dumps(default_board["STATIC_REPRESENTATION"])}, {json.dumps(default_board["SETUP_REPRESENTATION"])}, {json.dumps(default_board["AUTHOR"])}, {default_board["IS_PUBLIC"]}, {json.dumps(default_board["D_CREATED"])}, {json.dumps(default_board["D_CHANGED"])}, {json.dumps(default_board["D_PUBLISHED"])}, {json.dumps(default_board["BOARD_NAME"])})  RETURNING BOARD_ID) INSERT INTO BOC_USER_SAVED_BOARDS (BOARD_ID, USERNAME, D_SAVED) SELECT new_board.BOARD_ID, u.USERNAME, CURRENT_TIMESTAMP FROM BOC_USER u, new_board;")
     sql = """
         INSERT INTO BOC_BOARDS (
             T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, D_PUBLISHED, BOARD_NAME,
@@ -160,7 +155,7 @@ def add_user(username, email, password):
     default_boards = db.execute("SELECT BOARD_ID FROM BOC_BOARDS WHERE AUTHOR = \"batil\"").fetchall()
     for (board_id,) in default_boards:
         db.execute(
-            "INSERT INTO BOC_USER_SAVED_BOARDS (BOARD_ID, USERNAME, D_SAVED) VALUES (?, ?, CURRENT_TIMESTAMP)",
+            "INSERT INTO BOC_USER_BOARD_RELATIONSHIPS (BOARD_ID, USERNAME, STATUS, D_STATUS) VALUES (?, ?, \"saved\", CURRENT_TIMESTAMP)",
             (board_id, username)
         )
 
@@ -194,29 +189,79 @@ def new_blind_challenge(target_board, challenge_author, ruleset_selection):
             SELECT BOC_CHALLENGES.CHALLENGE_ID AS CHALLENGE_ID, BOC_CHALLENGES.RESERVED_GAME_ID AS RESERVED_GAME_ID, BOC_CHALLENGES.CHALLENGER AS CHALLENGER, BOC_CHALLENGES.CHALLENGEE AS CHALLENGEE, BOC_CHALLENGES.BOARD_ID AS BOARD_ID, BOC_CHALLENGES.STATUS AS CHALLENGE_STATUS
                 FROM BOC_CHALLENGES JOIN BOC_RULESETS ON BOC_CHALLENGES.RESERVED_GAME_ID = BOC_RULESETS.GAME_ID
                 JOIN EXPECTED_RULES ON BOC_RULESETS.RULE_GROUP = EXPECTED_RULES.RULEGROUP_ID AND BOC_RULESETS.RULE = EXPECTED_RULES.RULE_VALUE
-                WHERE CHALLENGE_STATUS = 'active' AND CHALLENGEE IS NULL AND CHALLENGER != ?
+                WHERE
+                    CHALLENGE_STATUS = 'active'
+                    AND CHALLENGEE IS NULL
+                    AND CHALLENGER != :a
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM BOC_USER_RELATIONSHIPS
+                        WHERE BOC_USER_RELATIONSHIPS.STATUS = \"blocked\"
+                        AND (
+                                (BOC_USER_RELATIONSHIPS.USER_1 = :a AND BOC_USER_RELATIONSHIPS.USER_2 = BOC_CHALLENGES.CHALLENGER)
+                            OR (BOC_USER_RELATIONSHIPS.USER_2 = :a AND BOC_USER_RELATIONSHIPS.USER_1 = BOC_CHALLENGES.CHALLENGER)
+                        )
+                    )
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM BOC_USER_BOARD_RELATIONSHIPS BOC_USER_BOARD_RELATIONSHIPS
+                        WHERE BOC_USER_BOARD_RELATIONSHIPS.STATUS = 'blocked'
+                        AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = :a
+                        AND BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_CHALLENGES.BOARD_ID
+                    )
                 GROUP BY BOC_CHALLENGES.CHALLENGE_ID
                 HAVING COUNT(*) = (SELECT COUNT(*) FROM EXPECTED_RULES)
                 ORDER BY BOC_CHALLENGES.DATE_CREATED ASC
-            """, (challenge_author,)).fetchone()
+            """, {"a" : challenge_author}).fetchone()
     else:
         # selected board, blind opponent
         retrieve_challenge = cur.execute("""
             SELECT BOC_CHALLENGES.CHALLENGE_ID AS CHALLENGE_ID, BOC_CHALLENGES.RESERVED_GAME_ID AS RESERVED_GAME_ID, BOC_CHALLENGES.CHALLENGER AS CHALLENGER, BOC_CHALLENGES.CHALLENGEE AS CHALLENGEE, BOC_CHALLENGES.BOARD_ID AS BOARD_ID, BOC_CHALLENGES.STATUS AS CHALLENGE_STATUS
                 FROM BOC_CHALLENGES JOIN BOC_RULESETS ON BOC_CHALLENGES.RESERVED_GAME_ID = BOC_RULESETS.GAME_ID
                 JOIN EXPECTED_RULES ON BOC_RULESETS.RULE_GROUP = EXPECTED_RULES.RULEGROUP_ID AND BOC_RULESETS.RULE = EXPECTED_RULES.RULE_VALUE
-                WHERE CHALLENGE_STATUS = 'active' AND (BOARD_ID = ? OR BOARD_ID IS NULL) AND CHALLENGEE IS NULL AND CHALLENGER != ?
+                WHERE
+                    CHALLENGE_STATUS = 'active'
+                    AND (BOARD_ID = :b OR BOARD_ID IS NULL)
+                    AND CHALLENGEE IS NULL
+                    AND CHALLENGER != :a
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM BOC_USER_RELATIONSHIPS
+                        WHERE BOC_USER_RELATIONSHIPS.STATUS = \"blocked\"
+                        AND (
+                                (BOC_USER_RELATIONSHIPS.USER_1 = :a AND BOC_USER_RELATIONSHIPS.USER_2 = BOC_CHALLENGES.CHALLENGER)
+                            OR (BOC_USER_RELATIONSHIPS.USER_2 = :a AND BOC_USER_RELATIONSHIPS.USER_1 = BOC_CHALLENGES.CHALLENGER)
+                        )
+                    )
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM BOC_USER_BOARD_RELATIONSHIPS BOC_USER_BOARD_RELATIONSHIPS
+                        WHERE BOC_USER_BOARD_RELATIONSHIPS.STATUS = 'blocked'
+                        AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = BOC_CHALLENGES.CHALLENGER
+                        AND BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = :b
+                    )
                 GROUP BY BOC_CHALLENGES.CHALLENGE_ID
                 HAVING COUNT(*) = (SELECT COUNT(*) FROM EXPECTED_RULES)
                 ORDER BY BOC_CHALLENGES.DATE_CREATED ASC
-            """, (target_board, challenge_author)).fetchone()
+            """, {"a" : challenge_author, "b" : target_board}).fetchone()
     if retrieve_challenge is not None:
         # Answer the proposition
         # If proposition also doesn't specify the board_id, we select a random board! exciting!
         if target_board is None:
             target_board_id = retrieve_challenge["BOARD_ID"]
             if target_board_id is None:
-                random_board_row = cur.execute("SELECT BOARD_ID FROM BOC_BOARDS WHERE BOARD_ID >= ABS(RANDOM()) % (SELECT MAX(BOARD_ID) + 1 FROM BOC_BOARDS) ORDER BY BOARD_ID").fetchone()
+                random_board_row = cur.execute("""
+                    SELECT BOC_BOARDS.BOARD_ID AS BOARD_ID FROM BOC_BOARDS WHERE
+                        BOC_BOARDS.BOARD_ID >= ABS(RANDOM()) % (SELECT MAX(BOC_BOARDS.BOARD_ID) + 1 FROM BOC_BOARDS)
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM BOC_USER_BOARD_RELATIONSHIPS BOC_USER_BOARD_RELATIONSHIPS
+                            WHERE BOC_USER_BOARD_RELATIONSHIPS.STATUS = 'blocked'
+                            AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = :a
+                            AND BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID
+                        )
+                    ORDER BY BOC_BOARDS.BOARD_ID
+                    """, {"a" : challenge_author}).fetchone()
                 target_board_id = random_board_row["BOARD_ID"]
         else:
             target_board_id = target_board
@@ -260,7 +305,10 @@ def new_blind_challenge(target_board, challenge_author, ruleset_selection):
         cur.execute("UPDATE BOC_CHALLENGES SET STATUS = 'resolved' WHERE CHALLENGE_ID = ?", (retrieve_challenge["CHALLENGE_ID"],))
     else:
         # If not, we create a new challenge proposition
-        cur.execute("INSERT INTO BOC_CHALLENGES (CHALLENGER) VALUES (?)", (g.user["username"],))
+        if target_board is None:
+            cur.execute("INSERT INTO BOC_CHALLENGES (CHALLENGER) VALUES (?)", (g.user["username"],))
+        else:
+            cur.execute("INSERT INTO BOC_CHALLENGES (CHALLENGER, BOARD_ID) VALUES (?, ?)", (g.user["username"], target_board))
         challenge_id = cur.lastrowid
         reserved_game_id = hash_number(challenge_id, length = 16)
         cur.execute("UPDATE BOC_CHALLENGES SET RESERVED_GAME_ID = ? WHERE CHALLENGE_ID = ?", (reserved_game_id, challenge_id))
@@ -314,8 +362,8 @@ def accept_challenge(challenge_id):
         player_B_cumulative_seconds = None
 
     # Read the initial ratings of the two players
-    player_a_rating = cur.execute("SELECT RATING FROM BOC_USER WHERE USERNAME = ?", (player_a,)).fetchone()["RATING"]
-    player_b_rating = cur.execute("SELECT RATING FROM BOC_USER WHERE USERNAME = ?", (player_b,)).fetchone()["RATING"]
+    player_a_rating = db.execute("SELECT RATING FROM BOC_USER WHERE USERNAME = ?", (player_a,)).fetchone()["RATING"]
+    player_b_rating = db.execute("SELECT RATING FROM BOC_USER WHERE USERNAME = ?", (player_b,)).fetchone()["RATING"]
 
     db.execute("UPDATE BOC_GAMES SET PLAYER_A = ?, PLAYER_B = ?, BOARD_ID = ?, D_STARTED = CURRENT_TIMESTAMP, STATUS = \"in_progress\", PLAYER_A_CUMULATIVE_SECONDS = ?, PLAYER_B_CUMULATIVE_SECONDS = ?, R_A_INIT = ?, R_B_INIT = ?, R_A_ADJUSTMENT = NULL WHERE GAME_ID = ?", (player_a, player_b, challenge_row["BOARD_ID"], player_A_cumulative_seconds, player_B_cumulative_seconds, player_a_rating, player_b_rating, challenge_row["RESERVED_GAME_ID"]))
 
@@ -402,9 +450,9 @@ def get_pfp_source(username):
 
 def hide_board(username, board_id):
     # If only this user saved the board, and it was not used for any game or challenge so far, then it is properly deleted
-    # otherwise he just unsaves it
+    # otherwise he just unsaves it, but doesn't block it
     db = get_db()
-    no_one_saved_the_board_data = db.execute("SELECT 1 FROM BOC_USER_SAVED_BOARDS WHERE BOARD_ID = ? AND USERNAME != ? LIMIT 1", (board_id, username)).fetchone()
+    no_one_saved_the_board_data = db.execute("SELECT 1 FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME != ? LIMIT 1", (board_id, username)).fetchone()
     no_one_saved_the_board = no_one_saved_the_board_data is None
     no_chal_used_the_board_data = db.execute("SELECT 1 FROM BOC_CHALLENGES WHERE BOARD_ID = ? LIMIT 1", (board_id,)).fetchone()
     no_chal_used_the_board = no_chal_used_the_board_data is None
@@ -412,11 +460,11 @@ def hide_board(username, board_id):
     no_game_used_the_board = no_game_used_the_board_data is None
 
     if no_one_saved_the_board and no_chal_used_the_board and no_game_used_the_board:
-        db.execute("DELETE FROM BOC_USER_SAVED_BOARDS WHERE BOARD_ID = ? AND USERNAME = ?", (board_id, username))
+        db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ?", (board_id, username))
         db.execute("DELETE FROM BOC_BOARDS WHERE BOARD_ID = ?", (board_id,))
         db.commit()
     else:
-        db.execute("DELETE FROM BOC_USER_SAVED_BOARDS WHERE BOARD_ID = ? AND USERNAME = ?", (board_id, username))
+        db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ?", (board_id, username))
         db.commit()
 
 # Tree document viewer actions
@@ -489,7 +537,6 @@ def safe_power_sum(x, kappa):
     elif x < -4:
         return(-x * np.log(10))
     else:
-        #print(x, kappa,np.power(10, x) + np.power(10, -x) + kappa + 0.1, np.log(np.power(10, x) + np.power(10, -x) + kappa + 0.1))
         return(np.log(np.power(10, x) + np.power(10, -x) + kappa + 0.1))
 
 def r_sigma(x, kappa):
@@ -520,23 +567,18 @@ def rate_game(game_id, board_id, player_A, player_B, delta_R, outcome):
             "kappa" : board_hot_raw["KAPPA"],
             "p_draw" : board_hot_raw["KAPPA"] / (board_hot_raw["KAPPA"] + 2.0),
         }
-
-
     board_prior_games = db.execute("SELECT (R_A_INIT - R_B_INIT) AS DELTA_R, OUTCOME FROM BOC_GAMES WHERE STATUS = \"concluded\" AND BOARD_ID = ? AND GAME_ID != ?", (board_id, game_id)).fetchall()
 
-    # calculate the game counts and the step size
+    # 3. Calculate the game counts and the step size
     N = db.execute("SELECT COUNT(*) AS N FROM BOC_GAMES WHERE BOC_GAMES.STATUS = \"concluded\" AND BOC_GAMES.BOARD_ID = ?", (board_id,)).fetchone()["N"]
     N_d = db.execute("SELECT COUNT(*) AS N FROM BOC_GAMES WHERE BOC_GAMES.STATUS = \"concluded\" AND BOC_GAMES.OUTCOME = \"draw\" AND BOC_GAMES.BOARD_ID = ?", (board_id,)).fetchone()["N"]
     step_size = rm_params["RATING_ADJUSTMENT_STEP_SCALE"] * N / (N + rm_params["RIGIDITY"])
 
-    # 3. Load player parameters -- i.e. rating
 
     # 4. Prior estimates
     p_prior = (rm_params["INITIAL_ESTIMATE_DRAW_PROBABILITY"] + N * board_hot["p_draw"] / rm_params["RIGIDITY"]) / (1.0 + N / rm_params["RIGIDITY"])
     h_prior = N * board_hot["h"] / (N + rm_params["RIGIDITY"])
     h_std_prior = (rm_params["INITIAL_ESTIMATE_HANDICAP_STD"] + N * board_hot["h_std"] / rm_params["RIGIDITY"]) / (1.0 + N / rm_params["RIGIDITY"])
-
-    print("Priors", p_prior, h_prior, h_std_prior)
 
     log_regularisation = 0.01
 
@@ -546,7 +588,6 @@ def rate_game(game_id, board_id, player_A, player_B, delta_R, outcome):
             if kappa < 0:
                 return -np.inf
             h_term = -0.5 * ((h - h_prior) / h_std_prior) * ((h - h_prior) / h_std_prior)
-            print()
             kappa_term = N * p_prior * np.log(kappa + log_regularisation) - (N + 2) * np.log(kappa + 2) #regularised
             return(h_term + kappa_term)
 

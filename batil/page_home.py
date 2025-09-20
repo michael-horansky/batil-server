@@ -48,6 +48,7 @@ class PageHome(Page):
         get_args.update(ActionForm.get_args("public_boards"))
         get_args.update(ActionTable.get_navigation_keywords("board_marketplace_table", ["BOARD_NAME", "AUTHOR", "D_PUBLISHED"]))
         get_args.update(ActionTable.get_navigation_keywords("your_saved_boards", ["BOARD_NAME", "AUTHOR", "D_PUBLISHED", "D_SAVED"]))
+        get_args.update(ActionTable.get_navigation_keywords("your_blocked_boards", ["BOARD_NAME", "AUTHOR", "D_PUBLISHED", "D_BLOCKED"]))
         # Users
         get_args.update(ActionForm.get_args("users"))
         get_args.update(ActionTable.get_navigation_keywords("leaderboard", ["USERNAME", "RATING", "COUNT_GAMES"]))
@@ -140,12 +141,12 @@ class PageHome(Page):
                 db.commit()
             elif request.form.get("action_your_boards_unpublished") == "publish":
                 db.execute("UPDATE BOC_BOARDS SET IS_PUBLIC = 1, D_PUBLISHED = CURRENT_TIMESTAMP WHERE BOARD_ID = ?", (action_board_id,))
-                db.execute("INSERT INTO BOC_USER_SAVED_BOARDS (BOARD_ID, USERNAME, D_SAVED) VALUES (?, ?, CURRENT_TIMESTAMP)", (action_board_id, g.user["username"]))
+                db.execute("INSERT INTO BOC_USER_BOARD_RELATIONSHIPS (BOARD_ID, USERNAME, STATUS, D_STATUS) VALUES (?, ?, \"saved\", CURRENT_TIMESTAMP)", (action_board_id, g.user["username"]))
                 db.commit()
         elif "action_your_boards_published" in request.form.keys():
             action_board_id = int(request.form.get("action_table_your_boards_published_selected_row"))
             if request.form.get("action_your_boards_published") == "hide":
-                # published boards are always shown from BOC_USER_SAVED_BOARDS, this just deletes the relational line
+                # published boards are always shown from BOC_USER_BOARD_RELATIONSHIPS, this just deletes the relational line
                 hide_board(g.user["username"], action_board_id)
             elif request.form.get("action_your_boards_published") == "fork":
                 db.execute("""
@@ -167,22 +168,46 @@ class PageHome(Page):
 
         # Database manipulation
         if "action_board_marketplace_table" in request.form:
+            action_board_id = int(request.form.get("action_table_board_marketplace_table_selected_row"))
             if request.form.get("action_board_marketplace_table") == "save":
                 # The user saves a board to their collection
-                saved_board_id = int(request.form.get("action_table_board_marketplace_table_selected_row"))
-                relevant_row = db.execute("SELECT BOARD_ID, D_SAVED FROM BOC_USER_SAVED_BOARDS WHERE BOARD_ID = ? AND USERNAME = ?", (saved_board_id, g.user["username"])).fetchone()
+                relevant_row = db.execute("SELECT BOARD_ID, D_STATUS FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user["username"])).fetchone()
                 if relevant_row is None:
                     # We create a new row
-                    db.execute("INSERT INTO BOC_USER_SAVED_BOARDS (BOARD_ID, USERNAME, D_SAVED) VALUES (?, ?, CURRENT_TIMESTAMP)", (saved_board_id, g.user["username"]))
+                    db.execute("INSERT INTO BOC_USER_BOARD_RELATIONSHIPS (BOARD_ID, USERNAME, STATUS, D_STATUS) VALUES (?, ?, \"saved\", CURRENT_TIMESTAMP)", (action_board_id, g.user["username"]))
                 else:
                     # We update the existing row
-                    db.execute("UPDATE BOC_USER_SAVED_BOARDS SET D_SAVED = CURRENT_TIMESTAMP WHERE BOARD_ID = ? AND USERNAME = ?", (saved_board_id, g.user["username"]))
+                    db.execute("UPDATE BOC_USER_BOARD_RELATIONSHIPS SET STATUS = \"saved\", D_STATUS = CURRENT_TIMESTAMP WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user["username"]))
+                db.commit()
+            elif request.form.get("action_board_marketplace_table") == "remove":
+                # The user removes a board from their collection
+                db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ? AND STATUS = \"saved\"", (action_board_id, g.user["username"]))
+                db.commit()
+            elif request.form.get("action_board_marketplace_table") == "block":
+                # The user adds a board to their blacklist
+                relevant_row = db.execute("SELECT BOARD_ID, D_STATUS FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user["username"])).fetchone()
+                if relevant_row is None:
+                    # We create a new row
+                    db.execute("INSERT INTO BOC_USER_BOARD_RELATIONSHIPS (BOARD_ID, USERNAME, STATUS, D_STATUS) VALUES (?, ?, \"blocked\", CURRENT_TIMESTAMP)", (action_board_id, g.user["username"]))
+                else:
+                    # We update the existing row
+                    db.execute("UPDATE BOC_USER_BOARD_RELATIONSHIPS SET STATUS = \"blocked\", D_STATUS = CURRENT_TIMESTAMP WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user["username"]))
+                db.commit()
+            elif request.form.get("action_board_marketplace_table") == "unblock":
+                # The user removes a board from their blacklist
+                db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ? AND STATUS = \"blocked\"", (action_board_id, g.user["username"]))
                 db.commit()
         if "action_your_saved_boards" in request.form:
             if request.form.get("action_your_saved_boards") == "remove":
                 # The user removes a board from their collection
                 removed_board_id = int(request.form.get("action_table_your_saved_boards_selected_row"))
-                db.execute("DELETE FROM BOC_USER_SAVED_BOARDS WHERE BOARD_ID = ? AND USERNAME = ?", (removed_board_id, g.user["username"]))
+                db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ? AND STATUS = \"saved\"", (removed_board_id, g.user["username"]))
+                db.commit()
+        if "action_your_blocked_boards" in request.form:
+            if request.form.get("action_your_blocked_boards") == "unblock":
+                # The user removes a board from their blacklist
+                removed_board_id = int(request.form.get("action_table_your_blocked_boards_selected_row"))
+                db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ? AND STATUS = \"blocked\"", (removed_board_id, g.user["username"]))
                 db.commit()
 
     def resolve_action_users(self):
@@ -288,10 +313,10 @@ class PageHome(Page):
 
         # Now: Board choices
         form_new_game.add_ordered_table(1, "select_board_for_new_game",
-            f"""SELECT BOC_BOARDS.BOARD_ID AS BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_USER_SAVED_BOARDS.D_SAVED AS D_SAVED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED
+            f"""SELECT BOC_BOARDS.BOARD_ID AS BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_USER_BOARD_RELATIONSHIPS.D_STATUS AS D_SAVED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED
             FROM BOC_BOARDS
                 LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
-                INNER JOIN BOC_USER_SAVED_BOARDS ON BOC_BOARDS.BOARD_ID = BOC_USER_SAVED_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = \"{g.user["username"]}\"
+                INNER JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_BOARDS.BOARD_ID = BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = \"{g.user["username"]}\" AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
                 GROUP BY BOC_BOARDS.BOARD_ID""",
             "BOARD_ID", ["BOARD_NAME", "AUTHOR", "D_SAVED", "GAMES_PLAYED", "HANDICAP"],
             include_select = True,
@@ -658,10 +683,10 @@ class PageHome(Page):
             form_your_boards.add_ordered_table(1, "your_boards_published",
                 f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP,
                         COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED,
-                        COUNT(BOC_USER_SAVED_BOARDS.BOARD_ID) AS SAVED_BY
+                        COUNT(BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID) AS SAVED_BY
                     FROM BOC_BOARDS
                         LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
-                        LEFT JOIN BOC_USER_SAVED_BOARDS ON BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME != {json.dumps(g.user["username"])}
+                        LEFT JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME != {json.dumps(g.user["username"])} AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
                     WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1 GROUP BY BOC_BOARDS.BOARD_ID""",
                 "BOARD_ID", ["BOARD_NAME", "D_PUBLISHED", "GAMES_PLAYED", "SAVED_BY", "HANDICAP"],
                 include_select = False,
@@ -684,24 +709,38 @@ class PageHome(Page):
     def render_section_public_boards(self):
         # One action form with two tabs: Your collection and Marketplace
         form_public_boards = ActionForm("public_boards", "Public boards", "home")
-        form_public_boards.initialise_tabs(["Board marketplace", "Saved boards"])
+        form_public_boards.initialise_tabs(["Board marketplace", "Saved boards", "Blocked boards"])
         form_public_boards.add_ordered_table(0, "board_marketplace_table",
             f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP, BOC_BOARDS.AUTHOR AS AUTHOR,
                     COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED,
-                    COUNT(BOC_USER_SAVED_BOARDS.BOARD_ID) AS SAVED_BY
+                    COUNT(BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID) AS SAVED_BY,
+                    CASE
+                        WHEN EXISTS (SELECT 1 FROM BOC_USER_BOARD_RELATIONSHIPS
+                            WHERE BOC_USER_BOARD_RELATIONSHIPS.USERNAME = {json.dumps(g.user["username"])} AND BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\") THEN "remove"
+                        ELSE "save"
+                    END AS SAVE_TOGGLE,
+                    CASE
+                        WHEN EXISTS (SELECT 1 FROM BOC_USER_BOARD_RELATIONSHIPS
+                            WHERE BOC_USER_BOARD_RELATIONSHIPS.USERNAME = {json.dumps(g.user["username"])} AND BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"blocked\") THEN "unblock"
+                        ELSE "block"
+                    END AS BLOCK_TOGGLE
             FROM BOC_BOARDS
                 LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
-                LEFT JOIN BOC_USER_SAVED_BOARDS ON BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME != {json.dumps(g.user["username"])}
+                LEFT JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME != {json.dumps(g.user["username"])} AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
             WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1
-            AND NOT EXISTS (
-                SELECT 1 FROM BOC_USER_SAVED_BOARDS WHERE BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = {json.dumps(g.user["username"])})
             GROUP BY BOC_BOARDS.BOARD_ID""",
-            "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "SAVED_BY", "D_PUBLISHED", "HANDICAP"], include_select = False,
+            "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "SAVED_BY", "D_PUBLISHED", "HANDICAP", "SAVE_TOGGLE", "BLOCK_TOGGLE"], include_select = False,
             headers = {"BOARD_NAME" : "Board", "AUTHOR" : "Author", "GAMES_PLAYED" : "# games played", "SAVED_BY" : "# users saved", "D_PUBLISHED" : "Published", "HANDICAP" : "Handicap"},
             order_options = [["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"], ["SAVED_BY", "# users"], ["HANDICAP", "Handicap"]],
-            actions = {"view" : "View", "save" : "Save"},
+            actions = {"view" : "View", "save" : "Save", "remove" : "Remove", "block" : "Blacklist", "unblock" : "Whitelist"},
             filters = ["BOARD_NAME", "AUTHOR", "D_PUBLISHED"],
-            action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
+            action_instructions = {
+                "view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))},
+                "save" : {"toggle" : "SAVE_TOGGLE"},
+                "remove" : {"toggle" : "SAVE_TOGGLE"},
+                "block" : {"toggle" : "BLOCK_TOGGLE"},
+                "unblock" : {"toggle" : "BLOCK_TOGGLE"}
+                },
             col_links = {
                 "BOARD_NAME" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"])),
                 "AUTHOR" : (lambda datum : url_for("user.user", username = datum["AUTHOR"]))
@@ -709,9 +748,9 @@ class PageHome(Page):
             rows_per_view = 8)
         form_public_boards.add_ordered_table(1, "your_saved_boards",
             f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP,
-                    COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_USER_SAVED_BOARDS.D_SAVED AS D_SAVED
+                    COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_USER_BOARD_RELATIONSHIPS.D_STATUS AS D_SAVED
                 FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
-                                INNER JOIN BOC_USER_SAVED_BOARDS ON BOC_USER_SAVED_BOARDS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_SAVED_BOARDS.USERNAME = {json.dumps(g.user["username"])}
+                                INNER JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = {json.dumps(g.user["username"])} AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
             WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1
             GROUP BY BOC_BOARDS.BOARD_ID""",
             "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "D_PUBLISHED", "D_SAVED", "HANDICAP"],
@@ -720,6 +759,25 @@ class PageHome(Page):
             order_options = [["D_SAVED", "Saved"], ["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"], ["HANDICAP", "Handicap"]],
             actions = {"view" : "View", "remove" : "Remove"},
             filters = ["BOARD_NAME", "AUTHOR", "D_PUBLISHED", "D_SAVED"],
+            action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
+            col_links = {
+                "BOARD_NAME" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"])),
+                "AUTHOR" : (lambda datum : url_for("user.user", username = datum["AUTHOR"]))
+                },
+            rows_per_view = 8)
+        form_public_boards.add_ordered_table(2, "your_blocked_boards",
+            f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP,
+                    COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_USER_BOARD_RELATIONSHIPS.D_STATUS AS D_BLOCKED
+                FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
+                                INNER JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = {json.dumps(g.user["username"])} AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"blocked\"
+            WHERE BOC_BOARDS.IS_PUBLIC = 1
+            GROUP BY BOC_BOARDS.BOARD_ID""",
+            "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "D_PUBLISHED", "D_BLOCKED", "HANDICAP"],
+            include_select = False,
+            headers = {"BOARD_NAME" : "Board", "AUTHOR" : "Author", "GAMES_PLAYED" : "# games played", "D_PUBLISHED" : "Published", "D_BLOCKED" : "Blocked", "HANDICAP" : "Handicap"},
+            order_options = [["D_BLOCKED", "Blocked"], ["D_PUBLISHED", "Published"], ["GAMES_PLAYED", "# games"], ["HANDICAP", "Handicap"]],
+            actions = {"view" : "View", "unblock" : "Unblock"},
+            filters = ["BOARD_NAME", "AUTHOR", "D_PUBLISHED", "D_BLOCKED"],
             action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
             col_links = {
                 "BOARD_NAME" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"])),

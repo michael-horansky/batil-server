@@ -103,7 +103,7 @@ class PageUser(Page):
 
         number_of_games = db.execute("SELECT COUNT(*) AS COUNT_GAMES FROM BOC_GAMES WHERE STATUS=\"concluded\" AND (PLAYER_A = ? OR PLAYER_B = ?)", (self.username, self.username)).fetchone()["COUNT_GAMES"]
         number_of_boards = db.execute("SELECT COUNT(*) AS COUNT_BOARDS FROM BOC_BOARDS WHERE IS_PUBLIC=1 AND AUTHOR = ?", (self.username,)).fetchone()["COUNT_BOARDS"]
-        number_of_boards_saved = db.execute("SELECT COUNT(*) AS COUNT_BOARDS_SAVED FROM BOC_USER_SAVED_BOARDS WHERE USERNAME = ?", (self.username,)).fetchone()["COUNT_BOARDS_SAVED"]
+        number_of_boards_saved = db.execute("SELECT COUNT(*) AS COUNT_BOARDS_SAVED FROM BOC_USER_BOARD_RELATIONSHIPS WHERE USERNAME = ? AND STATUS = \"blocked\"", (self.username,)).fetchone()["COUNT_BOARDS_SAVED"]
         number_of_friends = db.execute("SELECT COUNT(*) AS COUNT_FRIENDS FROM BOC_USER_RELATIONSHIPS WHERE STATUS=\"friends\" AND (USER_1 = ? OR USER_2 = ?)", (self.username, self.username)).fetchone()["COUNT_FRIENDS"]
 
         stats_table = StaticTable("profile_stats")

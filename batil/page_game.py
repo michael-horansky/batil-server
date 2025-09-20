@@ -24,7 +24,7 @@ class PageGame(Page):
 
         self.time_countdown = None
 
-        self.gm = Gamemaster(display_logs = True)
+        self.gm = Gamemaster(display_logs = False)
 
         # We determine the role
         db = get_db()
@@ -45,10 +45,6 @@ class PageGame(Page):
                 BOC_BOARDS.BOARD_NAME AS BOARD_NAME
             FROM BOC_GAMES INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE GAME_ID = ?
             """, (self.game_id,)).fetchone()
-        print("------------------------------")
-        for key in ["PLAYER_A_PROMPTED", "PLAYER_B_PROMPTED", "PLAYER_A_DEADLINE", "PLAYER_B_DEADLINE", "PLAYER_A_CUMULATIVE_SECONDS", "PLAYER_B_CUMULATIVE_SECONDS"]:
-            print(f"  {key} -> {self.game_row[key]}")
-        print("------------------------------")
         self.game_status = self.game_row["STATUS"]
         self.game_outcome = self.game_row["OUTCOME"]
         if self.game_row is None:
@@ -117,14 +113,13 @@ class PageGame(Page):
             commands_added.append(cur_cmd)
         output_message = self.gm.submit_commands(self.client_role, commands_added)
         if output_message.header == "error":
-            print(output_message.msg)
+            db.execute("INSERT INTO BOC_SYSTEM_LOGS (PRIORITY, ORIGIN, MESSAGE) VALUES (4, \"page_game.resolve_command_submission\", ?)", output_message.msg)
+            db.commit()
             return(-1)
         new_dynamic_rep = self.gm.dump_changes()
         # We save changes to database
-        print("The following new commands will be saved:")
         for turn_index in range(len(new_dynamic_rep)):
             for commander, command_rep in new_dynamic_rep[turn_index].items():
-                print(f"{turn_index} [{commander}]: {command_rep}")
                 db.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)", (self.game_id, turn_index, commander, command_rep))
 
         if output_message.header == "concluded":
@@ -135,8 +130,6 @@ class PageGame(Page):
 
     def resolve_action_game_management(self):
         db = get_db()
-        for key, val in request.form.items():
-            print(f"{key} -> {val}")
         active_client = request.form.get("client_role")
         if active_client == "A":
             opposite_client = "B"
