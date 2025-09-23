@@ -100,6 +100,21 @@ class TreeDocumentViewer(HTMLObject):
         # This function allows us to add not just html objects, but also dynamical python-calculated objects, such as links with URL_FOR
         parsed_content_text = content_text
 
+        def lft(href, label):
+            # link from text
+            return(f"<a href=\"{href}\" target=\"_blank\">{label}</a>")
+
+        # Magic word patterns
+        magic_word_patterns = {
+            "_URLKW2_([A-Za-z.]+)<([A-Za-z_]+)=([A-Za-z0-9]),([A-Za-z_]+)=([A-Za-z0-9])>_([A-Za-z0-9 ]+)_" : (lambda match : lft(url_for(match.group(1), **{match.group(2) : match.group(3), match.group(4) : match.group(5)}), match.group(6)) ),
+            "_URLKW_([A-Za-z.]+)<([A-Za-z_]+)=([A-Za-z0-9])>_([A-Za-z0-9 ]+)_" : (lambda match : lft(url_for(match.group(1), **{match.group(2) : match.group(3)}), match.group(4)) ),
+            "_URL_([A-Za-z.]+)_([A-Za-z0-9 ]+)_" : (lambda match : lft(url_for(match.group(1)), match.group(2)) ),
+            "_URLEXT_<([A-Za-z.:/]+)>_([A-Za-z0-9 ]+)_" : (lambda match : lft(match.group(1), match.group(2)) )
+            }
+
+        for pattern, replacer in magic_word_patterns.items():
+            parsed_content_text = re.sub(pattern, replacer, parsed_content_text)
+
         return(parsed_content_text)
 
     def make_main_content(self):

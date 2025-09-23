@@ -9,18 +9,20 @@ from flask import (
 from batil.db import get_db, get_table_as_list_of_dicts, conclude_and_rate_game
 
 from batil.engine.game_logic.class_Gamemaster import Gamemaster
-from batil.engine.rendering.class_HTMLRenderer import HTMLRenderer
+from batil.engine.rendering.class_tutorial_HTMLRenderer import TutorialHTMLRenderer
 from batil.engine.rendering.class_Abstract_Output import Abstract_Output
 
 
 class PageTutorial(Page):
 
-    def __init__(self, tutorial_id):
+    def __init__(self, tutorial_id, editor_role):
         super().__init__("Tutorial")
         self.tutorial_id = tutorial_id
-        self.client_role = None
+        self.editor_role = editor_role # "A" or "B", or None if not an editor
+        self.client_role = "guest" # default value
 
         self.gm = Gamemaster(display_logs = False)
+        self.refuse_render = False
 
         # We determine the role
         db = get_db()
@@ -37,16 +39,13 @@ class PageTutorial(Page):
             FROM BOC_TUTORIALS INNER JOIN BOC_BOARDS ON BOC_TUTORIALS.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE TUTORIAL_ID = ?
             """, (self.tutorial_id,)).fetchone()
         if self.tutorial_row is None:
-            print(f"ERROR: Attempting to load a non-existing game (game-id = {self.game_id})")
-            return(-1)
+            print(f"ERROR: Attempting to load a non-existing tutorial (tutorial-id = {self.tutorial_id})")
+            self.refuse_render = True
+            return(None)
         self.game_status = self.tutorial_row["STATUS"]
         self.game_outcome = self.tutorial_row["OUTCOME"]
 
         # We now identify the user who opened the page
-        self.link_data = {
-            "board" : self.tutorial_row["BOARD_ID"],
-            "board_name" : self.tutorial_row["BOARD_NAME"]
-            }
         if g.user is not None:
             if self.tutorial_row["AUTHOR"] == g.user["username"]:
                 self.client_role = "editor"
@@ -62,23 +61,20 @@ class PageTutorial(Page):
                 print(f"{key} -> {val}")
 
 
-    def resolve_tutorial_edit_submission(self):
+    def resolve_tutorial_comments_edit(self):
         db = get_db()
-        return(0)
-        # Before we even consider looking at the moves, we check if the game didn't end by timeout.
-        """time_control_rule = db.execute("SELECT RULE FROM BOC_RULESETS WHERE GAME_ID = ? AND RULE_GROUP = \"deadline\"", (self.game_id,)).fetchone()["RULE"]
+        for key, val in request.form.items():
+            print(f"{key} -> {val}")
 
-        if time_control_rule != "no_deadline":
-            # We note current time
-            current_time = datetime.utcnow()
-            self.check_for_timeout(time_control_rule, current_time, self.client_role)
-            if self.game_status == "in_progress":
-                # The player managed to submit commands without timing out.
-                # self.time_countdown is now guaranteed to store the time left.
-                # it is type int and is in total seconds.
-                if time_control_rule in ["one_hour_cumulative", "one_day_cumulative"]:
-                    db.execute(f"UPDATE BOC_GAMES SET PLAYER_{self.client_role}_CUMULATIVE_SECONDS = ? WHERE GAME_ID = ?", (self.time_countdown, self.game_id))
-        db.execute(f"UPDATE BOC_GAMES SET PLAYER_{self.client_role}_PROMPTED = NULL WHERE GAME_ID = ?", (self.game_id,))
+        if "tcf_action" in request.form:
+            if request.form.get("tcf_action") == "edit_tutorial_comment":
+                active_turn_index = int(request.form.get("turn_index"))
+                db.execute("INSERT OR REPLACE INTO BOC_TUTORIAL_COMMENTS (TUTORIAL_ID, TURN_INDEX, TUTORIAL_COMMENT) VALUES (?, ?, ?)", (self.tutorial_id, active_turn_index, request.form.get("tutorial_comment")))
+                db.execute("UPDATE BOC_TUTORIALS SET D_CHANGED = CURRENT_TIMESTAMP WHERE TUTORIAL_ID = ?", (self.tutorial_id,))
+                db.commit()
+
+    def resolve_command_submission(self):
+        db = get_db()
 
         stones_touched_in_order = [int(x) for x in request.form.get("touch_order").split(",")]
         commands_added = []
@@ -93,27 +89,30 @@ class PageTutorial(Page):
                 else:
                     cur_cmd[default_keyword] = request.form.get(f"cmd_{default_keyword}_{stone_ID}")
             commands_added.append(cur_cmd)
-        output_message = self.gm.submit_commands(self.client_role, commands_added)
+        output_message = self.gm.submit_commands(self.editor_role, commands_added)
         if output_message.header == "error":
-            db.execute("INSERT INTO BOC_SYSTEM_LOGS (PRIORITY, ORIGIN, MESSAGE) VALUES (4, \"page_game.resolve_command_submission\", ?)", output_message.msg)
+            db.execute("INSERT INTO BOC_SYSTEM_LOGS (PRIORITY, ORIGIN, MESSAGE) VALUES (4, \"page_tutorial.resolve_command_submission\", ?)", output_message.msg)
             db.commit()
             return(-1)
         new_dynamic_rep = self.gm.dump_changes()
         # We save changes to database
         for turn_index in range(len(new_dynamic_rep)):
             for commander, command_rep in new_dynamic_rep[turn_index].items():
-                db.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)", (self.game_id, turn_index, commander, command_rep))
+                db.execute("INSERT INTO BOC_TUTORIAL_MOVES (TUTORIAL_ID, TURN_INDEX, PLAYER, REPRESENTATION) VALUES (?, ?, ?, ?)", (self.tutorial_id, turn_index, commander, command_rep))
 
         if output_message.header == "concluded":
-            conclude_and_rate_game(self.game_id, output_message.msg)
+            db.execute("UPDATE BOC_TUTORIALS SET STATUS = \"concluded\", OUTCOME = ? WHERE TUTORIAL_ID = ?", (output_message.msg, self.tutorial_id))
             self.game_status = "concluded"
 
-        db.commit()"""
+        db.execute("UPDATE BOC_TUTORIALS SET D_CHANGED = CURRENT_TIMESTAMP WHERE TUTORIAL_ID = ?", (self.tutorial_id,))
+        db.commit()
 
     def load_game(self):
+        if self.refuse_render:
+            return(None)
         db = get_db()
         # We need to load the static data, the dynamic data, and the ruleset
-        static_data_row = db.execute("SELECT T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION FROM BOC_BOARDS WHERE BOARD_ID = ?", (self.game_row["BOARD_ID"],)).fetchone()
+        static_data_row = db.execute("SELECT T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION FROM BOC_BOARDS WHERE BOARD_ID = ?", (self.tutorial_row["BOARD_ID"],)).fetchone()
         static_data = {
                 "t_dim" : static_data_row["T_DIM"],
                 "x_dim" : static_data_row["X_DIM"],
@@ -134,7 +133,7 @@ class PageTutorial(Page):
         for row in dynamic_data_rows:
             dynamic_data[row["TURN_INDEX"]][row["PLAYER"]] = row["REPRESENTATION"]
 
-        ruleset_rows = db.execute("SELECT RULE_GROUP, RULE FROM BOC_TUTORIAL_RULESETS WHERE TUTORIAL_ID = ?", (self.game_id,)).fetchall()
+        ruleset_rows = db.execute("SELECT RULE_GROUP, RULE FROM BOC_TUTORIAL_RULESETS WHERE TUTORIAL_ID = ?", (self.tutorial_id,)).fetchall()
         ruleset = {}
         for row in ruleset_rows:
             ruleset[row["RULE_GROUP"]] = row["RULE"]
@@ -144,16 +143,22 @@ class PageTutorial(Page):
         else:
             self.gm.load_from_database(static_data, dynamic_data, ruleset, self.game_outcome)
 
+        # We also load the tutorial comments
+        tutorial_comment_rows = db.execute("SELECT TURN_INDEX, TUTORIAL_COMMENT FROM BOC_TUTORIAL_COMMENTS WHERE TUTORIAL_ID = ? ORDER BY TURN_INDEX ASC", (self.tutorial_id,)).fetchall()
+        self.tutorial_comments = {} #[turn index] = comment; not every index has to exist
+        for row in tutorial_comment_rows:
+            if row["TUTORIAL_COMMENT"] != "":
+                self.tutorial_comments[row["TURN_INDEX"]] = row["TUTORIAL_COMMENT"]
+
 
 
 
     def prepare_renderer(self):
         # Time for telling the proprietary gamemaster to properly initialise the game with the correct access rights
-        return(0)
         # TODO special renderer for tutorials ofc! also client role for editors can be set manually between A and B
-        #self.gm.prepare_for_rendering(self.client_role)
-        #self.renderer = HTMLRenderer(self.gm.rendering_output, self.game_id, self.client_role, self.game_management_status)
-        #self.renderer.render_game(self.link_data)
+        self.gm.prepare_for_rendering(self.editor_role)
+        self.renderer = TutorialHTMLRenderer(self.gm.rendering_output, self.tutorial_id, self.tutorial_comments, self.client_role, self.editor_role)
+        self.renderer.render_game()
 
 
     def render_page(self):
@@ -162,20 +167,17 @@ class PageTutorial(Page):
         # Then we check the POST form to see if new commands were submitted. If yes, we incorporate them into the render object, and also upload them to the db
         #self.resolve_request()
         # Finally, we prepare the rendering object
-        self.prepare_renderer()
+        if not self.refuse_render:
+            self.prepare_renderer()
 
         self.html_open("boc_tutorial")
 
-        """self.structured_html.append(self.renderer.structured_output)
+        if self.refuse_render:
+            self.structured_html.append("ERROR")
+        else:
+            self.structured_html.append(self.renderer.structured_output)
 
-        if self.game_status == "in_progress":
-            if self.gm.rendering_output.did_player_finish_turn:
-                # The client is waiting for his opponent; we will check the page automatically once the game has been updated
-                self.clientside_reloader(waiting_for_move = True)
-            else:
-                self.clientside_reloader(waiting_for_move = False)
-
-        self.structured_html.append("</body>")"""
+            self.structured_html.append("</body>")
 
         return(self.print_html())
 

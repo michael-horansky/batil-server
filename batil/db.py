@@ -391,8 +391,13 @@ def create_new_tutorial(author, board_id, ruleset_selection):
     cur.execute("INSERT INTO BOC_TUTORIALS (BOARD_ID, AUTHOR, STATUS) VALUES (?, ?, 'in_progress')", (board_id, author))
     new_tutorial_id = cur.lastrowid
 
+    # ruleset
     for rg_name, rule_val in ruleset_selection.items():
         cur.execute("INSERT INTO BOC_TUTORIAL_RULESETS (TUTORIAL_ID, RULE_GROUP, RULE) VALUES (?, ?, ?)", (new_tutorial_id, rg_name, rule_val))
+
+    # initial setup
+    target_board_info = db.execute("INSERT INTO BOC_TUTORIAL_MOVES (TUTORIAL_ID, TURN_INDEX, PLAYER, REPRESENTATION) SELECT ?, 0, 'GM', SETUP_REPRESENTATION FROM BOC_BOARDS WHERE BOARD_ID = ?", (new_tutorial_id, board_id))
+
     db.commit()
 
 

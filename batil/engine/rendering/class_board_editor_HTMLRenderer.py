@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# ---------------------------- class HTMLRenderer -----------------------------
+# ----------------------- class BoardEditorHTMLRenderer -----------------------
 # -----------------------------------------------------------------------------
 # This renderer creates a longstring in a HTML format, with interactive
 # features managed by JavaScript.
