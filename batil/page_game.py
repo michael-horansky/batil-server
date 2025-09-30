@@ -334,7 +334,7 @@ class PageGame(Page):
         for row in dynamic_data_rows:
             dynamic_data[row["TURN_INDEX"]][row["PLAYER"]] = row["REPRESENTATION"]
 
-        ruleset_rows = db.execute("SELECT RULE_GROUP, RULE FROM BOC_RULESETS WHERE GAME_ID = ?", (self.game_id,)).fetchall()
+        ruleset_rows = db.execute("SELECT BOC_RULESETS.RULE_GROUP AS RULE_GROUP, BOC_RULESETS.RULE AS RULE, BOC_RULES.LABEL AS RULE_LABEL FROM BOC_RULESETS INNER JOIN BOC_RULES ON BOC_RULESETS.RULE = BOC_RULES.RULE WHERE BOC_RULESETS.GAME_ID = ?", (self.game_id,)).fetchall()
         ruleset = {}
         for row in ruleset_rows:
             ruleset[row["RULE_GROUP"]] = row["RULE"]
@@ -344,6 +344,11 @@ class PageGame(Page):
         else:
             self.gm.load_from_database(static_data, dynamic_data, ruleset, self.game_outcome)
 
+        ruleset_labels_list = []
+        for row in ruleset_rows:
+            ruleset_labels_list.append(row["RULE_LABEL"])
+        self.ruleset_labels = "; ".join(ruleset_labels_list)
+
 
 
 
@@ -351,7 +356,7 @@ class PageGame(Page):
         # Time for telling the proprietary gamemaster to properly initialise the game with the correct access rights
         self.gm.prepare_for_rendering(self.client_role)
         self.renderer = HTMLRenderer(self.gm.rendering_output, self.game_id, self.client_role, self.game_management_status)
-        self.renderer.render_game(self.link_data, self.time_countdown)
+        self.renderer.render_game(self.ruleset_labels, self.link_data, self.time_countdown)
 
 
     def render_page(self):

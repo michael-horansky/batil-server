@@ -173,6 +173,9 @@ class PageUser(Page):
                 actions = boards_actions,
                 filters = ["BOARD_NAME", "D_PUBLISHED"],
                 action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))}},
+                col_links = {
+                    "BOARD_NAME" : (lambda datum : url_for("board.board", board_id = datum["IDENTIFIER"]))
+                    },
                 rows_per_view = 8
                 )
 
@@ -186,6 +189,9 @@ class PageUser(Page):
             actions = {"view" : "View"},
             filters = ["USERNAME", "RATING", "COUNT_GAMES"],
             action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("user.user", username = datum["IDENTIFIER"]))}},
+            col_links = {
+                "USERNAME" : (lambda datum : url_for("user.user", username = datum["USERNAME"]))
+                },
             rows_per_view = 8,
             enforce_filter_kw = "WHERE")
 

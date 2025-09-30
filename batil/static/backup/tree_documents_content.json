@@ -1,0 +1,191 @@
+[
+  {
+    "CHAPTER_ID": 1,
+    "LABEL": "Welcome",
+    "CONTENT": "<p>Welcome to Batil (BAttle in TIme Loops)!</p>\r\n\r\n<p>TL;DR: If you just want to start playing right away, head over to the _URL_auth.register_sign-up page_ to make an account, then log in and start playing! Here TODO is a list of all tutorials to quickly teach you how to play.</p>\r\n\r\n<p>This guide is divided into two parts. The first will teach you how to navigate the Batil website and how to start playing the game right away. The second is a complete rulebook for Batil, including example scenarios which you can explore in-game by clicking on the interactive links inside the tutorial text.</p>\r\n\r\n<p>If you're reading this, the first 'beta' version of the game has been deployed to a live server. Please keep track of any issues, wanted features, unwanted bugs, unclear explanations, or comments regarding the rules of the game that you might have and send them to me either via this _URLEXT_<https://forms.gle/yvaYjF7mAqE5y4vK9>_feedback submission form_ or via my e-mail address michael.horansky@gmail.com. If you won't, I will send you unsolicited emails on the address you provided during registration, where I will spam you with tedious multi-page feedback forms. Thank you for being a cooperating test subject.</p>\r\n\r\n<p>Enjoy the game!</p>",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": 2,
+    "PARENT_CHAPTER": null,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 2,
+    "LABEL": "Navigating the Batil web app",
+    "CONTENT": "Go to _URLKW2_home.index<section=5,tutorial_guide_chapter=1>_home section_ right now!\r\n<br>\r\nOr maybe go to _URL_admin.admin_the admin section_ if you have the rights!\r\n<br>\r\nOr maybe fill out _URLEXT_<https://xkcd.com>_this form_ ?\r\n\r\n<p>The Batil web-app is an open-source software package for hosting instances of Batil, a turn-based player-vs-player strategy game (or a \"chesslike\", if you will). The web-app source-code may be found on _URLEXT_<https://github.com/michael-horansky/batil-server>_this repository_. You are welcome to modify and reuse this software to host your own Batil (or Batil-derived) game servers!</p>\r\n\r\n<p>\r\nThe Batil web-app has five different page types which comprise its core features:\r\n</p>\r\n<ul>\r\n\r\n<li>_URL_auth.register_Sign-up_ and _URL_auth.login_log-in_: pages to make an account and to log in after closing and reopening the client.</li>\r\n<li>_URL_home.index_Home_: The home view of Batil after you log in; here you can begin new games and open ongoing ones, browse boards and users, manage your friend-list and change your account settings.</li>\r\n<li>_URLKW_user.user<username=batil>_User_: to view a particular user account. This link, for example, will display the official admin account for this instance of Batil!</li>\r\n<li>Game: the main interface for a single game of Batil. There is also the Tutorial interface, which looks very similar.</li>\r\n<li>_URLKW_board.board<board_id=1>_Board_: the interface to view (and edit) boards. This link, for example, will take you to one of the default boards Batil comes with!</li>\r\n<li>The secret sixth _URL_admin.admin_admin_ page</li>\r\n\r\n</ul>\r\n<p>\r\nEach of these is introduced in the sub-chapters of this chapter.\r\n</p>",
+    "NEXT_CHAPTER": 3,
+    "FIRST_SUBCHAPTER": 4,
+    "PARENT_CHAPTER": 1,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 3,
+    "LABEL": "Rules of the game",
+    "CONTENT": "How to play Batil?",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 1,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 4,
+    "LABEL": "Sign-up and Log-in",
+    "CONTENT": "<p>To register a new account, you need to choose a unique username (only alphanumeric characters please), a password (which is NOT stored in the database, as it is hashed) and an e-mail address. The e-mail address is currently entirely optional, since no e-mail verification is required to activate your account. This will probably change post-beta.<p>\r\n\r\n<p>Note that logging in stores a cookie on your computer to preserve your session. We don't have a fancy bar on the bottom, and thus opening this website anywhere in Europe is highly illegal.</p>",
+    "NEXT_CHAPTER": 5,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 2,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 5,
+    "LABEL": "Home",
+    "CONTENT": "The Home page is always handy, as it allows you to manage your ongoing and archived games, create and edit new boards, browse existing boards and users, and edit your account settings.",
+    "NEXT_CHAPTER": 6,
+    "FIRST_SUBCHAPTER": 9,
+    "PARENT_CHAPTER": 2,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 6,
+    "LABEL": "User interface",
+    "CONTENT": "<p>\r\nThis is the page to view a user profile. It can be accessed regardless of whether you're logged in or not. It features the following tabs:\r\n</p>\r\n\r\n<ol>\r\n\r\n<li>\r\n<mark>Stats</mark>: The general stats for the user profile, such as their rating, the number of games they played, the number of boards they published etc. If you're logged in, this tab also allows you to send the user a friend request or block them.\r\n</li>\r\n\r\n<li>\r\n<mark>Archive</mark>: An archive of all the games this user has finished, colour-coded by outcome from their perspective.\r\n</li>\r\n\r\n<li>\r\n<mark>Boards</mark>: A table of all the boards this user has published, displaying the number of games played on them and their measured handicap.\r\n</li>\r\n\r\n<li>\r\n<mark>Friends</mark>: The user's friend-list.\r\n</li>\r\n\r\n<li>\r\n<mark>Games with you</mark>: If logged in, this tab displays an archive of all the concluded gamees you played with this user, colour-coded by outcome from their perspective.\r\n</li>\r\n\r\n</ol>",
+    "NEXT_CHAPTER": 7,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 2,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 7,
+    "LABEL": "Game interface",
+    "CONTENT": "<p>\r\nThis page displays a specific game. The GUI is divided into three sections:\r\n</p>\r\n\r\n<ul>\r\n\r\n<li>\r\nThe <mark>board</mark>, consisting of board tiles rendered against a black background.\r\n</li>\r\n\r\n<li>\r\nThe <mark>inspectors</mark>, three forms on the right side of the window. These are the stone inspector, the tracking inspector, and the square inspector, in order from top to bottom.\r\n</li>\r\n\r\n<li>\r\nThe <mark>action bar</mark> on the bottom of the window, which allows interacting with the game, and which features three sections left to right: the control panel, the game log, and the management section.\r\n</li>\r\n\r\n</ul>\r\n\r\n<p>\r\nThe game interface features many navigation options, which are all bound to keyboard actions. The following is an exhaustive list of all keyboard actions for the game interface:\r\n</p>\r\n\r\n<ul>\r\n<li><mark>W</mark>: move camera up</li>\r\n<li><mark>A</mark>: move camera left</li>\r\n<li><mark>S</mark>: move camera down</li>\r\n<li><mark>D</mark>: move camera right</li>\r\n<li><mark>Q</mark>: zoom camera in</li>\r\n<li><mark>E</mark>: zoom camera out</li>\r\n<li><mark>R</mark>: reset camera to a full-board view</li>\r\n<li><mark>F</mark>: reset camera to the standard zoom level</li>\r\n<li><mark>Z</mark>: display previous time-slice</li>\r\n<li><mark>X</mark>: display active time-slice</li>\r\n<li><mark>C</mark>: display next time-slice</li>\r\n<li><mark>Left arrow</mark>: display previous round</li>\r\n<li><mark>Right arrow</mark>: display next round</li>\r\n<li><mark>Up arrow</mark>: display latest round</li>\r\n<li><mark>Escape</mark>: If tracking a stone, exit stone tracking; otherwise, unselect square.</li>\r\n</ul>\r\n\r\n<p>\r\nFurthermore, if selection mode is active, the following keyboard actions take precedence:\r\n</p>\r\n\r\n<ul>\r\n<li><mark>Arrow keys</mark>: select target azimuth</li>\r\n<li><mark>Escape</mark>: abort selection mode</li>\r\n<li><mark>Enter</mark>: submit selection</li>\r\n</ul>",
+    "NEXT_CHAPTER": 8,
+    "FIRST_SUBCHAPTER": 14,
+    "PARENT_CHAPTER": 2,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 8,
+    "LABEL": "Board interface",
+    "CONTENT": "<p>\r\nThe board interface is very similar to the game interface, with most changes being relevant during board editing (see the related sub-chapter for more details). There is no round or time-slice navigation, and the camera manipulation works the same way. The inspectors have slightly different functions: the stone inspector is now an <b>element inspector</b>, displaying information about bases as well; the tracking inspector is now a <b>board dimension inspector</b>; the square inspector remains as is, but does not display info about ante-effects and retro-causes. The inspectors are useful only in editing mode.\r\n</p>\r\n\r\n<p>\r\nIf the board is published, you will see the read-only version of the board interface, with a regular board view and inspectors. The bottom bar is simply a table of the board properties, with the Author username being a clickable link. You may save or block the board from here.\r\n</p>\r\n\r\n<p>\r\nYou can only access the editing mode if the board is not yet published and you are its author. In that case, the bottom bar is replaced with a panel with an element input section and a game management section.\r\n</p>",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": 21,
+    "PARENT_CHAPTER": 2,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 9,
+    "LABEL": "Play",
+    "CONTENT": "<h3>New game</h3>\r\n\r\n<p>\r\nUsing the <mark>New game</mark> form allows you to start a new game. There are three ways to do this:\r\n</p>\r\n\r\n<ol>\r\n\r\n<li>\r\n<mark>Blind challenge</mark>: without specifying the opponent or the board on which you want to play, only the ruleset you want to use, you create a blind challenge. Any other user who creates a blind or semi-blind challenge with the same ruleset has a chance of being matched with you (and, in fact, your new challenge may be immediately matched on creation if a suitable challenge already exists) and, in case the opponent's challenge was also fully blind, a completely random board is selected for your game. To create a blind challenge, simply chose your preferred ruleset on the first tab of the \"New game\" form and click the button \"Create challenge on random board with random opponent\" at the bottom.\r\n</li>\r\n\r\n<li>\r\n<mark>Semi-blind challenge</mark>: By specifying both the ruleset in tab 1 and the board in tab 2 of the form, you create a semi-blind challenge, which may be matched by any other user's blind or semi-blind challenge which does not specify a different board. When creating a semi-blind challenge you select a board from your board collection, which is managed in the _URLKW2_home.index<section=5,tutorial_guide_chapter=10>_Your boards_ section.\r\n</li>\r\n\r\n<li>\r\n<mark>Targeted challenge</mark>: After specifying the ruleset and the board, the third tab \"Opponent\" becomes visible. Navigating to this tab, you may select one of the users on your friend-list (which may be managed in the _URLKW2_home.index<section=5,tutorial_guide_chapter=13>_Profile_ section). Clicking on the button \"Challenge opponent on selected board\" creates a targeted challenge, which is not waiting to be matched by a suitable counter-challenge, but is displayed in your selected opponent's \"Play\" section as a dialogue box prompting them to accept or decline your challenge.\r\n</li>\r\n\r\n</ol>\r\n\r\n<p>Similarly, targeted challenges your friends create against you will prompt you to accept or decline them in this section in a form \"Challenges for you\" displayed right next to the \"New game\" form.</p>\r\n\r\n<h3>Ongoing games</h3>\r\n\r\n<p>\r\nIn the <mark>Ongoing games</mark> form, you can view the games which are currently in progress, sorted into two tabs depending on whether it is your turn or not; if it is, it means you will be prompted to submit commands and progress the game once you open it. Depending on the time control for the game, this form also shows you how much time you have left to submit your turn.\r\n</p>",
+    "NEXT_CHAPTER": 10,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 5,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 10,
+    "LABEL": "Your boards",
+    "CONTENT": "<p>\r\nYou can create and publish your own boards to play Batil on. To create a new board, press the \"Create new board\" button on the bottom panel of the \"Boards workshop\" tab. This creates a placeholder board called \"New board\" from a simple template, and lists it in your Workshop. Boards in your Workshop may be edited by pressing the \"Edit\" button, which opens the _URLKW2_home.index<section=5,tutorial_guide_chapter=8>_Board interface_ with editing privileges on a new tab.\r\n</p>\r\n\r\n<p>\r\nOnce you're happy with the state of your board, you may publish it. Published boards may not be un-published or deleted, since other players may save them or play games on them! Your published boards are listed in the second tab of the form, \"Public boards\".\r\n<p>\r\n\r\n<p>\r\nPublic boards may be \"forked\", which simply creates a copy of them in your Workshop to edit further. If you choose to \"Hide\" one of your published boards, it will be removed from your collection, but it will not be deleted from the database.\r\n</p>",
+    "NEXT_CHAPTER": 11,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 5,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 11,
+    "LABEL": "Public boards",
+    "CONTENT": "<p>\r\nIn this section you may browse the boards other users have published. Every board may be saved to your collection, which allows you to choose it when creating a semi-blind or a targeted challenge; it may be blacklisted, which means you cannot be randomly assigned this board when creating a new blind challenge; or it may be forked, which allows you to edit its copy in your Workshop.\r\n</p>\r\n\r\n<p>\r\nIn the other two tabs of the form, you may manage your collection of saved boards and your list of blacklisted boards, respectively.\r\n</p>",
+    "NEXT_CHAPTER": 12,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 5,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 12,
+    "LABEL": "Users",
+    "CONTENT": "<p>\r\nThis section is simply a leaderboard of all users of Batil. By using the filter in the User column, you may search for user profiles by their username. You may send friend requests and block people from this form.\r\n</p>",
+    "NEXT_CHAPTER": 13,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 5,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 13,
+    "LABEL": "Profile",
+    "CONTENT": "<p>\r\nThe <mark>Profile</mark> form is divided into the following tabs:\r\n</p>\r\n\r\n<ol>\r\n\r\n<li>\r\n<mark>Personal settings</mark>: This tab allows you to change your profile picture and your password.\r\n</li>\r\n\r\n<li>\r\n<mark>Archive</mark>: This tab features a table of all your concluded games, colour-coded by their outcome from your perspective. You may view the games, the boards they were played on, or the opponents they were played against.\r\n</li>\r\n\r\n<li>\r\n<mark>Friends</mark>: This is the table of users who befriended you. You may send these opponents targeted challenges. Blocking a user automatically removes them from your friend-list. Also note that you may not send a friend request to a user who blocked you.\r\n</li>\r\n\r\n<li>\r\n<mark>Blocked</mark>: This is the table of users that you blocked. This means they may not be assigned as your opponents through blind and semi-blind challenges. You may unblock these users any time you like.\r\n</li>\r\n\r\n</ol>",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 5,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 14,
+    "LABEL": "Viewing the game",
+    "CONTENT": "<p>\r\nThe game interface is available to every user for any specific game; however, unless the game is a) in progress and b) you are one of the players, you will only have viewing privileges. These let you view the state of the game as recorded at the end of every round, navigating the time-slices and using the camera to view the board. You may also select squares and read the information in the three inspectors on the right side of the window. Finally, you may view the board and both players in the _URLKW2_home.index<section=5,tutorial_guide_chapter=8>_board_ and _URLKW2_home.index<section=5,tutorial_guide_chapter=6>_user_ interfaces, respectively.\r\n</p>\r\n\r\n<p>\r\nIf you're an active player of an ongoing game, you may still choose to open and view it without submitting your turn; however, beware the time control rules for this game, which may place a deadline on the submission of your turn.\r\n</p>",
+    "NEXT_CHAPTER": 15,
+    "FIRST_SUBCHAPTER": 16,
+    "PARENT_CHAPTER": 7,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 15,
+    "LABEL": "Submitting a new turn",
+    "CONTENT": "<p>\r\nIf you're one of the players in an ongoing game, opening the game prompts you to submit your turn if you have at least one causally-free stone in the active time-slice and you have not yet submitted your turn. The stones waiting for your commands are highlighted with a red rhombus outline. Selecting a square with one of these stones displays the available commands in the stone inspector, but <b>only if the active time-slice is displayed</b>: to quickly navigate there, you can press the \"X\" key, or track one of these stones and press the button which skips to their end-point, at which they become causally free.\r\n</p>\r\n\r\n<p>\r\nPressing one of the command buttons in the stone inspector launches <mark>selection mode</mark>, the purpose of which is to confirm the options for this command, which typically consist of choosing a target square on the board, plus potentially an ante-effect to swap or a choice word to select. An example: if you select the \"move\" command, the selection mode simply prompts you to select the square your stone moves to. After all the information required by the selection mode has been inputted, you may submit the command, which changes the rhombus outline colour to green. Selection mode may be abandoned at will, which interrupts the command submission.\r\n</p>\r\n\r\n<p>\r\nOnce all causally free stones get their commands, a button to submit your turn appears in the control panel.\r\n</p>",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": 19,
+    "PARENT_CHAPTER": 7,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 16,
+    "LABEL": "Viewing the board",
+    "CONTENT": "<p>\r\nThe board consists of a black background, over which the animation layers are overlayed. Manipulating the camera with keyboard actions WASD,QERF allows you to zoom in on a specific part of the board or move around, which is especially helpful if this particular board is quite big.\r\n</p>\r\n\r\n<p>\r\nThe actual board is a grid of squares. You may select a square by clicking on it; the information about the square type and any potential ante-effects, retro-causes, or a stone present on this square will be displayed in their respective inspectors.\r\n</p>\r\n\r\n<p>\r\nWhen navigating between time-slices, an animation is played which smoothly transitions between the states of the board on the initial and final time-slice, showing all events that happen in between. Note that the game may refresh automatically should the state of the game update; in that case, this transition animation plays, bringing the game to the new active time-slice (if a new round begins as well, the initial state will be the first time-slice of the new last round).\r\n</p>",
+    "NEXT_CHAPTER": 17,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 14,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 17,
+    "LABEL": "Using the inspectors",
+    "CONTENT": "<p>\r\nThere are three inspectors which display information about the selected square. Mentions of stones and squares in text displayed here are highlighted, and clicking them displays the selected element instead; clicking on a stone highlight also starts tracking it.\r\n</p>\r\n\r\n<ol>\r\n\r\n<li>\r\n<mark>Stone inspector</mark>: If there's a stone present on the selected square, information about it is displayed in the stone inspector. The highlight in the inspector's title allows you to track this stone, and the start- and end-point highlights allow you to select the respective squares. More importantly, <b>if this stone is causally free in the active time-slice and belongs to your faction, the stone inspector displays the buttons for commanding this stone.</b>\r\n</li>\r\n\r\n<li>\r\n<mark>Tracking inspector</mark>: When a stone is <b>tracked</b>, changing the displayed time-slice re-selects the square this stone lands on. The camera follows the stone always whilst it's displayed on the board, and camera movement is disabled (however, you may still zoom in and out). If the stone is not present on the board in the displayed time-slice, you may move the camera and select squares at will; however, should the tracked stone reappear on the board, the camera position is locked onto it again. The tracking inspector allows you to jump to the tracked stone's start- and end-point, as well as exit tracking (which may also be done by pressing Esc).\r\n</li>\r\n\r\n<li>\r\n<mark>Square inspector</mark>: When a square is selected, this inspector displays the type of the square in its title, and, more importantly, <b>the list of all ante-effects and retro-causes present on this square</b>, categorised by whether they're active in this round.\r\n</li>\r\n\r\n\r\n</ol>",
+    "NEXT_CHAPTER": 18,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 14,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 18,
+    "LABEL": "Using the action bar",
+    "CONTENT": "<p>\r\nThe bar at the bottom of the window hosts several sections, organised left-to-right like so:\r\n</p>\r\n\r\n<ol>\r\n\r\n<li>\r\nThe <mark>control panel</mark>: Allows you to navigate the rounds of the game up to the ongoing one, which you can also jump to; if prompted for turn submission, this section also displays a button to submit your turn after placing a command for every causally-free stone in your faction.\r\n</li>\r\n\r\n<li>\r\nThe <mark>game log</mark>: Displays the selected time-slice and round number, as well as the time-control for an ongoing game which you participate in; if the game is concluded, it displays the outcome instead.\r\n</li>\r\n\r\n<li>\r\nThe <mark>game management</mark>: Displays the usernames of player A and B, as well as the board name; clicking any of these takes you to the relevant User or Board page, respectively. Also displays the ruleset for this game as a list of rule labels.\r\n</li>\r\n\r\n</ol>",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 14,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 19,
+    "LABEL": "Selection mode: board navigation",
+    "CONTENT": "<p>\r\nEvery command requires the selection of a target square. Selection mode disables round navigation, but <b>not time-slice navigation</b>, since for certain commands you can pick from multiple time-slices (e.g. time-jumps). Squares available for selection will be highlighted in green; unavailable stones are highlighted in grey. If there are no green squares displayed, try navigating to different time-slices!\r\n</p>\r\n\r\n<h3>Azimuth selection</h3>\r\n<p>\r\nFor orientable stones, selecting a target board square doesn't automatically place the dummy icon which signifies a successful board square selection, but instead displays four (or fewer) arrows at the edges of the board view (not subject to camera manipulation). Clicking on one of these arrows selects the target azimuth and places the dummy (you may also use the arrow keys, since round navigation is disabled).\r\n</p>\r\n\r\n<h3>Automatic selection</h3>\r\n<p>\r\nIf all the available target squares are in a single time-slice (as is the case for all \"normal\" commands, such as Wait, Turn etc), time-slice navigation is disabled, and that time-slice is automatically displayed. If only a single board square is available, it is automatically selected. If the selected square only has a single azimuth option, that option is automatically selected.\r\n</p>",
+    "NEXT_CHAPTER": 20,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 15,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 20,
+    "LABEL": "Selection mode: inspectors",
+    "CONTENT": "<p>\r\nEvery inspector gains a new functionality while selection mode is active:\r\n</p>\r\n\r\n<ul>\r\n\r\n<li>\r\nStone inspector becomes the <mark>command manager</mark>: allowing you to Submit the selection, or Abort the selection mode, which interrupts the command submission. Note that you can Undo a submitted command by selecting the stone's square in the active time-slice and pressing the Undo button in the stone inspector.\r\n</li>\r\n\r\n<li>\r\nTracking inspector becomes the <mark>choice manager</mark>: certain commands (such as Tagscreen for the tagger) require the selection of an \"option\", e.g. what type of tagscreen should the tagger deploy. The options are displayed here as buttons.\r\n</li>\r\n\r\n<li>\r\nSquare inspector becomes the <mark>swap manager</mark>: time-jumps may allow you to <b>swap</b> an existing time-jump-in for certain available board squares. After selecting the target board square, the swapping options are listed here; clicking on one selects it, and clicking on the \"no swap\" option (which is always selected by default) means a new ante-effect will be created.\r\n</li>\r\n\r\n</ul>",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 15,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 21,
+    "LABEL": "Editing the board",
+    "CONTENT": "<p>\r\nAs an unpublished board's author, you may edit all of its properties. To save the changes you made, you need to press the \"Save board\" button in the game management section, right next to the board name text input.\r\n</p>\r\n\r\n<h3>Adding elements</h3>\r\n<p>\r\nAll the elements you can add to the board (that is, bases and stones of all allegiances and types) are listed by their icons in the element input section. By clicking on an icon you enter selection mode, where selecting one of the available squares (and, for orientable stones, selecting the azimuth) places the stone onto the board; there is no need to click on a Submit button, but you can still abort the selection mode by pressing Esc. Note that placing an element onto a wall square forcibly changes the wall to an empty square.\r\n</p>\r\n\r\n<h3>Managing and removing elements</h3>\r\n<p>\r\nIf you change your mind, you may remove elements from the board or change orientable stones' azimuths by clicking the relevant buttons in the element inspector.\r\n</p>\r\n\r\n<h3>Changing the board dimensions</h3>\r\n<p>\r\nThe default board is 7x5x5 by default, with the convention (time dimension)x(width)x(height). You may change any of these dimensions in the board dimension inspector. After selecting the new dimensions, <b>just pressing \"Save board\" undoes your changes</b>; you must first press the Update button, which appears in the inspector. The reason for this is because changing the spatial dimensions may delete placed elements if they would no longer fit onto the board. The way spatial dimension changes works is like so: the outer rim of the board always consists of walls. Increasing the width/height adds columns/rows of empty squares right before the last column/row, which will always consist of walls. Decreasing the width/height removes the same squares, deleting all elements placed on them. \r\n</p>\r\n\r\n<h3>Changing square types</h3>\r\n<p>\r\nSelecting a square which is not on the outer rim (and therefore not fixed to a wall) shows all the possible types you may change it to in the square inspector. Note that changing a square to a wall deletes all elements placed on it.\r\n</p>",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 8,
+    "VIEWER": "tutorial_guide"
+  }
+]

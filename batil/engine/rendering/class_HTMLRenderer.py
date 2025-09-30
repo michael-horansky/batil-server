@@ -708,7 +708,7 @@ class HTMLRenderer(Renderer):
                 self.commit_to_output(f"<span id=\"game_log_draw\">Draw</span>")
         self.commit_to_output("</div>")
 
-    def draw_game_management(self, link_data):
+    def draw_game_management(self, link_data, ruleset_labels):
         self.commit_to_output("<div id=\"game_management\">")
         # View board, relevant users...
 
@@ -743,7 +743,7 @@ class HTMLRenderer(Renderer):
                 f"        <th class=\"action_table_header\">Player A</th>",
                 f"        <th class=\"action_table_header\">Player B</th>",
                 f"        <th class=\"action_table_header\">Board</th>",
-                f"        <th class=\"action_table_header\">Time control</th>",
+                f"        <th class=\"action_table_header\">Ruleset</th>",
                 f"        <th colspan=\"{1 + len(available_draw_offer_status_buttons)}\" class=\"action_table_actions_header\">Actions</th>",
                 f"      </tr>",
                 f"    </thead>",
@@ -752,7 +752,7 @@ class HTMLRenderer(Renderer):
                 f"        <td><a href=\"{url_for("user.user", username = link_data["A"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["A"] }</a></td>",
                 f"        <td><a href=\"{url_for("user.user", username = link_data["B"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["B"] }</a></td>",
                 f"        <td><a href=\"{url_for("board.board", board_id = link_data["board"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["board_name"] }</a></td>",
-                f"        <td>{ 4-2 }</td>"
+                f"        <td>{ ruleset_labels }</td>"
                 ])
             for key, label in available_draw_offer_status_buttons.items():
                 self.commit_to_output(f"        <td><button type=\"submit\" name=\"action_game_management\" value=\"{key}\" class=\"action_game_management_submit_btn action_table_column_button\">{label}</button></td>")
@@ -772,7 +772,7 @@ class HTMLRenderer(Renderer):
                 f"      <th class=\"action_table_header\">Player A</th>",
                 f"      <th class=\"action_table_header\">Player B</th>",
                 f"      <th class=\"action_table_header\">Board</th>",
-                f"      <th class=\"action_table_header\">Time control</th>",
+                f"      <th class=\"action_table_header\">Ruleset</th>",
                 f"    </tr>",
                 f"  </thead>",
                 f"  <tbody>",
@@ -780,7 +780,7 @@ class HTMLRenderer(Renderer):
                 f"      <td><a href=\"{url_for("user.user", username = link_data["A"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["A"] }</a></td>",
                 f"      <td><a href=\"{url_for("user.user", username = link_data["B"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["B"] }</a></td>",
                 f"      <td><a href=\"{url_for("board.board", board_id = link_data["board"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["board_name"] }</a></td>",
-                f"      <td>{ 4-2 }</td>",
+                f"      <td>{ ruleset_labels }</td>",
                 f"    </tr>",
                 f"  </tbody>",
                 f"</table>",
@@ -791,7 +791,7 @@ class HTMLRenderer(Renderer):
 
     # ---------------------------- Global methods -----------------------------
 
-    def render_game(self, link_data, seconds_left_to_timeout):
+    def render_game(self, ruleset_labels, link_data, seconds_left_to_timeout):
         self.open_body()
         self.deposit_contextual_data(seconds_left_to_timeout)
 
@@ -815,7 +815,7 @@ class HTMLRenderer(Renderer):
 
         self.draw_game_control_panel()
         self.draw_game_log(seconds_left_to_timeout)
-        self.draw_game_management(link_data)
+        self.draw_game_management(link_data, ruleset_labels)
 
         # Close gameside
         self.close_gameside()

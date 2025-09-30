@@ -106,10 +106,10 @@ class TreeDocumentViewer(HTMLObject):
 
         # Magic word patterns
         magic_word_patterns = {
-            "_URLKW2_([A-Za-z.]+)<([A-Za-z_]+)=([A-Za-z0-9]),([A-Za-z_]+)=([A-Za-z0-9])>_([A-Za-z0-9 ]+)_" : (lambda match : lft(url_for(match.group(1), **{match.group(2) : match.group(3), match.group(4) : match.group(5)}), match.group(6)) ),
-            "_URLKW_([A-Za-z.]+)<([A-Za-z_]+)=([A-Za-z0-9])>_([A-Za-z0-9 ]+)_" : (lambda match : lft(url_for(match.group(1), **{match.group(2) : match.group(3)}), match.group(4)) ),
-            "_URL_([A-Za-z.]+)_([A-Za-z0-9 ]+)_" : (lambda match : lft(url_for(match.group(1)), match.group(2)) ),
-            "_URLEXT_<([A-Za-z.:/]+)>_([A-Za-z0-9 ]+)_" : (lambda match : lft(match.group(1), match.group(2)) )
+            "_URLKW2_([A-Za-z.]+)<([A-Za-z_]+)=([A-Za-z0-9]+),([A-Za-z_]+)=([A-Za-z0-9]+)>_([A-Za-z0-9\- ]+)_" : (lambda match : lft(url_for(match.group(1), **{match.group(2) : match.group(3), match.group(4) : match.group(5)}), match.group(6)) ),
+            "_URLKW_([A-Za-z.]+)<([A-Za-z_]+)=([A-Za-z0-9]+)>_([A-Za-z0-9\- ]+)_" : (lambda match : lft(url_for(match.group(1), **{match.group(2) : match.group(3)}), match.group(4)) ),
+            "_URL_([A-Za-z.]+)_([A-Za-z0-9\- ]+)_" : (lambda match : lft(url_for(match.group(1)), match.group(2)) ),
+            "_URLEXT_<([A-Za-z0-9.:/\-_]+)>_([A-Za-z0-9\- ]+)_" : (lambda match : lft(match.group(1), match.group(2)) )
             }
 
         for pattern, replacer in magic_word_patterns.items():

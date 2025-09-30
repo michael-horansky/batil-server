@@ -93,6 +93,45 @@ def init_db_command():
     init_db()
     click.echo('Initialized the database.')
 
+@click.command('tdv-backup')
+def tdv_backup_command():
+    # Backs up all TDV rows into a json
+    backup_file_path = os.path.join(current_app.root_path, "static", "backup", "tree_documents_content.json")
+
+    db = get_db()
+    tree_documents_rows = db.execute("SELECT CHAPTER_ID, LABEL, CONTENT, NEXT_CHAPTER, FIRST_SUBCHAPTER, PARENT_CHAPTER, VIEWER FROM BOC_TREE_DOCUMENTS").fetchall()
+    tree_documents = []
+    for row in tree_documents_rows:
+        tree_documents.append({
+            "CHAPTER_ID"       : row["CHAPTER_ID"],
+            "LABEL"            : row["LABEL"],
+            "CONTENT"          : row["CONTENT"],
+            "NEXT_CHAPTER"     : row["NEXT_CHAPTER"],
+            "FIRST_SUBCHAPTER" : row["FIRST_SUBCHAPTER"],
+            "PARENT_CHAPTER"   : row["PARENT_CHAPTER"],
+            "VIEWER"           : row["VIEWER"]
+            })
+
+    with open(backup_file_path, "w", encoding="utf-8") as f:
+        json.dump(tree_documents, f, indent=2, ensure_ascii=False)
+
+    click.echo(f"Tree document content backed up to {backup_file_path}")
+
+@click.command('tdv-restore')
+def tdv_restore_command():
+    # Restores all TDV rows from a json
+    backup_file_path = os.path.join(current_app.root_path, "static", "backup", "tree_documents_content.json")
+
+    db = get_db()
+    with open(backup_file_path, "r", encoding="utf-8") as f:
+        tree_documents = json.load(f)
+    tree_document_values = []
+    for td_row in tree_documents:
+        tree_document_values.append((td_row["CHAPTER_ID"], td_row["LABEL"], td_row["CONTENT"], td_row["NEXT_CHAPTER"], td_row["FIRST_SUBCHAPTER"], td_row["PARENT_CHAPTER"], td_row["VIEWER"]))
+    db.executemany("INSERT OR REPLACE INTO BOC_TREE_DOCUMENTS (CHAPTER_ID, LABEL, CONTENT, NEXT_CHAPTER, FIRST_SUBCHAPTER, PARENT_CHAPTER, VIEWER) VALUES (?, ?, ?, ?, ?, ?, ?)", tree_document_values)
+    db.commit()
+    click.echo(f"Tree document content restored from {backup_file_path}")
+
 
 sqlite3.register_converter(
     "timestamp", lambda v: datetime.fromisoformat(v.decode())
@@ -101,6 +140,8 @@ sqlite3.register_converter(
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
+    app.cli.add_command(tdv_backup_command)
+    app.cli.add_command(tdv_restore_command)
 
 # Helpful functions
 def get_table_as_list_of_dicts(query, identifier, columns):
@@ -147,7 +188,7 @@ def add_user(username, email, password):
             (USERNAME, EMAIL, PASSWORD, AUTH_CODE, N_FAILS, D_CREATED, D_CHANGED, PRIVILEGE, STATUS,
             RATING)
         VALUES
-            (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, \'USER\', \'PENDING\',
+            (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, \'USER\', \'ACTIVE\',
             (SELECT PARAMETER_VALUE FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_RATING\"))
         """, (username, email, generate_password_hash(password), random_string),
     )
