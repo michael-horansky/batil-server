@@ -163,16 +163,21 @@ class TutorialHTMLRenderer(Renderer):
         self.deposit_object("time_jumps", self.render_object.time_jumps)
 
         self.deposit_datum("current_turn", self.render_object.current_turn)
+        # See if the displayed turn was specified. If not, we default to the first turn of the game.
+        if self.client_role == "editor":
+            default_displayed_turn = self.render_object.current_turn
+        else:
+            default_displayed_turn = 1
         if "last_displayed_turn" in request.args:
             try:
                 if int(request.args.get("last_displayed_turn")) >= 1:
                     self.deposit_datum("last_displayed_turn", int(request.args.get("last_displayed_turn")))
                 else:
-                    self.deposit_datum("last_displayed_turn", self.render_object.current_turn)
+                    self.deposit_datum("last_displayed_turn", default_displayed_turn)
             except:
-                self.deposit_datum("last_displayed_turn", self.render_object.current_turn)
+                self.deposit_datum("last_displayed_turn", default_displayed_turn)
         else:
-            self.deposit_datum("last_displayed_turn", self.render_object.current_turn)
+            self.deposit_datum("last_displayed_turn", default_displayed_turn)
 
         # ---------------------- Game status properties -----------------------
         self.deposit_datum("game_status", self.render_object.game_status)
@@ -748,7 +753,7 @@ class TutorialHTMLRenderer(Renderer):
             return(f"<span class=\"stone_highlight\" onmouseenter=\"set_stone_highlight({stone_ID})\" onmouseleave=\"set_stone_highlight(null)\" onclick=\"cameraman.track_stone({stone_ID})\">{stone_label}</span>")
 
         def square_highlight(t, x, y, square_label):
-            return(f"<span class=\"square_highlight\" onclick=\"go_to_square({t},{x},{y})\">{square_label}</tspan>")
+            return(f"<span class=\"square_highlight\" onclick=\"go_to_square({t},{x},{y})\">{square_label}</span>")
 
         # Magic word patterns
         magic_word_patterns = {

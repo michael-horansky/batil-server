@@ -133,6 +133,12 @@ def tdv_restore_command():
     click.echo(f"Tree document content restored from {backup_file_path}")
 
 
+@click.command('tutorials-backup')
+def tutorials_backup_command():
+    # Backs up all the tutorials and also their boards
+    pass
+
+
 sqlite3.register_converter(
     "timestamp", lambda v: datetime.fromisoformat(v.decode())
 )

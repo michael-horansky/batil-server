@@ -2,7 +2,7 @@
   {
     "CHAPTER_ID": 1,
     "LABEL": "Welcome",
-    "CONTENT": "<p>Welcome to Batil (BAttle in TIme Loops)!</p>\r\n\r\n<p>TL;DR: If you just want to start playing right away, head over to the _URL_auth.register_sign-up page_ to make an account, then log in and start playing! Here TODO is a list of all tutorials to quickly teach you how to play.</p>\r\n\r\n<p>This guide is divided into two parts. The first will teach you how to navigate the Batil website and how to start playing the game right away. The second is a complete rulebook for Batil, including example scenarios which you can explore in-game by clicking on the interactive links inside the tutorial text.</p>\r\n\r\n<p>If you're reading this, the first 'beta' version of the game has been deployed to a live server. Please keep track of any issues, wanted features, unwanted bugs, unclear explanations, or comments regarding the rules of the game that you might have and send them to me either via this _URLEXT_<https://forms.gle/yvaYjF7mAqE5y4vK9>_feedback submission form_ or via my e-mail address michael.horansky@gmail.com. If you won't, I will send you unsolicited emails on the address you provided during registration, where I will spam you with tedious multi-page feedback forms. Thank you for being a cooperating test subject.</p>\r\n\r\n<p>Enjoy the game!</p>",
+    "CONTENT": "<p>Welcome to Batil (BAttle in TIme Loops)!</p>\r\n\r\n<p>TL;DR: If you just want to start playing right away, head over to the _URL_auth.register_sign-up page_ to make an account, then log in and start playing! _URLKW2_home.index<section=5,tutorial_guide_chapter=26>_Here_ is a list of all tutorials to quickly teach you how to play.</p>\r\n\r\n<p>This guide is divided into two parts. The first will teach you how to navigate the Batil website and how to start playing the game right away. The second is a complete rulebook for Batil, including example scenarios which you can explore in-game by clicking on the interactive links inside the tutorial text.</p>\r\n\r\n<p>If you're reading this, the first 'beta' version of the game has been deployed to a live server. Please keep track of any issues, wanted features, unwanted bugs, unclear explanations, or comments regarding the rules of the game that you might have and send them to me either via this _URLEXT_<https://forms.gle/yvaYjF7mAqE5y4vK9>_feedback submission form_ or via my e-mail address michael.horansky@gmail.com. If you won't, I will send you unsolicited emails on the address you provided during registration, where I will spam you with tedious multi-page feedback forms. Thank you for being a cooperating test subject.</p>\r\n\r\n<p>Enjoy the game!</p>",
     "NEXT_CHAPTER": null,
     "FIRST_SUBCHAPTER": 2,
     "PARENT_CHAPTER": null,
@@ -20,9 +20,9 @@
   {
     "CHAPTER_ID": 3,
     "LABEL": "Rules of the game",
-    "CONTENT": "How to play Batil?",
+    "CONTENT": "<p>\r\nThis section will teach you how to play Batil itself, including links to helpful tutorials (i.e. annotated example games).\r\n</p>",
     "NEXT_CHAPTER": null,
-    "FIRST_SUBCHAPTER": null,
+    "FIRST_SUBCHAPTER": 22,
     "PARENT_CHAPTER": 1,
     "VIEWER": "tutorial_guide"
   },
@@ -186,6 +186,60 @@
     "NEXT_CHAPTER": null,
     "FIRST_SUBCHAPTER": null,
     "PARENT_CHAPTER": 8,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 22,
+    "LABEL": "Introduction",
+    "CONTENT": "<p>\r\n<i>Battle of Causality</i> is a turn-based digital strategy board game about time-travel. So how is it different from <i>5D Chess With Multiverse Time Travel</i>? In <i>5D Chess With Multiverse Time Travel</i>, you cannot \"change the past\" in a way that affects a board configuration which has already been reached—attempting to do so creates a new timeline, which is a neat resolution of the ontological paradox. <i>Battle of Causality</i> tackles time-travel in a completely different way, utilising the _URLEXT_<https://en.wikipedia.org/wiki/Novikov_self-consistency_principle>_Novikov self-consistency principle_. A stone may travel back in time, but such an action only occurs if it can be \"justified\" by the player's actions, i.e. any caused effects don't contradict their initial causes. In short, there is a single timeline which hosts an increasing number of tangled world lines, where effect may precede cause, and the growing danger of a paradox looms ever-present.\r\n</p>\r\n\r\n<h3>Setting</h3>\r\n<p>\r\nTwo players, <i>A</i> and <i>B</i>, face each other in a competitive battle over the board. Each player controls an army of stones with diverse specialisations and abilities. Commandeering their stones as time progresses, the players attempt to destroy the opponent's army to clear the way for capturing all the strategically significant points. However, time runs short, and after a few turns, there is nowhere to move anymore. The game, however, continues: the stones can be commanded not just to move in space, but also to jump back in time. These new versions of the old stones share the board space with their previous versions, which follow the established routes already known to the players. However, should a stone travel back in time and obstruct the path of its old self, history becomes malleable. And so the players can control an ever-growing and ever-changing army of many mirror images of a handful of stones, which constantly rewrite their own history. However, be careful not to perform an action which contradicts itself, or you might find yourself trapped in a paradox...\r\n</p>\r\n\r\n<h3>Goal of the game</h3>\r\n<p>\r\nThe board houses a few special squares called bases. Each base has an allegiance: it can belong to either player, or be neutral. Players can capture bases by visiting them with their stones, which changes the base's allegiance to the player's faction until it is captured by their opponent. The goal of the game is to make sure that all the bases on the board belong to you.\r\n</p>",
+    "NEXT_CHAPTER": 23,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 3,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 23,
+    "LABEL": "How to play",
+    "CONTENT": "<p>\r\nThe board consists of squares placed along three axes: horizontal position <i>x</i>, vertical position <i>y</i>, and time <i>t</i>. Time is, of course, special, as the state of the squares at a particular time is directly inferred from the state of the squares at a lower time. The collection of squares at a specified time is called a time-slice, and can be thought of as the temporal equivalent of a rank or a file in classical chess. The dimension of the board along the time axis is called the time cap: the whole game takes place in a time interval of length restricted by this time cap.\r\n</p>\r\n<p>\r\nAn example of what a game could look like in its first round, with instructions on how to navigate and interpret the board can be found in _URLKW_tutorial.tutorial<tutorial_id=1>_this tutorial_.\r\n</p>",
+    "NEXT_CHAPTER": 24,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 3,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 24,
+    "LABEL": "Stone types",
+    "CONTENT": "Change me",
+    "NEXT_CHAPTER": 25,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 3,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 25,
+    "LABEL": "Ruleset variations",
+    "CONTENT": "Change me",
+    "NEXT_CHAPTER": 26,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 3,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 26,
+    "LABEL": "Index of tutorials",
+    "CONTENT": "<table>\r\n<tbody>\r\n\r\n<tr>\r\n<td>Introduction:</td> <td> _URLKW_tutorial.tutorial<tutorial_id=1>_a single-round game_ </td>\r\n</tr>\r\n\r\n</tbody>\r\n</table>",
+    "NEXT_CHAPTER": 27,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 3,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 27,
+    "LABEL": "Glossary of terms",
+    "CONTENT": "Change me",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 3,
     "VIEWER": "tutorial_guide"
   }
 ]
