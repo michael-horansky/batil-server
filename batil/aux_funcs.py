@@ -34,6 +34,15 @@ def seconds_to_str(seconds, val_on_none = "", val_on_neg = ""):
 
     return(f"{hours}:{minutes:02}:{secs:02}")
 
+def make_dict(imm_dict, cols):
+    res = {}
+    for col in cols:
+        res[col] = imm_dict[col]
+    return(res)
+
+def make_tuple(my_dict, cols):
+    return(tuple(my_dict[x] for x in cols))
+
 
 # --------------------------------- CONSTANTS ---------------------------------
 

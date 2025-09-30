@@ -1,0 +1,140 @@
+{
+  "boards": [
+    {
+      "BOARD_ID": 2,
+      "BOARD_NAME": "Tutorial: tanks, five by five",
+      "T_DIM": 6,
+      "X_DIM": 7,
+      "Y_DIM": 7,
+      "STATIC_REPRESENTATION": "XXXXXXXX     XX     XX  X  XX     XX     XXXXXXXX",
+      "SETUP_REPRESENTATION": "[{\"type\": \"add_base\", \"faction\": \"neutral\", \"x\": 3, \"y\": 1}, {\"type\": \"add_base\", \"faction\": \"neutral\", \"x\": 3, \"y\": 5}, {\"type\": \"add_stone\", \"faction\": \"A\", \"stone_type\": \"tank\", \"x\": 1, \"y\": 3, \"a\": 1}, {\"type\": \"add_stone\", \"faction\": \"A\", \"stone_type\": \"tank\", \"x\": 2, \"y\": 3, \"a\": 1}, {\"type\": \"add_stone\", \"faction\": \"B\", \"stone_type\": \"tank\", \"x\": 4, \"y\": 3, \"a\": 3}, {\"type\": \"add_stone\", \"faction\": \"B\", \"stone_type\": \"tank\", \"x\": 5, \"y\": 3, \"a\": 3}]",
+      "AUTHOR": "batil",
+      "IS_PUBLIC": 0,
+      "D_CREATED": "2025-09-30 13:14:40",
+      "D_CHANGED": "2025-09-30 13:15:22",
+      "D_PUBLISHED": null
+    }
+  ],
+  "tutorials": [
+    {
+      "header": {
+        "TUTORIAL_ID": 1,
+        "BOARD_ID": 2,
+        "AUTHOR": "batil",
+        "STATUS": "in_progress",
+        "OUTCOME": null,
+        "D_CREATED": "2025-09-30 13:15:33",
+        "D_CHANGED": "2025-09-30 13:49:46"
+      },
+      "ruleset": [
+        {
+          "RULE_GROUP": "deadline",
+          "RULE": "one_day_per_move"
+        },
+        {
+          "RULE_GROUP": "end_without_win",
+          "RULE": "draw"
+        },
+        {
+          "RULE_GROUP": "paradox_action",
+          "RULE": "permanent_removal"
+        },
+        {
+          "RULE_GROUP": "scenario_priority",
+          "RULE": "conserve_setup"
+        },
+        {
+          "RULE_GROUP": "unlock_tagscreen_behaviour",
+          "RULE": "presence"
+        },
+        {
+          "RULE_GROUP": "viewing_scope",
+          "RULE": "view_entire_board"
+        }
+      ],
+      "comments": [
+        {
+          "TURN_INDEX": 1,
+          "TUTORIAL_COMMENT": "This is an example of an ongoing game with a single round. Each turn will have an annotation here. To navigate to the next turn, press C, or click on the \"Next timeslice\" button."
+        },
+        {
+          "TURN_INDEX": 2,
+          "TUTORIAL_COMMENT": "<p>\r\nPlayer <i>A</i> controls the green stones, player <i>B</i> controls the red stones. In the last turn, <i>A</i> told the stone _STONE_2_on the left_ to turn up, and the stone _STONE_3_on the right_ to turn down. Meanwhile, <i>B</i> told both of their stones to turn up. As you can see, both actions are executed simultaneously.\r\n</p>\r\n<p>\r\nTo navigate to the previous turn, press Z or the relevant button. Pressing X brings you to the last turn of this game, which would skip the rest of the tutorial, so don't do that!\r\n</p>\r\n<p>\r\nIf you pressed the highlighted links in the first paragraph, you are now tracking one of the stones. This affixes the camera to that stone. If you want to exit this, press Esc, or the relevant button in the tracking inspector (the beige box on the right). Pressing R will then reset the camera.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 3,
+          "TUTORIAL_COMMENT": "<p>\r\nBoth players now moved their stones. All the stones on the board are of type <i>tank</i>, which means they can only move forwards or backwards regarding the direction they're facing. As they move, they can also turn right or left; _STONE_4_this stone_ just moved forward, but _STONE_5_this stone_ moved and also turned anti-clockwise, so it's now facing to the left.\r\n</p>\r\n<p>\r\nYou can move the camera which displays the board with WASD, and zoom in and out with Q and E, respectively. As you saw before, R resets the camera so that it displays the entire board; you can also press F to reset the zoom level to the default value.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 4,
+          "TUTORIAL_COMMENT": "<p>\r\nAs you can see, you don't always have to turn or move your stones; the stone on _SQUARE_3,1,2_this_  square simply waits. Also note that, since all stone movement is performed simultaneously, the stones can obstruct each other; _STONE_4_this stone_ waits in place, but _STONE_5_this stone_ pushes it along, which in this case is part of player <i>B</i>'s strategy. The full rules for how this works are shown IN A LATER TUTORIAL.\r\n</p>\r\n<p>\r\nIf you wish, navigate to the previous turn and then back to this one by pressing Z and C, paying attention to the moving animation. Firstly the _STONE_5_right stone_ moves into the square occupied by the  _STONE_4_left stone_, and the left stone is only afterwards pushed out. The transition animations decompose the actions which are performed between each turn into sections, which illustrate the logic behind the game's evolution.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 5,
+          "TUTORIAL_COMMENT": "<p>\r\nA lot happened here! _STONE_2_This stone_ fires their laser, but _STONE_4_their target_ dodges out of the way, so they destroy player <i>B</i>'s _STONE_5_other stone_. The _STONE_4_stone which dodged the laser_ successfully captures the base on the _SQUARE_4,3,1_top square_. In the meantime, player <i>A</i>'s _STONE_3_other stone_ demonstrates the tank's capability of moving backwards.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 6,
+          "TUTORIAL_COMMENT": "<p>\r\nThis is the last time-slice of this round. Although labelled by number 5, remember that time-slices are indexed from zero, so it is indeed the sixth time-slice (and six is the time dimension of this board). The stones may no longer move, but they can jump back in time at this point; what that would look like, you will see in THIS TUTORIAL.\r\n</p>\r\n<p>\r\nNote that the base on the _SQUARE_5,3,1_top square_ changed colour to red to signify the fact it was captured by player <i>B</i>. The base on the _SQUARE_5,3,5_bottom square_ was in turn captured by player <i>A</i>, but you can't see it, because the _STONE_3_capturing stone_ sits on top of it.\r\n</p>"
+        }
+      ],
+      "moves": [
+        {
+          "TURN_INDEX": 0,
+          "PLAYER": "GM",
+          "REPRESENTATION": "[{\"type\": \"add_base\", \"faction\": \"neutral\", \"x\": 3, \"y\": 1}, {\"type\": \"add_base\", \"faction\": \"neutral\", \"x\": 3, \"y\": 5}, {\"type\": \"add_stone\", \"faction\": \"A\", \"stone_type\": \"tank\", \"x\": 1, \"y\": 3, \"a\": 1}, {\"type\": \"add_stone\", \"faction\": \"A\", \"stone_type\": \"tank\", \"x\": 2, \"y\": 3, \"a\": 1}, {\"type\": \"add_stone\", \"faction\": \"B\", \"stone_type\": \"tank\", \"x\": 4, \"y\": 3, \"a\": 3}, {\"type\": \"add_stone\", \"faction\": \"B\", \"stone_type\": \"tank\", \"x\": 5, \"y\": 3, \"a\": 3}]"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 0, \"x\": 1, \"y\": 3, \"a\": 1, \"target_t\": 1, \"target_x\": 1, \"target_y\": 3, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 0, \"x\": 2, \"y\": 3, \"a\": 1, \"target_t\": 1, \"target_x\": 2, \"target_y\": 3, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 0, \"x\": 4, \"y\": 3, \"a\": 3, \"target_t\": 1, \"target_x\": 4, \"target_y\": 3, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 0, \"x\": 5, \"y\": 3, \"a\": 3, \"target_t\": 1, \"target_x\": 5, \"target_y\": 3, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 1, \"x\": 1, \"y\": 3, \"a\": 0, \"target_t\": 2, \"target_x\": 1, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 1, \"x\": 2, \"y\": 3, \"a\": 2, \"target_t\": 2, \"target_x\": 2, \"target_y\": 4, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 1, \"x\": 4, \"y\": 3, \"a\": 0, \"target_t\": 2, \"target_x\": 4, \"target_y\": 2, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 1, \"x\": 5, \"y\": 3, \"a\": 0, \"target_t\": 2, \"target_x\": 5, \"target_y\": 2, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 2, \"x\": 1, \"y\": 2, \"a\": 1, \"target_t\": 3, \"target_x\": 1, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 2, \"x\": 2, \"y\": 4, \"a\": 1, \"target_t\": 3, \"target_x\": 2, \"target_y\": 4, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 2, \"x\": 4, \"y\": 2, \"a\": 0, \"target_t\": 3, \"target_x\": 4, \"target_y\": 2, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 2, \"x\": 5, \"y\": 2, \"a\": 3, \"target_t\": 3, \"target_x\": 4, \"target_y\": 2, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"attack\", \"t\": 3, \"x\": 1, \"y\": 2, \"a\": 1, \"target_t\": 4, \"target_x\": 1, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 3, \"x\": 2, \"y\": 4, \"a\": 0, \"target_t\": 4, \"target_x\": 2, \"target_y\": 5, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 3, \"x\": 3, \"y\": 2, \"a\": 0, \"target_t\": 4, \"target_x\": 3, \"target_y\": 1, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 3, \"x\": 4, \"y\": 2, \"a\": 3, \"target_t\": 4, \"target_x\": 3, \"target_y\": 2, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 4, \"x\": 1, \"y\": 2, \"a\": 1, \"target_t\": 5, \"target_x\": 1, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 4, \"x\": 2, \"y\": 5, \"a\": 1, \"target_t\": 5, \"target_x\": 3, \"target_y\": 5, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 4, \"x\": 3, \"y\": 1, \"a\": 3, \"target_t\": 5, \"target_x\": 2, \"target_y\": 1, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        }
+      ]
+    }
+  ]
+}

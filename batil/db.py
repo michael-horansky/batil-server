@@ -136,7 +136,81 @@ def tdv_restore_command():
 @click.command('tutorials-backup')
 def tutorials_backup_command():
     # Backs up all the tutorials and also their boards
-    pass
+    backup_file_path = os.path.join(current_app.root_path, "static", "backup", "tutorials_backup.json")
+
+    db = get_db()
+    required_tables_raw = db.execute("SELECT BOARD_ID, BOARD_NAME, T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, D_PUBLISHED FROM BOC_BOARDS WHERE EXISTS (SELECT 1 FROM BOC_TUTORIALS WHERE BOC_TUTORIALS.BOARD_ID = BOC_BOARDS.BOARD_ID)").fetchall()
+    all_tutorials_raw = db.execute("SELECT TUTORIAL_ID, BOARD_ID, AUTHOR, STATUS, OUTCOME, D_CREATED, D_CHANGED FROM BOC_TUTORIALS").fetchall()
+
+    data_to_save = {
+        "boards" : [],
+        "tutorials" : []
+        }
+
+    for row in required_tables_raw:
+        data_to_save["boards"].append(make_dict(row, ["BOARD_ID", "BOARD_NAME", "T_DIM", "X_DIM", "Y_DIM", "STATIC_REPRESENTATION", "SETUP_REPRESENTATION", "AUTHOR", "IS_PUBLIC", "D_CREATED", "D_CHANGED", "D_PUBLISHED"]))
+
+    for tutorial_row in all_tutorials_raw:
+        # We select all the comments, rulesets, and moves
+        ruleset_raw = db.execute("SELECT RULE_GROUP, RULE FROM BOC_TUTORIAL_RULESETS WHERE TUTORIAL_ID = ?", (tutorial_row["TUTORIAL_ID"],)).fetchall()
+        all_comments_raw = db.execute("SELECT TURN_INDEX, TUTORIAL_COMMENT FROM BOC_TUTORIAL_COMMENTS WHERE TUTORIAL_ID = ?", (tutorial_row["TUTORIAL_ID"],)).fetchall()
+        all_moves_raw = db.execute("SELECT TURN_INDEX, PLAYER, REPRESENTATION FROM BOC_TUTORIAL_MOVES WHERE TUTORIAL_ID = ?", (tutorial_row["TUTORIAL_ID"],)).fetchall()
+        new_tutorial_dict = {
+            "header" : make_dict(tutorial_row, ["TUTORIAL_ID", "BOARD_ID", "AUTHOR", "STATUS", "OUTCOME", "D_CREATED", "D_CHANGED"]),
+            "ruleset" : [],
+            "comments" : [],
+            "moves" : []
+            }
+        for row in ruleset_raw:
+            new_tutorial_dict["ruleset"].append(make_dict(row, ["RULE_GROUP", "RULE"]))
+        for row in all_comments_raw:
+            new_tutorial_dict["comments"].append(make_dict(row, ["TURN_INDEX", "TUTORIAL_COMMENT"]))
+        for row in all_moves_raw:
+            new_tutorial_dict["moves"].append(make_dict(row, ["TURN_INDEX", "PLAYER", "REPRESENTATION"]))
+        data_to_save["tutorials"].append(new_tutorial_dict)
+
+    with open(backup_file_path, "w") as f:
+        json.dump(data_to_save, f, indent=2, default=str)
+
+    click.echo(f"Tutorials and tutorial boards backed up to {backup_file_path}")
+
+@click.command('tutorials-restore')
+def tutorials_restore_command():
+    # Restores tutorials, their required boards, and all the moves etc from the backup json
+    backup_file_path = os.path.join(current_app.root_path, "static", "backup", "tutorials_backup.json")
+
+    db = get_db()
+    with open(backup_file_path, "r") as f:
+        tutorials_data = json.load(f)
+
+    # First, the boards
+    tutorial_boards_vals = []
+    for row in tutorials_data["boards"]:
+        tutorial_boards_vals.append(make_tuple(row, ["BOARD_ID", "BOARD_NAME", "T_DIM", "X_DIM", "Y_DIM", "STATIC_REPRESENTATION", "SETUP_REPRESENTATION", "AUTHOR", "IS_PUBLIC", "D_CREATED", "D_CHANGED", "D_PUBLISHED"]))
+    db.executemany("INSERT OR REPLACE INTO BOC_BOARDS (BOARD_ID, BOARD_NAME, T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, AUTHOR, IS_PUBLIC, D_CREATED, D_CHANGED, D_PUBLISHED) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", tutorial_boards_vals)
+
+    # Now, the tutorials
+    for tutorial_datum in tutorials_data["tutorials"]:
+        # tutorial
+        db.execute("INSERT OR REPLACE INTO BOC_TUTORIALS (TUTORIAL_ID, BOARD_ID, AUTHOR, STATUS, OUTCOME, D_CREATED, D_CHANGED) VALUES (?, ?, ?, ?, ?, ?, ?)", make_tuple(tutorial_datum["header"], ["TUTORIAL_ID", "BOARD_ID", "AUTHOR", "STATUS", "OUTCOME", "D_CREATED", "D_CHANGED"]))
+        # ruleset
+        ruleset_vals = []
+        for row in tutorial_datum["ruleset"]:
+            ruleset_vals.append((tutorial_datum["header"]["TUTORIAL_ID"],) + make_tuple(row, ["RULE_GROUP", "RULE"]))
+        db.executemany("INSERT OR REPLACE INTO BOC_TUTORIAL_RULESETS (TUTORIAL_ID, RULE_GROUP, RULE) VALUES (?, ?, ?)", ruleset_vals)
+        # comments
+        comments_vals = []
+        for row in tutorial_datum["comments"]:
+            comments_vals.append((tutorial_datum["header"]["TUTORIAL_ID"],) + make_tuple(row, ["TURN_INDEX", "TUTORIAL_COMMENT"]))
+        db.executemany("INSERT OR REPLACE INTO BOC_TUTORIAL_COMMENTS (TUTORIAL_ID, TURN_INDEX, TUTORIAL_COMMENT) VALUES (?, ?, ?)", comments_vals)
+        # moves
+        moves_vals = []
+        for row in tutorial_datum["moves"]:
+            moves_vals.append((tutorial_datum["header"]["TUTORIAL_ID"],) + make_tuple(row, ["TURN_INDEX", "PLAYER", "REPRESENTATION"]))
+        db.executemany("INSERT OR REPLACE INTO BOC_TUTORIAL_MOVES (TUTORIAL_ID, TURN_INDEX, PLAYER, REPRESENTATION) VALUES (?, ?, ?, ?)", moves_vals)
+
+    db.commit()
+    click.echo(f"Tutorials restored from {backup_file_path}")
 
 
 sqlite3.register_converter(
@@ -148,6 +222,7 @@ def init_app(app):
     app.cli.add_command(init_db_command)
     app.cli.add_command(tdv_backup_command)
     app.cli.add_command(tdv_restore_command)
+    app.cli.add_command(tutorials_backup_command)
 
 # Helpful functions
 def get_table_as_list_of_dicts(query, identifier, columns):
