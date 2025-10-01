@@ -183,6 +183,9 @@ hr {
     flex-direction: column;
     padding-top: 7px;
 }
+#game_log.active {
+    background-color: #b2c49b;
+}
 
 /* game log */
 

@@ -11,7 +11,7 @@
   {
     "CHAPTER_ID": 2,
     "LABEL": "Navigating the Batil web app",
-    "CONTENT": "Go to _URLKW2_home.index<section=5,tutorial_guide_chapter=1>_home section_ right now!\r\n<br>\r\nOr maybe go to _URL_admin.admin_the admin section_ if you have the rights!\r\n<br>\r\nOr maybe fill out _URLEXT_<https://xkcd.com>_this form_ ?\r\n\r\n<p>The Batil web-app is an open-source software package for hosting instances of Batil, a turn-based player-vs-player strategy game (or a \"chesslike\", if you will). The web-app source-code may be found on _URLEXT_<https://github.com/michael-horansky/batil-server>_this repository_. You are welcome to modify and reuse this software to host your own Batil (or Batil-derived) game servers!</p>\r\n\r\n<p>\r\nThe Batil web-app has five different page types which comprise its core features:\r\n</p>\r\n<ul>\r\n\r\n<li>_URL_auth.register_Sign-up_ and _URL_auth.login_log-in_: pages to make an account and to log in after closing and reopening the client.</li>\r\n<li>_URL_home.index_Home_: The home view of Batil after you log in; here you can begin new games and open ongoing ones, browse boards and users, manage your friend-list and change your account settings.</li>\r\n<li>_URLKW_user.user<username=batil>_User_: to view a particular user account. This link, for example, will display the official admin account for this instance of Batil!</li>\r\n<li>Game: the main interface for a single game of Batil. There is also the Tutorial interface, which looks very similar.</li>\r\n<li>_URLKW_board.board<board_id=1>_Board_: the interface to view (and edit) boards. This link, for example, will take you to one of the default boards Batil comes with!</li>\r\n<li>The secret sixth _URL_admin.admin_admin_ page</li>\r\n\r\n</ul>\r\n<p>\r\nEach of these is introduced in the sub-chapters of this chapter.\r\n</p>",
+    "CONTENT": "<p>The Batil web-app is an open-source software package for hosting instances of Batil, a turn-based player-vs-player strategy game (or a \"chesslike\", if you will). The web-app source-code may be found on _URLEXT_<https://github.com/michael-horansky/batil-server>_this repository_. You are welcome to modify and reuse this software to host your own Batil (or Batil-derived) game servers!</p>\r\n\r\n<p>\r\nThe Batil web-app has five different page types which comprise its core features:\r\n</p>\r\n<ul>\r\n\r\n<li>_URL_auth.register_Sign-up_ and _URL_auth.login_log-in_: pages to make an account and to log in after closing and reopening the client.</li>\r\n<li>_URL_home.index_Home_: The home view of Batil after you log in; here you can begin new games and open ongoing ones, browse boards and users, manage your friend-list and change your account settings.</li>\r\n<li>_URLKW_user.user<username=batil>_User_: to view a particular user account. This link, for example, will display the official admin account for this instance of Batil!</li>\r\n<li>Game: the main interface for a single game of Batil. There is also the Tutorial interface, which looks very similar.</li>\r\n<li>_URLKW_board.board<board_id=1>_Board_: the interface to view (and edit) boards. This link, for example, will take you to one of the default boards Batil comes with!</li>\r\n<li>The secret sixth _URL_admin.admin_admin_ page</li>\r\n\r\n</ul>\r\n<p>\r\nEach of these is introduced in the sub-chapters of this chapter.\r\n</p>",
     "NEXT_CHAPTER": 3,
     "FIRST_SUBCHAPTER": 4,
     "PARENT_CHAPTER": 1,
@@ -191,7 +191,7 @@
   {
     "CHAPTER_ID": 22,
     "LABEL": "Introduction",
-    "CONTENT": "<p>\r\n<i>Battle of Causality</i> is a turn-based digital strategy board game about time-travel. So how is it different from <i>5D Chess With Multiverse Time Travel</i>? In <i>5D Chess With Multiverse Time Travel</i>, you cannot \"change the past\" in a way that affects a board configuration which has already been reached—attempting to do so creates a new timeline, which is a neat resolution of the ontological paradox. <i>Battle of Causality</i> tackles time-travel in a completely different way, utilising the _URLEXT_<https://en.wikipedia.org/wiki/Novikov_self-consistency_principle>_Novikov self-consistency principle_. A stone may travel back in time, but such an action only occurs if it can be \"justified\" by the player's actions, i.e. any caused effects don't contradict their initial causes. In short, there is a single timeline which hosts an increasing number of tangled world lines, where effect may precede cause, and the growing danger of a paradox looms ever-present.\r\n</p>\r\n\r\n<h3>Setting</h3>\r\n<p>\r\nTwo players, <i>A</i> and <i>B</i>, face each other in a competitive battle over the board. Each player controls an army of stones with diverse specialisations and abilities. Commandeering their stones as time progresses, the players attempt to destroy the opponent's army to clear the way for capturing all the strategically significant points. However, time runs short, and after a few turns, there is nowhere to move anymore. The game, however, continues: the stones can be commanded not just to move in space, but also to jump back in time. These new versions of the old stones share the board space with their previous versions, which follow the established routes already known to the players. However, should a stone travel back in time and obstruct the path of its old self, history becomes malleable. And so the players can control an ever-growing and ever-changing army of many mirror images of a handful of stones, which constantly rewrite their own history. However, be careful not to perform an action which contradicts itself, or you might find yourself trapped in a paradox...\r\n</p>\r\n\r\n<h3>Goal of the game</h3>\r\n<p>\r\nThe board houses a few special squares called bases. Each base has an allegiance: it can belong to either player, or be neutral. Players can capture bases by visiting them with their stones, which changes the base's allegiance to the player's faction until it is captured by their opponent. The goal of the game is to make sure that all the bases on the board belong to you.\r\n</p>",
+    "CONTENT": "<p>\r\n<i>Battle of Causality</i> is a turn-based digital strategy board game about time-travel. So how is it different from <i>5D Chess With Multiverse Time Travel</i>? In <i>5D Chess With Multiverse Time Travel</i>, you cannot \"change the past\" in a way that affects a board configuration which has already been reached--attempting to do so creates a new timeline, which is a neat resolution of the ontological paradox. <i>Battle of Causality</i> tackles time-travel in a completely different way, utilising the _URLEXT_<https://en.wikipedia.org/wiki/Novikov_self-consistency_principle>_Novikov self-consistency principle_. A stone may travel back in time, but such an action only occurs if it can be \"justified\" by the player's actions, i.e. any caused effects don't contradict their initial causes. In short, there is a single timeline which hosts an increasing number of tangled world lines, where effect may precede cause, and the growing danger of a paradox looms ever-present.\r\n</p>\r\n\r\n<h3>Setting</h3>\r\n<p>\r\nTwo players, <i>A</i> and <i>B</i>, face each other in a competitive battle over the board. Each player controls an army of stones with diverse specialisations and abilities. Commandeering their stones as time progresses, the players attempt to destroy the opponent's army to clear the way for capturing all the strategically significant points. However, time runs short, and after a few turns, there is nowhere to move anymore. The game, however, continues: the stones can be commanded not just to move in space, but also to jump back in time. These new versions of the old stones share the board space with their previous versions, which follow the established routes already known to the players. However, should a stone travel back in time and obstruct the path of its old self, history becomes malleable. And so the players can control an ever-growing and ever-changing army of many mirror images of a handful of stones, which constantly rewrite their own history. However, be careful not to perform an action which contradicts itself, or you might find yourself trapped in a paradox...\r\n</p>\r\n\r\n<h3>Goal of the game</h3>\r\n<p>\r\nThe board houses a few special squares called bases. Each base has an allegiance: it can belong to either player, or be neutral. Players can capture bases by visiting them with their stones, which changes the base's allegiance to the player's faction until it is captured by their opponent. The goal of the game is to make sure that all the bases on the board belong to you.\r\n</p>",
     "NEXT_CHAPTER": 23,
     "FIRST_SUBCHAPTER": null,
     "PARENT_CHAPTER": 3,
@@ -200,9 +200,9 @@
   {
     "CHAPTER_ID": 23,
     "LABEL": "How to play",
-    "CONTENT": "<p>\r\nThe board consists of squares placed along three axes: horizontal position <i>x</i>, vertical position <i>y</i>, and time <i>t</i>. Time is, of course, special, as the state of the squares at a particular time is directly inferred from the state of the squares at a lower time. The collection of squares at a specified time is called a time-slice, and can be thought of as the temporal equivalent of a rank or a file in classical chess. The dimension of the board along the time axis is called the time cap: the whole game takes place in a time interval of length restricted by this time cap.\r\n</p>\r\n<p>\r\nAn example of what a game could look like in its first round, with instructions on how to navigate and interpret the board can be found in _URLKW_tutorial.tutorial<tutorial_id=1>_this tutorial_.\r\n</p>",
+    "CONTENT": "<p>\r\nThe board consists of squares placed along three axes: horizontal position <i>x</i>, vertical position <i>y</i>, and time <i>t</i>. Time is, of course, special, as the state of the squares at a particular time is directly inferred from the state of the squares at a lower time. The collection of squares at a specified time is called a time-slice, and can be thought of as the temporal equivalent of a rank or a file in classical chess. The dimension of the board along the time axis is called the time cap: the whole game takes place in a time interval of length restricted by this time cap.\r\n</p>\r\n<p>\r\nThe game is played in rounds, where every round consists of a number of turns equal to the time cap. In each round, the players look at the first time-slice in the first turn, then the second time-slice in the second turn etc, until they reach the time cap. In each turn, both players simultaneously place down one command for each stone in the active time-slice. These commands manifest as <b>flags</b>, and after each turn, those flags are translated into actions performed by the stones, which determine the state of the next time-slice. You can think of flags as road-marks which the stones follow along their trajectories.\r\n</p>\r\n<p>\r\nAt the end of each round, a procedure called <b>canonisation</b> is performed, which resolves everything to do with time-travel and sets the stage for the first time-slice of the next round. At this moment, it is also checked if the end-of-game conditions have been satisfied.\r\n</p>\r\n<p>\r\nAn important thing to note is that a flag being placed for a stone at a time-slice <i>t</i> affects the stone \"in-between\" this and the next time-slice, and the consequences of that action showly on in the next time-slice <i>t+1</i>.\r\n</p>\r\n<p>\r\nAn example of what a game could look like in its first round, with instructions on how to navigate and interpret the board can be found in _URLKW_tutorial.tutorial<tutorial_id=1>_this tutorial_.\r\n</p>",
     "NEXT_CHAPTER": 24,
-    "FIRST_SUBCHAPTER": null,
+    "FIRST_SUBCHAPTER": 28,
     "PARENT_CHAPTER": 3,
     "VIEWER": "tutorial_guide"
   },
@@ -227,7 +227,7 @@
   {
     "CHAPTER_ID": 26,
     "LABEL": "Index of tutorials",
-    "CONTENT": "<table>\r\n<tbody>\r\n\r\n<tr>\r\n<td>Introduction:</td> <td> _URLKW_tutorial.tutorial<tutorial_id=1>_a single-round game_ </td>\r\n</tr>\r\n\r\n</tbody>\r\n</table>",
+    "CONTENT": "_URLKW_tutorial.tutorial<tutorial_id=1>_1. Introduction_\r\n<br>\r\n_URLKW_tutorial.tutorial<tutorial_id=2>_2. Causal freedom and the comb rule_\r\n<br>\r\n_URLKW_tutorial.tutorial<tutorial_id=3>_3. Interference and amnesia_",
     "NEXT_CHAPTER": 27,
     "FIRST_SUBCHAPTER": null,
     "PARENT_CHAPTER": 3,
@@ -240,6 +240,69 @@
     "NEXT_CHAPTER": null,
     "FIRST_SUBCHAPTER": null,
     "PARENT_CHAPTER": 3,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 28,
+    "LABEL": "Stone trajectories and flag placement",
+    "CONTENT": "<p>\r\nEvery stone placed on the board has a unique flag called the <b>progenitor</b> which, if active, places it onto a specific position. From the corresponding time onward, the stone checks the square it stands on in each time-slice for flags which can be activated (see Sec. _URLKW2_home.index<section=5,tutorial_guide_chapter=30>_Interference and amnesia_ for specific rules about which flag is activated). Activating a flag determines the stone's initial placement in the next time-slice, and after all flags in this time-slice are dealt with, this initial placement is changed into the canonical placement by resolving all conflicts (see Sec. _URLKW2_home.index<section=5,tutorial_guide_chapter=33>_Spatial conflict resolution_). If the stone follows a flag which removes it from a board, is destroyed, or becomes causally free, it is not placed into the next time-slice, and its trajectory ends.\r\n</p>\r\n<p>\r\nIt is important to note that the game is totally deterministic. In other words, specifying the flags players placed on each turn up to turn <i>T</i> allows us to unequivocally ascertain the state of the board on turn <i>1</i>, turn <i>2...</i> all the way to turn <i>T</i>.\r\n</p>",
+    "NEXT_CHAPTER": 32,
+    "FIRST_SUBCHAPTER": 29,
+    "PARENT_CHAPTER": 23,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 29,
+    "LABEL": "Causal freedom and the comb rule",
+    "CONTENT": "<p>\r\nIf a stone reaches a position at which there is no flag which it can follow, the stone becomes <b>causally free</b>. This means that we don't know what the stone does between this and the next time-slice, and so it isn't yet placed in the next time-slice. However, when a flag is placed for this stone at the point of its causal freedom, it gets \"locked\" into the specified action and can be placed into the next time-slice, where (if not destroyed) it is causally free and can be commanded again.\r\n</p>\r\n<p>\r\nNow we understand the structure of the game as divided into rounds and turns: the turns progress through every time-slice \"sweeping up\" causally free stones, propagating their trajectories to the point of removal from the board or the time cap. Then, when the end of the round is reached, any progenitor flag, including the newly placed time-jumps, can be set as active, which in turn creates new causally free stones sprinkled over the board, and a new round of \"sweeping\" may begin again.\r\n<p>\r\n</p>\r\nThe <b>comb rule</b> states that within a round, the past is always known. In other words, in a turn where time-slice <i>t</i> is active, there cannot be any causally free stones in time-slices <i>1, 2... t-1</i>. This mean that the players have to command <i>all</i> of their causally free stones at <i>t</i>, with the only exception to this being the final time-slice of the round, where stones are allowed to be left as causally free, since there is no later time at which their past would have to be known.\r\n</p>\r\n<p>\r\n_URLKW_tutorial.tutorial<tutorial_id=2>_This tutorial_ shows the state of an example game after the second round starts; in the first round, no stone may remain causally free except for in the final time-slice, but in the last round, which is in progress, causally free stones may turn up in any time-slice which is later than the active one.\r\n</p>",
+    "NEXT_CHAPTER": 30,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 28,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 30,
+    "LABEL": "Interference and amnesia",
+    "CONTENT": "<h3>Interference</h3>\r\n<p>\r\nAn important term to be familiar with is <b>interference</b>. The philosophy the game follows is that trajectories once laid out will play out again and again, unless their actors are interacted with by stones sharing the same time, but still remaining causally free due to being placed into the same time later in the game. If a stone which would not normally become causally free in a specific time-slice has its path obstructed or is in another way prevented from reaching the next flag leading it along its trajectory, that stone once again becomes causally free in that time-slice. In short, the more interference the players can cause among their stones, the more control over them they can gain.\r\n</p>\r\n\r\n<h3>Preventing amnesia</h3>\r\n<p>\r\n<b>Amnesia</b> does not exist in the world of Batil. This is why <b>amnesia prevention</b> is an important mechanic in the game. Suppose that a certain stone follows a trajectory carved out in some early round. In a later round, this stone is interfered with, and follows a different trajectory. And now suppose that, in this new trajectory, the stone enters a square which it would occupy in the earlier trajectory as well, the same time and the same position. Should the stone \"forget\" the interference and slip back into the old trajectory? No! This is why the presence of a flag associated with the stone is a necessary, but not sufficient condition for the stone to actually follow the flag. In fact, the stone cannot follow a flag placed in an earlier round than that of the flag it followed in the previous time-slice; this ensures that a stone set causally free by interference remains causally free in the active time-slice until the end of the round.\r\n</p>\r\n<p>\r\nBoth of these concepts are demonstrated in _URLKW_tutorial.tutorial<tutorial_id=3>_this tutorial_.\r\n</p>",
+    "NEXT_CHAPTER": 31,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 28,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 31,
+    "LABEL": "Order of flag execution",
+    "CONTENT": "<p>\r\nOnce all flags have been placed for this turn, the game calculates the state of the board for the next turn. It does this by going from the first to the last time-slice, always taking the flags in the previous time-slice to determine the state of this time-slice. This process can be broken down into four parts:\r\n</p>\r\n<ol>\r\n<li>\r\nThe movement flags placed on the previous time-slice and progenitor flags associated with this time-slice are executed, propagating the stones into this time-slice, in general into conflicting positions.\r\n</li>\r\n<li>\r\nThe spatial conflicts are resolved, and the state of this time-slice is conflict-free.\r\n</li>\r\n<li>\r\nThe stone actions activated in the previous time-slice, such as attacks, and board events such as explosions of bombs and tagscreens, are resolved now. Since these can only remove stones from the board, but not push them, the time-slice remains without conflict.\r\n</li>\r\n<li>\r\nFinally, the allegiance of each base changes to the faction of the occupying stone, if there is one. The time-slice state is now canonical.\r\n</li>\r\n</ol>\r\n<p>\r\nNote that, within each turn, there is no order imposed upon the players--rather, all of the commands they submitted are performed simultaneously! An important part of the game is also that players choose their actions in a given turn without seeing what the other player is considering to do, only learning of each other's actions after the turn ends.\r\n</p>",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 28,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 32,
+    "LABEL": "Spatial movement and attacking",
+    "CONTENT": "Change me",
+    "NEXT_CHAPTER": 34,
+    "FIRST_SUBCHAPTER": 33,
+    "PARENT_CHAPTER": 23,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 33,
+    "LABEL": "Spatial conflict resolution",
+    "CONTENT": "literally the most cursed thing",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 32,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 34,
+    "LABEL": "Interacting with the past",
+    "CONTENT": "Change me",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 23,
     "VIEWER": "tutorial_guide"
   }
 ]

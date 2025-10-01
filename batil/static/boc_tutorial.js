@@ -193,6 +193,12 @@ function inds(obj, inds, to_str = true) {
 function update_game_log_nav(timeslice, round) {
     document.getElementById("game_log_nav_timeslice_value").textContent = `${timeslice} / ${t_dim - 1}`;
     document.getElementById("game_log_nav_round_value").textContent = `${round} / ${active_round}`;
+    // If this is the active turn, we highlight the background of the game log section.
+    if (timeslice == active_timeslice && round == active_round) {
+        document.getElementById("game_log").classList.add("active");
+    } else {
+        document.getElementById("game_log").classList.remove("active");
+    }
 }
 
 function update_tutorial_comment_form(timeslice, round) {
@@ -223,6 +229,7 @@ function select_round(new_round_n, new_timeslice = null) {
     }
     //document.getElementById("navigation_label").innerText = `Selected timeslice ${selected_timeslice}, selected round ${selected_round}`;
     update_game_log_nav(selected_timeslice, selected_round);
+    update_tutorial_comment_form(selected_timeslice, selected_round);
 }
 
 function show_canon_board_slice(round_n, timeslice){
@@ -1237,6 +1244,9 @@ function show_next_timeslice(){
             animation_manager.add_to_queue([["change_process", selected_round, selected_timeslice, process_keys[process_key_index], false]]);
         }
         animation_manager.add_to_queue([["reset_to_canon", selected_round, selected_timeslice]]);
+    } else if (timeslice_navigation_enabled && round_navigation_enabled && (selected_timeslice == t_dim - 1) && (selected_round < active_round)) {
+        select_timeslice(0);
+        show_next_round();
     }
 }
 
@@ -1251,6 +1261,9 @@ function show_prev_timeslice(){
         }
         animation_manager.add_to_queue([["change_process", selected_round, selected_timeslice, "canon", true]]);
         animation_manager.add_to_queue([["reset_to_canon", selected_round, selected_timeslice]]);
+    } else if (timeslice_navigation_enabled && round_navigation_enabled && (selected_timeslice == 0) && (selected_round > 0)) {
+        select_timeslice(t_dim - 1);
+        show_prev_round();
     }
 }
 

@@ -223,6 +223,7 @@ def init_app(app):
     app.cli.add_command(tdv_backup_command)
     app.cli.add_command(tdv_restore_command)
     app.cli.add_command(tutorials_backup_command)
+    app.cli.add_command(tutorials_restore_command)
 
 # Helpful functions
 def get_table_as_list_of_dicts(query, identifier, columns):

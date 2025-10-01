@@ -135,6 +135,418 @@
           "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 4, \"x\": 3, \"y\": 1, \"a\": 3, \"target_t\": 5, \"target_x\": 2, \"target_y\": 1, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
         }
       ]
+    },
+    {
+      "header": {
+        "TUTORIAL_ID": 2,
+        "BOARD_ID": 2,
+        "AUTHOR": "batil",
+        "STATUS": "in_progress",
+        "OUTCOME": null,
+        "D_CREATED": "2025-09-30 17:57:01",
+        "D_CHANGED": "2025-10-01 00:43:32"
+      },
+      "ruleset": [
+        {
+          "RULE_GROUP": "deadline",
+          "RULE": "one_day_per_move"
+        },
+        {
+          "RULE_GROUP": "end_without_win",
+          "RULE": "draw"
+        },
+        {
+          "RULE_GROUP": "paradox_action",
+          "RULE": "permanent_removal"
+        },
+        {
+          "RULE_GROUP": "scenario_priority",
+          "RULE": "conserve_setup"
+        },
+        {
+          "RULE_GROUP": "unlock_tagscreen_behaviour",
+          "RULE": "presence"
+        },
+        {
+          "RULE_GROUP": "viewing_scope",
+          "RULE": "view_entire_board"
+        }
+      ],
+      "comments": [
+        {
+          "TURN_INDEX": 1,
+          "TUTORIAL_COMMENT": "<p>\r\nThis tutorial revisits the game in a _URLKW_tutorial.tutorial<tutorial_id=1>_previous tutorial_, where we add only one more turn: that is, both players place their commands for the final time-slice of round zero.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 2,
+          "TUTORIAL_COMMENT": "<p>\r\nAs you can see, there are two rounds available for viewing in this game: round 0 and round 1. Round 0 is finished; that is, all the commands which were supposed to be placed in round 0 were placed, and the comb (see _URLKW2_home.index<section=5,tutorial_guide_chapter=29>_here_ if you don't know what that is) moved through the entirety of round 0.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 3,
+          "TUTORIAL_COMMENT": "<p>\r\nConversely, round 1 has only just begun: in fact, no commands were yet placed in this round, so it will be displayed in its unfinished form as it was initialised in the final time-slice of round 0. You will see it once we get there.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 4,
+          "TUTORIAL_COMMENT": "<p>\r\nThere are two ways to navigate between rounds in the game interface: either press \"Next time-slice\" (or press C) in the final time-slice of the previous round, which wraps around to the zeroth time-slice of the next round, <i>or</i> press \"Next round\" (or the right arrow key) to skip to the next round from any time-slice (which remains selected as is).\r\n</p>\r\n<p>\r\nThe first method is useful when you want to see how a game unfolds (and should be followed when reading a tutorial as to not break the flow of the annotations). The second method is useful when comparing the state of a single time-slice or even a single board square across multiple rounds, for example when deciding how best to interfere with an established stone trajectory.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 5,
+          "TUTORIAL_COMMENT": "<p>\r\nAs stated in the comb rule, all stones had to be commanded in every time-slice up to and including this one, because they cannot be left causally free. The obvious exception is the _STONE_5_destroyed stone_, which cannot be commanded in this time-slice.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 6,
+          "TUTORIAL_COMMENT": "<p>\r\nNow you see time portals for the first time. Orange ones are called <b>time-jumps-out</b>, as they mark a stone <i>leaving</i> the board; blue ones are called <b>time-jumps-in</b>, as they mark a stone spawning <i>onto</i> the board. Select _SQUARE_5,2,1_this_ and _SQUARE_5,3,5_this_ square and see that these actions are listed in the square inspector!\r\n</p>\r\n<p>\r\nEach time-jump-out points at a specific time-jump-in like an arrow; these are listed in the square inspector. If you click on the squares linked in the square inspector (_SQUARE_3,2,1_this one_ and _SQUARE_0,3,5_this one_), you will see the square inspector listing \"inactive ante-effects\", which means even in round 0 the game is aware that there are time-jumps-in scheduled, although, because of the comb rule, they are not active yet. Scheduled ante-effects are differentiated from deactivated ante-effects by omitting the blue halo highlight on the board.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 7,
+          "TUTORIAL_COMMENT": "<p>\r\nThis is the active time-slice, as can be seen from the green highlight on the game-log panel. Do you know how many causally free stones does player <i>A</i> have? Two; all of their stones are causally free except for the _STONE_3_stone which time-jumps-out_. _STONE_6_This stone_ becomes causally free on _SQUARE_0,3,5_this square_; and _STONE_2_this stone_ becomes causally free on _SQUARE_5,1,2_this square_.\r\n</p>\r\n<p>\r\nHowever, for player <i>A</i>, only _STONE_6_one stone_ is labelled as waiting for commands. This is because you only place commands for the stones which become causally free <i>in the active time-slice</i>. The _STONE_2_other stone_ will simply follow its trajectory marked by flags placed down in round 0 until the final time-slice, where it can be commanded.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 8,
+          "TUTORIAL_COMMENT": "<p>\r\nAs the turn index progresses, the time comb will sweep up the other two stones which are causally free on this board, and they will require commands.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 9,
+          "TUTORIAL_COMMENT": "<p>\r\nTo progress to the next active time-slice, all players which have at least one stone which is waiting for commands must submit their turn: this means that, up until time-slice 3, only player <i>A</i> needs to do that, and every time they submit their turn, the game immediately progresses to the next active time-slice and they are automatically prompted to submit their next turn. Player <i>B</i> doesn't have to do anything until time-slice 3 becomes active.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 10,
+          "TUTORIAL_COMMENT": "<p>\r\nNow both players have a commandable stone on the board, so they have to wait for each other to submit their turns for the game to progress.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 11,
+          "TUTORIAL_COMMENT": "<p>\r\nThe destroyed stone never becomes causally free: at least not in this round. But, later on, an interference may save it, and then it will become causally free once it reaches the point where it <i>should</i> have died.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 12,
+          "TUTORIAL_COMMENT": "<p>\r\nThe two time-jumps-out are highlighted again, but following the links in the square inspector to the corresponding time-jumps-in will list them as active. You will later see that this is a general pattern for how any action which happens \"opposite\" to the flow of time is treated in Batil: the effect which precedes the cause (thus called the <b>ante-effect</b>) will only manifest in the next round, i.e. the next sweep of the comb. However, the cause which succeeds the effect (thus called the <b>retro-cause</b>) happens trivially, and hence immediately, i.e. in the round when it was placed.\r\n</p>"
+        }
+      ],
+      "moves": [
+        {
+          "TURN_INDEX": 0,
+          "PLAYER": "GM",
+          "REPRESENTATION": "[{\"type\": \"add_base\", \"faction\": \"neutral\", \"x\": 3, \"y\": 1}, {\"type\": \"add_base\", \"faction\": \"neutral\", \"x\": 3, \"y\": 5}, {\"type\": \"add_stone\", \"faction\": \"A\", \"stone_type\": \"tank\", \"x\": 1, \"y\": 3, \"a\": 1}, {\"type\": \"add_stone\", \"faction\": \"A\", \"stone_type\": \"tank\", \"x\": 2, \"y\": 3, \"a\": 1}, {\"type\": \"add_stone\", \"faction\": \"B\", \"stone_type\": \"tank\", \"x\": 4, \"y\": 3, \"a\": 3}, {\"type\": \"add_stone\", \"faction\": \"B\", \"stone_type\": \"tank\", \"x\": 5, \"y\": 3, \"a\": 3}]"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 0, \"x\": 1, \"y\": 3, \"a\": 1, \"target_t\": 1, \"target_x\": 1, \"target_y\": 3, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 0, \"x\": 2, \"y\": 3, \"a\": 1, \"target_t\": 1, \"target_x\": 2, \"target_y\": 3, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 0, \"x\": 4, \"y\": 3, \"a\": 3, \"target_t\": 1, \"target_x\": 4, \"target_y\": 3, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 0, \"x\": 5, \"y\": 3, \"a\": 3, \"target_t\": 1, \"target_x\": 5, \"target_y\": 3, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 1, \"x\": 1, \"y\": 3, \"a\": 0, \"target_t\": 2, \"target_x\": 1, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 1, \"x\": 2, \"y\": 3, \"a\": 2, \"target_t\": 2, \"target_x\": 2, \"target_y\": 4, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 1, \"x\": 4, \"y\": 3, \"a\": 0, \"target_t\": 2, \"target_x\": 4, \"target_y\": 2, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 1, \"x\": 5, \"y\": 3, \"a\": 0, \"target_t\": 2, \"target_x\": 5, \"target_y\": 2, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 2, \"x\": 2, \"y\": 4, \"a\": 1, \"target_t\": 3, \"target_x\": 2, \"target_y\": 4, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 2, \"x\": 1, \"y\": 2, \"a\": 1, \"target_t\": 3, \"target_x\": 1, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 2, \"x\": 5, \"y\": 2, \"a\": 3, \"target_t\": 3, \"target_x\": 4, \"target_y\": 2, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 2, \"x\": 4, \"y\": 2, \"a\": 0, \"target_t\": 3, \"target_x\": 4, \"target_y\": 2, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"attack\", \"t\": 3, \"x\": 1, \"y\": 2, \"a\": 1, \"target_t\": 4, \"target_x\": 1, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 3, \"x\": 2, \"y\": 4, \"a\": 0, \"target_t\": 4, \"target_x\": 2, \"target_y\": 5, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 3, \"x\": 4, \"y\": 2, \"a\": 3, \"target_t\": 4, \"target_x\": 3, \"target_y\": 2, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 3, \"x\": 3, \"y\": 2, \"a\": 0, \"target_t\": 4, \"target_x\": 3, \"target_y\": 1, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 4, \"x\": 2, \"y\": 5, \"a\": 1, \"target_t\": 5, \"target_x\": 3, \"target_y\": 5, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 4, \"x\": 1, \"y\": 2, \"a\": 1, \"target_t\": 5, \"target_x\": 1, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 4, \"x\": 3, \"y\": 1, \"a\": 3, \"target_t\": 5, \"target_x\": 2, \"target_y\": 1, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 3, \"type\": \"timejump\", \"t\": 5, \"x\": 3, \"y\": 5, \"a\": 1, \"target_t\": 0, \"target_x\": 3, \"target_y\": 5, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 2, \"type\": \"pass\", \"t\": 5, \"x\": 1, \"y\": 2, \"a\": 1, \"target_t\": 5, \"target_x\": 1, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"timejump\", \"t\": 5, \"x\": 2, \"y\": 1, \"a\": 2, \"target_t\": 3, \"target_x\": 2, \"target_y\": 1, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "B",
+          "REPRESENTATION": "[]"
+        }
+      ]
+    },
+    {
+      "header": {
+        "TUTORIAL_ID": 3,
+        "BOARD_ID": 2,
+        "AUTHOR": "batil",
+        "STATUS": "in_progress",
+        "OUTCOME": null,
+        "D_CREATED": "2025-10-01 01:00:47",
+        "D_CHANGED": "2025-10-01 01:48:53"
+      },
+      "ruleset": [
+        {
+          "RULE_GROUP": "deadline",
+          "RULE": "one_day_per_move"
+        },
+        {
+          "RULE_GROUP": "end_without_win",
+          "RULE": "draw"
+        },
+        {
+          "RULE_GROUP": "paradox_action",
+          "RULE": "permanent_removal"
+        },
+        {
+          "RULE_GROUP": "scenario_priority",
+          "RULE": "conserve_setup"
+        },
+        {
+          "RULE_GROUP": "unlock_tagscreen_behaviour",
+          "RULE": "presence"
+        },
+        {
+          "RULE_GROUP": "viewing_scope",
+          "RULE": "view_entire_board"
+        }
+      ],
+      "comments": [
+        {
+          "TURN_INDEX": 1,
+          "TUTORIAL_COMMENT": "<p>\r\nThis tutorial introduces the ideas of interference, amnesia prevention, and persistent trajectories.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 2,
+          "TUTORIAL_COMMENT": "<p>\r\nThe main star of this demonstration will be player <i>B</i>'s _STONE_4_left stone_. Note how its first round's trajectory involves turning down and moving forward in the very first two time-slices.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 3,
+          "TUTORIAL_COMMENT": "<p>\r\nEvery stone follows a trajectory laid down by the commands submitted by the commanding player. Once a stone \"knows\" what its action is at a given time, it will follow through with it in every subsequent round.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 4,
+          "TUTORIAL_COMMENT": "<p>\r\nThe stone's actions are derived from <b>flags</b>, which are invisible objects representing a certain directive. The whole \"chain of command\" looks like this:\r\n</p>\r\n<ol>\r\n<li>A player submits a <b>command</b></li>\r\n<li>This command gets translated into one or multiple <b>flags</b></li>\r\n<li>When calculating the state of the board at a given time, stones look at relevant flags and translate them into <b>actions</b></li>\r\n</ol>"
+        },
+        {
+          "TURN_INDEX": 5,
+          "TUTORIAL_COMMENT": "<p>\r\nWhen a stone looks for the flag it should follow, it looks at certain things. Every flag is:\r\n</p>\r\n<ul>\r\n<li>tied to a specific stone</li>\r\n<li>tied to a specific board square (time-slice and spatial position)</li>\r\n<li>tied to a specific round number on which it was placed down</li>\r\n</ul>\r\nThe third property is important for <b>amnesia prevention</b>, but we're getting ahead of ourselves."
+        },
+        {
+          "TURN_INDEX": 6,
+          "TUTORIAL_COMMENT": "<p>\r\nWhoops! Looks like player <i>B</i> misclicked: their _STONE_4_stone_ went backwards instead of forwards. And now it's stuck like this forever. Unless...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 7,
+          "TUTORIAL_COMMENT": "<p>\r\nThis is not a realistic game, so both the players made some questionable strategy choices. The only stone sent back in time is _STONE_6_this one_. As such, if this was the active time-slice, that stone would be the only causally free stone on the entire board across all the time-slices. However, that is not the case, because of what happens in time-slice 2.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 8,
+          "TUTORIAL_COMMENT": "<p>\r\nNote that all the stones which were present on the board in round 0 follow the trajectories laid down in that round, as expected. The presence of the _STONE_6_interloper_ has not disturbed them yet.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 9,
+          "TUTORIAL_COMMENT": "<p>\r\nThis time-slice showcases <b>interference</b> in its pure form. Player <i>B</i>'s _STONE_4_stone_ was scheduled to move onto _SQUARE_2,4,4_this square_, but player <i>A</i>'s _STONE_6_stone_ obstructed this by attempting to move onto the same square (and turning clockwise at the same time, which did happen). If this was the active time-slice, player <i>B</i>'s _STONE_4_stone_ would become causally free. Instead, we get to see its new trajectory.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 10,
+          "TUTORIAL_COMMENT": "<p>\r\nPlayer <i>B</i> really wants to get _STONE_4_their stone_ onto the bottom square, so they try again. The one time-slice they lost because of the interference, they will try to make up for by saving one time-slice by moving and turning simultaneously just now...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 11,
+          "TUTORIAL_COMMENT": "<p>\r\n...which lands them in the exact same square, at the exact same time-slice, and with the exact same azimuth as in the previous round, when the stone was ordered to move backwards. You can see this for yourself by selecting the _SQUARE_4,4,5_relevant square_ and pressing the left arrow key to view the same situation in the previous round. The stone is in the exact same situation! Does this mean it will stop being causally free and slip into the old tracks of going backwards?\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 12,
+          "TUTORIAL_COMMENT": "<p>\r\n...of course not! Within the logic of the game, the driver of the tank remembers being obstructed by the _STONE_6_opposing tank_, which is a memory they did not hold in the previous round: since their mind is in a different state, they should be able to make different decisions. And indeed, the _STONE_4_stone_ now moves forwards, capturing a base.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 13,
+          "TUTORIAL_COMMENT": "<p>\r\nNow, one more demonstration to drive this point home. Let's say only _STONE_5_this stone_ time-jumped-out in the final time-slice of round 1, now manifesting as _STONE_7_this stone_. It is, as familiar, the only causally free stone at the moment.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 14,
+          "TUTORIAL_COMMENT": "<p>\r\nPlayer <i>B</i>'s _STONE_7_new stone_ doesn't waste any time and promptly destroys the _STONE_6_interloper_. This is also the active time-slice, which means we leave this new stone to become causally free here. But let's press on and see what the rest of the board's evolution looks like at this point (remember that all the time-slices exist at all times, regardless of which one is the active one!).\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 15,
+          "TUTORIAL_COMMENT": "<p>\r\nNow our _STONE_4_main character_ is now able to progress without interference. What does this mean? Does it become causally free once again?\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 16,
+          "TUTORIAL_COMMENT": "<p>\r\nNo! All flags placed on the board remain there until the end of the game. There is a perfectly valid trajectory laid down for this stone in round 0, which it now can happily follow.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 17,
+          "TUTORIAL_COMMENT": "<p>\r\nThis is interesting. On its _SQUARE_4,4,5_current square_ there are two flags placed down for the _STONE_4_main character_: the flag placed down in round 0 says to drive backwards, and the flag placed down in round 1 says to drive forwards. What will the tank do?\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 18,
+          "TUTORIAL_COMMENT": "<p>\r\nSince the driver doesn't have the round 1 memories of being obstructed, their mind is in a round 0 state, and the tank drives backwards. This entire paradigm may be summarised as a rule:\r\n</p>\r\n<p>\r\n<i>When choosing which flag to follow, every stone looks at all flags which are pointing at it and which are placed on its square; from these, it selects the earliest-placed flag which is not placed earlier than the last flag the stone followed.</i>\r\n</p>"
+        }
+      ],
+      "moves": [
+        {
+          "TURN_INDEX": 0,
+          "PLAYER": "GM",
+          "REPRESENTATION": "[{\"type\": \"add_base\", \"faction\": \"neutral\", \"x\": 3, \"y\": 1}, {\"type\": \"add_base\", \"faction\": \"neutral\", \"x\": 3, \"y\": 5}, {\"type\": \"add_stone\", \"faction\": \"A\", \"stone_type\": \"tank\", \"x\": 1, \"y\": 3, \"a\": 1}, {\"type\": \"add_stone\", \"faction\": \"A\", \"stone_type\": \"tank\", \"x\": 2, \"y\": 3, \"a\": 1}, {\"type\": \"add_stone\", \"faction\": \"B\", \"stone_type\": \"tank\", \"x\": 4, \"y\": 3, \"a\": 3}, {\"type\": \"add_stone\", \"faction\": \"B\", \"stone_type\": \"tank\", \"x\": 5, \"y\": 3, \"a\": 3}]"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 0, \"x\": 1, \"y\": 3, \"a\": 1, \"target_t\": 1, \"target_x\": 1, \"target_y\": 3, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 0, \"x\": 2, \"y\": 3, \"a\": 1, \"target_t\": 1, \"target_x\": 2, \"target_y\": 3, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 0, \"x\": 4, \"y\": 3, \"a\": 3, \"target_t\": 1, \"target_x\": 4, \"target_y\": 3, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 0, \"x\": 5, \"y\": 3, \"a\": 3, \"target_t\": 1, \"target_x\": 5, \"target_y\": 3, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 1, \"x\": 1, \"y\": 3, \"a\": 2, \"target_t\": 2, \"target_x\": 1, \"target_y\": 4, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 1, \"x\": 2, \"y\": 3, \"a\": 0, \"target_t\": 2, \"target_x\": 2, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 1, \"x\": 4, \"y\": 3, \"a\": 2, \"target_t\": 2, \"target_x\": 4, \"target_y\": 4, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 1, \"x\": 5, \"y\": 3, \"a\": 2, \"target_t\": 2, \"target_x\": 5, \"target_y\": 2, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 2, \"x\": 1, \"y\": 4, \"a\": 2, \"target_t\": 3, \"target_x\": 1, \"target_y\": 4, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"attack\", \"t\": 2, \"x\": 2, \"y\": 2, \"a\": 1, \"target_t\": 3, \"target_x\": 2, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 2, \"x\": 5, \"y\": 2, \"a\": 2, \"target_t\": 3, \"target_x\": 5, \"target_y\": 3, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 2, \"x\": 4, \"y\": 4, \"a\": 2, \"target_t\": 3, \"target_x\": 4, \"target_y\": 5, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 3, \"x\": 1, \"y\": 4, \"a\": 1, \"target_t\": 4, \"target_x\": 2, \"target_y\": 4, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 3, \"x\": 2, \"y\": 2, \"a\": 1, \"target_t\": 4, \"target_x\": 2, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 3, \"x\": 4, \"y\": 5, \"a\": 2, \"target_t\": 4, \"target_x\": 4, \"target_y\": 5, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 3, \"x\": 5, \"y\": 3, \"a\": 2, \"target_t\": 4, \"target_x\": 5, \"target_y\": 3, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 2, \"type\": \"spatial_move\", \"t\": 4, \"x\": 2, \"y\": 4, \"a\": 1, \"target_t\": 5, \"target_x\": 3, \"target_y\": 4, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"spatial_move\", \"t\": 4, \"x\": 2, \"y\": 2, \"a\": 1, \"target_t\": 5, \"target_x\": 2, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 4, \"x\": 4, \"y\": 5, \"a\": 3, \"target_t\": 5, \"target_x\": 5, \"target_y\": 5, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 5, \"type\": \"spatial_move\", \"t\": 4, \"x\": 5, \"y\": 3, \"a\": 2, \"target_t\": 5, \"target_x\": 5, \"target_y\": 4, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 3, \"type\": \"pass\", \"t\": 5, \"x\": 2, \"y\": 2, \"a\": 1, \"target_t\": 5, \"target_x\": 2, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 2, \"type\": \"timejump\", \"t\": 5, \"x\": 3, \"y\": 4, \"a\": 1, \"target_t\": 0, \"target_x\": 3, \"target_y\": 4, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 5, \"type\": \"pass\", \"t\": 5, \"x\": 5, \"y\": 4, \"a\": 3, \"target_t\": 5, \"target_x\": 5, \"target_y\": 4, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 4, \"type\": \"pass\", \"t\": 5, \"x\": 5, \"y\": 5, \"a\": 3, \"target_t\": 5, \"target_x\": 5, \"target_y\": 5, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 6, \"type\": \"spatial_move\", \"t\": 0, \"x\": 3, \"y\": 4, \"a\": 1, \"target_t\": 1, \"target_x\": 3, \"target_y\": 4, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "B",
+          "REPRESENTATION": "[]"
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 6, \"type\": \"spatial_move\", \"t\": 1, \"x\": 3, \"y\": 4, \"a\": 1, \"target_t\": 2, \"target_x\": 4, \"target_y\": 4, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "B",
+          "REPRESENTATION": "[]"
+        },
+        {
+          "TURN_INDEX": 9,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 6, \"type\": \"spatial_move\", \"t\": 2, \"x\": 3, \"y\": 4, \"a\": 2, \"target_t\": 3, \"target_x\": 3, \"target_y\": 5, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 9,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 2, \"x\": 4, \"y\": 3, \"a\": 2, \"target_t\": 3, \"target_x\": 4, \"target_y\": 4, \"target_a\": 2, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 10,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 6, \"type\": \"spatial_move\", \"t\": 3, \"x\": 3, \"y\": 5, \"a\": 3, \"target_t\": 4, \"target_x\": 2, \"target_y\": 5, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 10,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 3, \"x\": 4, \"y\": 4, \"a\": 2, \"target_t\": 4, \"target_x\": 4, \"target_y\": 5, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 11,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 6, \"type\": \"spatial_move\", \"t\": 4, \"x\": 2, \"y\": 5, \"a\": 3, \"target_t\": 5, \"target_x\": 1, \"target_y\": 5, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 11,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 4, \"type\": \"spatial_move\", \"t\": 4, \"x\": 4, \"y\": 5, \"a\": 3, \"target_t\": 5, \"target_x\": 3, \"target_y\": 5, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 12,
+          "PLAYER": "A",
+          "REPRESENTATION": "[{\"stone_ID\": 6, \"type\": \"pass\", \"t\": 5, \"x\": 1, \"y\": 5, \"a\": 0, \"target_t\": 5, \"target_x\": 1, \"target_y\": 5, \"target_a\": 0, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 3, \"type\": \"pass\", \"t\": 5, \"x\": 2, \"y\": 2, \"a\": 1, \"target_t\": 5, \"target_x\": 2, \"target_y\": 2, \"target_a\": 1, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 12,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 5, \"type\": \"timejump\", \"t\": 5, \"x\": 5, \"y\": 4, \"a\": 3, \"target_t\": 0, \"target_x\": 5, \"target_y\": 4, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}, {\"stone_ID\": 4, \"type\": \"pass\", \"t\": 5, \"x\": 3, \"y\": 5, \"a\": 3, \"target_t\": 5, \"target_x\": 3, \"target_y\": 5, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 13,
+          "PLAYER": "A",
+          "REPRESENTATION": "[]"
+        },
+        {
+          "TURN_INDEX": 13,
+          "PLAYER": "B",
+          "REPRESENTATION": "[{\"stone_ID\": 7, \"type\": \"attack\", \"t\": 0, \"x\": 5, \"y\": 4, \"a\": 3, \"target_t\": 1, \"target_x\": 5, \"target_y\": 4, \"target_a\": 3, \"swap_effect\": null, \"choice_keyword\": \"\"}]"
+        },
+        {
+          "TURN_INDEX": 14,
+          "PLAYER": "A",
+          "REPRESENTATION": "[]"
+        }
+      ]
     }
   ]
 }

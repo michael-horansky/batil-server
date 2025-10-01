@@ -183,6 +183,9 @@ hr {
     flex-direction: column;
     padding-top: 7px;
 }
+#game_log.active {
+    background-color: #b2c49b;
+}
 
 /* game log */
 
@@ -914,5 +917,13 @@ hr {
     height: 100%;
     padding: 12px;
     box-sizing: border-box;
+}
+
+#tutorial_comment_display ol {
+    margin-left: 25px;
+}
+
+#tutorial_comment_display ul {
+    margin-left: 25px;
 }
 
