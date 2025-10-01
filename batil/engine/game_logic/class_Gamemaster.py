@@ -1859,7 +1859,7 @@ class Gamemaster():
                                 self.place_stone_on_board(STPos(t+1, cur_flag.flag_args[0], cur_flag.flag_args[1]), cur_flag.stone_ID, [cur_flag.flag_args[2]])
                                 self.stone_causal_freedom[cur_flag.stone_ID] = t+1
                                 # If Wildcard and not wait, we mark it as explosive
-                                if self.stones[cur_flag.stone_ID].stone_type == "wildcard" and cur_flag.flag_args[2] == 1:
+                                if self.stones[cur_flag.stone_ID].stone_type == "wildcard" and cur_flag.flag_type == "spatial_move" and not (x == cur_flag.flag_args[0] and y == cur_flag.flag_args[1]):
                                     self.stones[cur_flag.stone_ID].is_explosive_this_turn = True
                             if cur_flag.flag_type == "attack":
                                 self.place_stone_on_board(STPos(t+1, x, y), cur_flag.stone_ID, self.board_dynamic[t][x][y].stone_properties[cur_flag.stone_ID])
