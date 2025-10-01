@@ -9,6 +9,7 @@ from batil.db import get_db, get_table_as_list_of_dicts
 
 from batil.engine.rendering.class_board_editor_HTMLRenderer import BoardEditorHTMLRenderer
 
+from batil.aux_funcs import *
 
 class PageBoardEditor(Page):
 
@@ -65,7 +66,7 @@ class PageBoardEditor(Page):
                         new_command[element_keywords["stones"][kw_s_i]] = request.form.get(f"stone_{i_s}_{element_keywords["stones"][kw_s_i]}")
                 setup_commands.append(new_command)
 
-            setup_rep = json.dumps(setup_commands)
+            setup_rep = compress_commands(setup_commands) #json.dumps(setup_commands)
 
             board_name = request.form.get("board_name")
 

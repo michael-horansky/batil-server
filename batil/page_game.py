@@ -12,6 +12,7 @@ from batil.engine.game_logic.class_Gamemaster import Gamemaster
 from batil.engine.rendering.class_HTMLRenderer import HTMLRenderer
 from batil.engine.rendering.class_Abstract_Output import Abstract_Output
 
+from batil.aux_funcs import *
 
 class PageGame(Page):
 
@@ -116,11 +117,11 @@ class PageGame(Page):
             db.execute("INSERT INTO BOC_SYSTEM_LOGS (PRIORITY, ORIGIN, MESSAGE) VALUES (4, \"page_game.resolve_command_submission\", ?)", output_message.msg)
             db.commit()
             return(-1)
-        new_dynamic_rep = self.gm.dump_changes()
+        new_dynamic_commands = self.gm.dump_changes()
         # We save changes to database
-        for turn_index in range(len(new_dynamic_rep)):
-            for commander, command_rep in new_dynamic_rep[turn_index].items():
-                db.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)", (self.game_id, turn_index, commander, command_rep))
+        for turn_index in range(len(new_dynamic_commands)):
+            for commander, command_list in new_dynamic_commands[turn_index].items():
+                db.execute("INSERT INTO BOC_MOVES (GAME_ID, TURN_INDEX, PLAYER, REPRESENTATION, D_MOVE) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)", (self.game_id, turn_index, commander, compress_commands(command_list)))
 
         if output_message.header == "concluded":
             conclude_and_rate_game(self.game_id, output_message.msg)
@@ -332,7 +333,7 @@ class PageGame(Page):
             dynamic_data.append({})
 
         for row in dynamic_data_rows:
-            dynamic_data[row["TURN_INDEX"]][row["PLAYER"]] = row["REPRESENTATION"]
+            dynamic_data[row["TURN_INDEX"]][row["PLAYER"]] = decompress_commands(row["REPRESENTATION"])
 
         ruleset_rows = db.execute("SELECT BOC_RULESETS.RULE_GROUP AS RULE_GROUP, BOC_RULESETS.RULE AS RULE, BOC_RULES.LABEL AS RULE_LABEL FROM BOC_RULESETS INNER JOIN BOC_RULES ON BOC_RULESETS.RULE = BOC_RULES.RULE WHERE BOC_RULESETS.GAME_ID = ?", (self.game_id,)).fetchall()
         ruleset = {}

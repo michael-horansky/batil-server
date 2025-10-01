@@ -1,8 +1,6 @@
 
 
 import math
-import json
-
 import batil.engine.utils.constants as constants
 import batil.engine.utils.functions as functions
 
@@ -893,10 +891,10 @@ class Gamemaster():
             self.new_dynamic_representation.append({})
         if commander not in self.new_dynamic_representation[turn_index]:
             # First batch of flags canonized for this author for this turn.
-            self.new_dynamic_representation[turn_index][commander] = self.encode_commands(list_of_commands)
+            self.new_dynamic_representation[turn_index][commander] = list_of_commands
         else:
-            old_commands = self.decode_commands(self.new_dynamic_representation[turn_index][commander])
-            self.new_dynamic_representation[turn_index][commander] = self.encode_commands(old_commands + list_of_commands)
+            old_commands = self.new_dynamic_representation[turn_index][commander]
+            self.new_dynamic_representation[turn_index][commander] = old_commands + list_of_commands
 
         # We also record everything into self.dynamic_representation, for full
         # copy and legacy purposes
@@ -904,10 +902,10 @@ class Gamemaster():
             self.dynamic_representation.append({})
         if commander not in self.dynamic_representation[turn_index]:
             # First batch of flags canonized for this author for this turn.
-            self.dynamic_representation[turn_index][commander] = self.encode_commands(list_of_commands)
+            self.dynamic_representation[turn_index][commander] = list_of_commands
         else:
-            old_commands = self.decode_commands(self.dynamic_representation[turn_index][commander])
-            self.dynamic_representation[turn_index][commander] = self.encode_commands(old_commands + list_of_commands)
+            old_commands = self.dynamic_representation[turn_index][commander]
+            self.dynamic_representation[turn_index][commander] = old_commands + list_of_commands
 
 
 
@@ -2319,11 +2317,6 @@ class Gamemaster():
                 board_representation += cur_char
         return([self.t_dim, self.x_dim, self.y_dim, board_representation])
 
-    def encode_commands(self, list_of_commands):
-        # list of dicts -> string
-        return(json.dumps(list_of_commands))
-
-
     def trim_empty_turns(self, dynamic_data, tail_element = {}):
         # dynamic_data is a list of dictionaries
         # This method trims empty dictionaries off of the list's tail
@@ -2351,10 +2344,6 @@ class Gamemaster():
 
 
     # -------------------------------- Loading --------------------------------
-
-    def decode_commands(self, commands_representation):
-        # string -> list of dicts
-        return(json.loads(commands_representation))
 
     # This is a legacy feature
     def load_board(self, board_number):
@@ -2542,9 +2531,8 @@ class Gamemaster():
 
             self.flags_by_turn.append({})
             for commander in dynamic_data_representation[self.current_turn_index].keys():
-                commands_representation = dynamic_data_representation[self.current_turn_index][commander]
+                commands = dynamic_data_representation[self.current_turn_index][commander]
                 self.flags_by_turn[self.current_turn_index][commander] = []
-                commands = self.decode_commands(commands_representation)
 
                 effects_added_this_turn = []
                 for command in commands:

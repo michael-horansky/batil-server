@@ -12,6 +12,8 @@ from batil.engine.game_logic.class_Gamemaster import Gamemaster
 from batil.engine.rendering.class_tutorial_HTMLRenderer import TutorialHTMLRenderer
 from batil.engine.rendering.class_Abstract_Output import Abstract_Output
 
+from batil.aux_funcs import *
+
 
 class PageTutorial(Page):
 
@@ -94,11 +96,11 @@ class PageTutorial(Page):
             db.execute("INSERT INTO BOC_SYSTEM_LOGS (PRIORITY, ORIGIN, MESSAGE) VALUES (4, \"page_tutorial.resolve_command_submission\", ?)", output_message.msg)
             db.commit()
             return(-1)
-        new_dynamic_rep = self.gm.dump_changes()
+        new_dynamic_commands = self.gm.dump_changes()
         # We save changes to database
-        for turn_index in range(len(new_dynamic_rep)):
-            for commander, command_rep in new_dynamic_rep[turn_index].items():
-                db.execute("INSERT INTO BOC_TUTORIAL_MOVES (TUTORIAL_ID, TURN_INDEX, PLAYER, REPRESENTATION) VALUES (?, ?, ?, ?)", (self.tutorial_id, turn_index, commander, command_rep))
+        for turn_index in range(len(new_dynamic_commands)):
+            for commander, command_list in new_dynamic_commands[turn_index].items():
+                db.execute("INSERT INTO BOC_TUTORIAL_MOVES (TUTORIAL_ID, TURN_INDEX, PLAYER, REPRESENTATION) VALUES (?, ?, ?, ?)", (self.tutorial_id, turn_index, commander, compress_commands(command_rep)))
 
         if output_message.header == "concluded":
             db.execute("UPDATE BOC_TUTORIALS SET STATUS = \"concluded\", OUTCOME = ? WHERE TUTORIAL_ID = ?", (output_message.msg, self.tutorial_id))
@@ -131,7 +133,7 @@ class PageTutorial(Page):
             dynamic_data.append({})
 
         for row in dynamic_data_rows:
-            dynamic_data[row["TURN_INDEX"]][row["PLAYER"]] = row["REPRESENTATION"]
+            dynamic_data[row["TURN_INDEX"]][row["PLAYER"]] = decompress_commands(row["REPRESENTATION"])
 
         ruleset_rows = db.execute("SELECT RULE_GROUP, RULE FROM BOC_TUTORIAL_RULESETS WHERE TUTORIAL_ID = ?", (self.tutorial_id,)).fetchall()
         ruleset = {}

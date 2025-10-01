@@ -253,7 +253,7 @@ def add_default_board_script(default_board):
         )"""
     params = (
         default_board["T_DIM"], default_board["X_DIM"], default_board["Y_DIM"],
-        default_board["STATIC_REPRESENTATION"], default_board["SETUP_REPRESENTATION"],
+        default_board["STATIC_REPRESENTATION"], compress_commands(json.loads(default_board["SETUP_REPRESENTATION"])),
         default_board["AUTHOR"], default_board["IS_PUBLIC"], default_board["D_CREATED"],
         default_board["D_CHANGED"], default_board["D_PUBLISHED"], default_board["BOARD_NAME"]
     )
@@ -384,8 +384,12 @@ def new_blind_challenge(target_board, challenge_author, ruleset_selection):
                             AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = :a
                             AND BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID
                         )
-                    ORDER BY BOC_BOARDS.BOARD_ID
+                        AND BOC_BOARDS.IS_PUBLIC = 1
+                    ORDER BY BOC_BOARDS.BOARD_ID LIMIT 1
                     """, {"a" : challenge_author}).fetchone()
+                if random_board_row is None:
+                    # No board is available
+                    return(None)
                 target_board_id = random_board_row["BOARD_ID"]
         else:
             target_board_id = target_board
