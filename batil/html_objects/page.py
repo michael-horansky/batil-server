@@ -22,7 +22,7 @@ class Page(HTMLObject):
         self.client_row = None
         if g.user:
             db = get_db()
-            self.client_row = db.execute("SELECT PRIVILEGE FROM BOC_USER WHERE USERNAME = ?", (g.user["username"],)).fetchone()
+            self.client_row = db.execute("SELECT PRIVILEGE, CAST(ROUND(RATING) AS INTEGER) AS RATING_ROUND FROM BOC_USER WHERE USERNAME = ?", (g.user["username"],)).fetchone()
 
     def resolve_request(self):
         if request.method == 'POST':
@@ -103,6 +103,7 @@ class Page(HTMLObject):
             self.structured_html.append([
                 "  <div class=\"sidebar_pfp\">",
                 f"    <div class=\"sidebar_pfp_username\">{ g.user['username'] }</div>",
+                f"    <div class=\"sidebar_pfp_username\">{ self.client_row["RATING_ROUND"] }</div>",
                 f"    <img src=\"{pfp_url}\" alt=\"{g.user["username"]} profile picture\">",
                 "  </div>"
                 ])

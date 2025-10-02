@@ -51,14 +51,14 @@ class PageHome(Page):
         get_args.update(ActionTable.get_navigation_keywords("your_blocked_boards", ["BOARD_NAME", "AUTHOR", "D_PUBLISHED", "D_BLOCKED"]))
         # Users
         get_args.update(ActionForm.get_args("users"))
-        get_args.update(ActionTable.get_navigation_keywords("leaderboard", ["USERNAME", "RATING", "COUNT_GAMES"]))
+        get_args.update(ActionTable.get_navigation_keywords("leaderboard", ["USERNAME", "RATING_ROUND", "COUNT_GAMES"]))
         # Profile
         get_args.update(ActionForm.get_args("pending_friend_requests"))
         get_args.update(ActionTable.get_navigation_keywords("friend_requests_for_you", ["USER_1", "D_STATUS"]))
         get_args.update(ActionForm.get_args("your_profile"))
         get_args.update(ActionTable.get_navigation_keywords("your_archive", ["OPPONENT", "POV_OUTCOME", "BOARD_NAME", "PLAYER_ROLE", "D_STARTED", "D_FINISHED"]))
-        get_args.update(ActionTable.get_navigation_keywords("your_friends", ["USERNAME", "RATING", "COUNT_GAMES"]))
-        get_args.update(ActionTable.get_navigation_keywords("your_blocked", ["USERNAME", "RATING", "COUNT_GAMES"]))
+        get_args.update(ActionTable.get_navigation_keywords("your_friends", ["USERNAME", "RATING_ROUND", "COUNT_GAMES"]))
+        get_args.update(ActionTable.get_navigation_keywords("your_blocked", ["USERNAME", "RATING_ROUND", "COUNT_GAMES"]))
         # Tutorials
         get_args.update(TreeDocumentViewer.get_navigation_keywords("tutorial_guide"))
 
@@ -339,10 +339,10 @@ class PageHome(Page):
         form_new_game.set_tab_property(2, "selection_condition", "action_table_select_board_for_new_game_selected_row_input")
 
         form_new_game.add_ordered_table(2, "select_opponent_for_new_game",
-            f"SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])})) AND BOC_USER_RELATIONSHIPS.STATUS=\"friends\"",
-            "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES"],
+            f"SELECT BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])})) AND BOC_USER_RELATIONSHIPS.STATUS=\"friends\"",
+            "USERNAME", ["USERNAME", "RATING_ROUND", "COUNT_GAMES"],
             include_select = True,
-            headers = {"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games played with you"},
+            headers = {"USERNAME" : "User", "RATING_ROUND" : "Rating", "COUNT_GAMES" : "# of games played with you"},
             order_options = [["COUNT_GAMES", "# games"]],
             actions = {"view" : "View"},
             action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("user.user", username = datum["IDENTIFIER"]))}},
@@ -794,7 +794,7 @@ class PageHome(Page):
 
         form_users.add_ordered_table(0, "leaderboard",
             f"""SELECT
-            BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES,
+            BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES,
             CASE
                 WHEN (EXISTS (SELECT 1
                     FROM BOC_USER_RELATIONSHIPS
@@ -833,12 +833,12 @@ class PageHome(Page):
                 ELSE \"block_user\"
             END AS BLOCK_TOGGLE
             FROM BOC_USER""",
-            "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES", "IS_AMICABLE", "IS_NOT_YOU", "FRIEND_TOGGLE", "BLOCK_TOGGLE"],
+            "USERNAME", ["USERNAME", "RATING_ROUND", "COUNT_GAMES", "IS_AMICABLE", "IS_NOT_YOU", "FRIEND_TOGGLE", "BLOCK_TOGGLE"],
             include_select = False,
-            headers = {"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games played with you"},
-            order_options = [["RATING", "Rating"], ["COUNT_GAMES", "# games"], ["USERNAME", "Username"]],
+            headers = {"USERNAME" : "User", "RATING_ROUND" : "Rating", "COUNT_GAMES" : "# of games played with you"},
+            order_options = [["RATING_ROUND", "Rating"], ["COUNT_GAMES", "# games"], ["USERNAME", "Username"]],
             actions = {"view" : "View", "send_friend_request" : "Befriend", "accept_friend_request" : "Accept", "withdraw_friend_request" : "Withdraw", "unfriend" : "Unfriend", "block_user" : "Block", "unblock_user" : "Unblock"},
-            filters = ["USERNAME", "RATING", "COUNT_GAMES"],
+            filters = ["USERNAME", "RATING_ROUND", "COUNT_GAMES"],
             action_instructions = {
                 "view" : {"type" : "link", "url_func" : (lambda datum : url_for("user.user", username = datum["IDENTIFIER"]))},
                 "send_friend_request" : {"condition" : "IS_AMICABLE", "toggle" : "FRIEND_TOGGLE"},
@@ -914,13 +914,13 @@ class PageHome(Page):
 
         # List of friends
         form_your_profile.add_ordered_table(2, "your_friends",
-            f"""SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])})) AND BOC_USER_RELATIONSHIPS.STATUS=\"friends\"""",
-            "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES"],
+            f"""SELECT BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])})) AND BOC_USER_RELATIONSHIPS.STATUS=\"friends\"""",
+            "USERNAME", ["USERNAME", "RATING_ROUND", "COUNT_GAMES"],
             include_select = False,
-            headers = {"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games played with you"},
-            order_options = [["COUNT_GAMES", "# games"], ["RATING", "Rating"], ["USERNAME", "Username"]],
+            headers = {"USERNAME" : "User", "RATING_ROUND" : "Rating", "COUNT_GAMES" : "# of games played with you"},
+            order_options = [["COUNT_GAMES", "# games"], ["RATING_ROUND", "Rating"], ["USERNAME", "Username"]],
             actions = {"view" : "View", "unfriend" : "Unfriend"},
-            filters = ["USERNAME", "RATING", "COUNT_GAMES"],
+            filters = ["USERNAME", "RATING_ROUND", "COUNT_GAMES"],
             action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("user.user", username = datum["IDENTIFIER"]))}},
             col_links = {
                 "USERNAME" : (lambda datum : url_for("user.user", username = datum["IDENTIFIER"]))
@@ -930,13 +930,13 @@ class PageHome(Page):
 
         # List of blocked users
         form_your_profile.add_ordered_table(3, "your_blocked",
-            f"""SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])}) AND BOC_USER_RELATIONSHIPS.STATUS=\"blocked\"""",
-            "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES"],
+            f"""SELECT BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])}) AND BOC_USER_RELATIONSHIPS.STATUS=\"blocked\"""",
+            "USERNAME", ["USERNAME", "RATING_ROUND", "COUNT_GAMES"],
             include_select = False,
-            headers = {"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games played with you"},
-            order_options = [["COUNT_GAMES", "# games"], ["RATING", "Rating"], ["USERNAME", "Username"]],
+            headers = {"USERNAME" : "User", "RATING_ROUND" : "Rating", "COUNT_GAMES" : "# of games played with you"},
+            order_options = [["COUNT_GAMES", "# games"], ["RATING_ROUND", "Rating"], ["USERNAME", "Username"]],
             actions = {"view" : "View", "unblock" : "Unblock"},
-            filters = ["USERNAME", "RATING", "COUNT_GAMES"],
+            filters = ["USERNAME", "RATING_ROUND", "COUNT_GAMES"],
             action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("user.user", username = datum["IDENTIFIER"]))}},
             col_links = {
                 "USERNAME" : (lambda datum : url_for("user.user", username = datum["IDENTIFIER"]))

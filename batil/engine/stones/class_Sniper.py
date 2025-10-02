@@ -105,6 +105,18 @@ class Sniper(Stone):
                     "label" : "Turn"
                 }
 
+            # Command: attack
+            available_commands["commands"].append("attack")
+            available_commands["command_properties"]["attack"] = {
+                    "command_type" : "attack",
+                    "selection_mode" : {
+                            "lock_timeslice" : None,
+                            "squares" : [{"t" : t + 1, "x" : cur_x, "y" : cur_y, "a" : [cur_a], "swap_effects" : None}],
+                            "choice_keyword" : None
+                        },
+                    "label" : "Attack"
+                }
+
         # Any timeslice
 
         # Command: timejump

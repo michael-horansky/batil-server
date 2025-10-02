@@ -34,7 +34,7 @@ class PageUser(Page):
         get_args.update(ActionForm.get_args("profile_form"))
         get_args.update(ActionTable.get_navigation_keywords("profile_archive", ["OPPONENT", "POV_OUTCOME", "BOARD_NAME", "PLAYER_ROLE", "D_STARTED", "D_FINISHED"]))
         get_args.update(ActionTable.get_navigation_keywords("profile_boards", ["BOARD_NAME", "D_PUBLISHED"]))
-        get_args.update(ActionTable.get_navigation_keywords("profile_friends", ["USERNAME", "RATING", "COUNT_GAMES"]))
+        get_args.update(ActionTable.get_navigation_keywords("profile_friends", ["USERNAME", "RATING_ROUND", "COUNT_GAMES"]))
         get_args.update(ActionTable.get_navigation_keywords("profile_archive_with_you", ["POV_OUTCOME", "BOARD_NAME", "PLAYER_ROLE", "D_STARTED", "D_FINISHED"]))
 
         return(get_args)
@@ -110,7 +110,7 @@ class PageUser(Page):
         stats_table_cols = ["stats_header", "stats_val"]
         stats_table_data = [
             ["Joined:", self.user_row["D_CREATED"]],
-            ["Rating:", self.user_row["RATING"]],
+            ["Rating:", self.user_row["RATING_ROUND"]],
             ["Played:", number_of_games],
             ["Boards:", number_of_boards],
             ["Boards saved:", number_of_boards_saved],
@@ -181,13 +181,13 @@ class PageUser(Page):
 
         # Friends
         profile_form.add_ordered_table(3, "profile_friends",
-            f"""SELECT BOC_USER.USERNAME AS USERNAME, BOC_USER.RATING AS RATING, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(self.username)} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(self.username)} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(self.username)}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(self.username)})) AND BOC_USER_RELATIONSHIPS.STATUS=\"friends\"""",
-            "USERNAME", ["USERNAME", "RATING", "COUNT_GAMES"],
+            f"""SELECT BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(self.username)} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(self.username)} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(self.username)}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(self.username)})) AND BOC_USER_RELATIONSHIPS.STATUS=\"friends\"""",
+            "USERNAME", ["USERNAME", "RATING_ROUND", "COUNT_GAMES"],
             include_select = False,
-            headers = {"USERNAME" : "User", "RATING" : "Rating", "COUNT_GAMES" : "# of games together"},
-            order_options = [["COUNT_GAMES", "# games"], ["RATING", "Rating"], ["USERNAME", "Username"]],
+            headers = {"USERNAME" : "User", "RATING_ROUND" : "Rating", "COUNT_GAMES" : "# of games together"},
+            order_options = [["COUNT_GAMES", "# games"], ["RATING_ROUND", "Rating"], ["USERNAME", "Username"]],
             actions = {"view" : "View"},
-            filters = ["USERNAME", "RATING", "COUNT_GAMES"],
+            filters = ["USERNAME", "RATING_ROUND", "COUNT_GAMES"],
             action_instructions = {"view" : {"type" : "link", "url_func" : (lambda datum : url_for("user.user", username = datum["IDENTIFIER"]))}},
             col_links = {
                 "USERNAME" : (lambda datum : url_for("user.user", username = datum["USERNAME"]))
@@ -212,7 +212,7 @@ class PageUser(Page):
 
         # username, pfp, stats (rating, number of games played), archive of all games, list of friends
         db = get_db()
-        self.user_row = db.execute("SELECT USERNAME, D_CREATED, RATING, PROFILE_PICTURE_EXTENSION FROM BOC_USER WHERE USERNAME = ?", (self.username,)).fetchone()
+        self.user_row = db.execute("SELECT USERNAME, D_CREATED, CAST(ROUND(RATING) AS INTEGER) AS RATING_ROUND, PROFILE_PICTURE_EXTENSION FROM BOC_USER WHERE USERNAME = ?", (self.username,)).fetchone()
 
         self.open_container("main_content")
         self.open_container("main_column")

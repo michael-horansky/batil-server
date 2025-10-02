@@ -41,6 +41,62 @@
       "D_CREATED": "2025-10-01 19:15:22",
       "D_CHANGED": "2025-10-01 19:16:38",
       "D_PUBLISHED": null
+    },
+    {
+      "BOARD_ID": 5,
+      "BOARD_NAME": "Tutorial: capturing bases",
+      "T_DIM": 5,
+      "X_DIM": 7,
+      "Y_DIM": 7,
+      "STATIC_REPRESENTATION": "XXXXXXXX     XX     XX     XX     XX     XXXXXXXX",
+      "SETUP_REPRESENTATION": "1+3+3+2;1+3+3+4;0+0+0+2+4+1;0+1+0+4+4+3;0+0+0+2+2+1;0+1+1+4+1+;0+0+0+3+5+0",
+      "AUTHOR": "batil",
+      "IS_PUBLIC": 0,
+      "D_CREATED": "2025-10-02 13:29:19",
+      "D_CHANGED": "2025-10-02 13:43:16",
+      "D_PUBLISHED": null
+    },
+    {
+      "BOARD_ID": 6,
+      "BOARD_NAME": "Stone showcase: tank",
+      "T_DIM": 4,
+      "X_DIM": 9,
+      "Y_DIM": 5,
+      "STATIC_REPRESENTATION": "XXXXXXXXXX       XX       XX       XXXXXXXXXX",
+      "SETUP_REPRESENTATION": "0+0+0+1+1+1;0+0+0+2+3+0;0+0+0+1+2+0;0+0+1+5+3+;0+1+2+7+3+;0+1+2+7+2+",
+      "AUTHOR": "batil",
+      "IS_PUBLIC": 0,
+      "D_CREATED": "2025-10-02 14:17:25",
+      "D_CHANGED": "2025-10-02 14:18:58",
+      "D_PUBLISHED": null
+    },
+    {
+      "BOARD_ID": 7,
+      "BOARD_NAME": "Stone showcase: bombardier",
+      "T_DIM": 5,
+      "X_DIM": 7,
+      "Y_DIM": 4,
+      "STATIC_REPRESENTATION": "XXXXXXXX     XX     XXXXXXXX",
+      "SETUP_REPRESENTATION": "0+1+0+5+2+3;0+0+2+1+2+;0+0+1+1+1+",
+      "AUTHOR": "batil",
+      "IS_PUBLIC": 0,
+      "D_CREATED": "2025-10-02 15:05:35",
+      "D_CHANGED": "2025-10-02 15:06:59",
+      "D_PUBLISHED": null
+    },
+    {
+      "BOARD_ID": 8,
+      "BOARD_NAME": "Stone showcase: sniper",
+      "T_DIM": 4,
+      "X_DIM": 10,
+      "Y_DIM": 5,
+      "STATIC_REPRESENTATION": "XXXXXXXXXXX        XX        XX        XXXXXXXXXXX",
+      "SETUP_REPRESENTATION": "0+0+3+2+2+0;0+0+3+2+1+1;0+0+3+2+3+3;0+0+0+1+1+1;0+0+0+1+2+1;0+0+0+1+3+1;0+1+2+8+1+;0+1+2+8+2+;0+1+2+8+3+;0+2+5+6+3+;0+0+1+6+2+;0+0+1+4+3+;0+0+1+4+2+",
+      "AUTHOR": "batil",
+      "IS_PUBLIC": 0,
+      "D_CREATED": "2025-10-02 15:23:39",
+      "D_CHANGED": "2025-10-02 15:27:35",
+      "D_PUBLISHED": null
     }
   ],
   "tutorials": [
@@ -1259,6 +1315,531 @@
           "TURN_INDEX": 9,
           "PLAYER": "B",
           "REPRESENTATION": ""
+        }
+      ]
+    },
+    {
+      "header": {
+        "TUTORIAL_ID": 7,
+        "BOARD_ID": 5,
+        "AUTHOR": "batil",
+        "STATUS": "in_progress",
+        "OUTCOME": null,
+        "D_CREATED": "2025-10-02 13:42:24",
+        "D_CHANGED": "2025-10-02 14:09:34"
+      },
+      "ruleset": [
+        {
+          "RULE_GROUP": "deadline",
+          "RULE": "one_day_per_move"
+        },
+        {
+          "RULE_GROUP": "end_without_win",
+          "RULE": "draw"
+        },
+        {
+          "RULE_GROUP": "paradox_action",
+          "RULE": "permanent_removal"
+        },
+        {
+          "RULE_GROUP": "scenario_priority",
+          "RULE": "conserve_setup"
+        },
+        {
+          "RULE_GROUP": "unlock_tagscreen_behaviour",
+          "RULE": "presence"
+        },
+        {
+          "RULE_GROUP": "viewing_scope",
+          "RULE": "view_entire_board"
+        }
+      ],
+      "comments": [
+        {
+          "TURN_INDEX": 1,
+          "TUTORIAL_COMMENT": "<p>\r\nThis tutorial will introduce the basic rules regarding base captures and game-over conditions.\r\n<p>"
+        },
+        {
+          "TURN_INDEX": 2,
+          "TUTORIAL_COMMENT": "<p>\r\nObserve <i>A</i>'s _STONE_2_tank_ moving onto the _SQUARE_1,3,4_neutral base_--even though it makes it, the base is never captured by <i>A</i>, because the tank gets blown up by <i>B</i>'s _STONE_3_tank_ before the time-slice is canonised.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 3,
+          "TUTORIAL_COMMENT": "<p>\r\nIn this time-slice, both bases belong to <i>A</i>, but the game is not over, because the game-over condition is only checked at the end of a round.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 4,
+          "TUTORIAL_COMMENT": "<p>\r\n<i>B</i>'s _STONE_3_tank_ recaptures one of <i>A</i>'s bases.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 5,
+          "TUTORIAL_COMMENT": "<p>\r\nIn the final time-slice, each player controls one base, and so a new round begins.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 6,
+          "TUTORIAL_COMMENT": "<p>\r\nThis is the active round (with the active time-slice being time-slice 4), because the players have not yet submitted their turns for the final time-slice. Keep in mind then that we're seeing this round in its pre-canonised version.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 7,
+          "TUTORIAL_COMMENT": "<p>\r\nThere is only one stone which was causally free as this round unfolded: <i>A</i>'s _STONE_7_new stone_. Let's see how it shakes up the events set up in the previous round!\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 8,
+          "TUTORIAL_COMMENT": "<p>\r\nAmusingly, <i>A</i>'s _STONE_7_new tank_ destroys its own _STONE_6_parent_, i.e. the tank which would time-jump-out to become the new tank.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 9,
+          "TUTORIAL_COMMENT": "<p>\r\nThe _STONE_7_new tank_ moves closer to <i>B</i>'s base...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 10,
+          "TUTORIAL_COMMENT": "<p>\r\n...and captures it. <i>A</i> now controls both bases, and it is the final time-slice. Does this mean <i>A</i> will win this round once it concludes? No!\r\n</p>\r\n<p>\r\nRemember that the game-over condition is tested on the canonised version of this round, and we're still seeing the pre-canonised version. In the canonised version, <i>A</i>'s _STONE_2_tank_ will be removed from the board to prevent a paradox (and <i>B</i>'s _STONE_3_tank_'s laser destroys <i>A</i>'s _STONE_7_new tank_), since the scenario selection prioritises to keep the time-jump-in active. Regardless of what ante-effects will be placed in the final time-slice of this round, once both players submit their turn in this time-slice, the game will continue.\r\n</p>"
+        }
+      ],
+      "moves": [
+        {
+          "TURN_INDEX": 0,
+          "PLAYER": "GM",
+          "REPRESENTATION": "1+3+3+2;1+3+3+4;0+0+0+2+4+1;0+1+0+4+4+3;0+0+0+2+2+1;0+1+1+4+1+;0+0+0+3+5+0"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+2+0+2+4+3+4+1;2+4+0+2+2+3+2+2;2+6+0+3+5+3+5+0"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "B",
+          "REPRESENTATION": "3+3+0+4+4+1+4+4+;2+5+0+4+1+4+1+"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+4+1+3+2+3+3+3;2+6+1+3+5+3+4+3"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+3+1+4+4+4+4+3;2+5+1+4+1+4+1+"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+6+2+3+4+2+4+3;2+4+2+3+3+2+3+0"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+3+2+4+4+3+4+2;2+5+2+4+1+4+1+"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+4+3+2+3+2+2+1;2+6+3+2+4+1+4+2"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+3+3+3+4+3+5+1;2+5+3+4+1+3+1+"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "A",
+          "REPRESENTATION": "5+6+4+1+4+0+1+4+2+;6+4+4+2+2"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "B",
+          "REPRESENTATION": "6+5+4+3+1;6+3+4+3+5"
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+7+0+1+4+1+4+1"
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "A",
+          "REPRESENTATION": "3+7+1+1+4+2+1+4+"
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+7+2+1+4+2+4+1"
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 9,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+7+3+2+4+3+4+1"
+        },
+        {
+          "TURN_INDEX": 9,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        }
+      ]
+    },
+    {
+      "header": {
+        "TUTORIAL_ID": 8,
+        "BOARD_ID": 6,
+        "AUTHOR": "batil",
+        "STATUS": "in_progress",
+        "OUTCOME": null,
+        "D_CREATED": "2025-10-02 14:18:23",
+        "D_CHANGED": "2025-10-02 14:49:37"
+      },
+      "ruleset": [
+        {
+          "RULE_GROUP": "deadline",
+          "RULE": "one_day_per_move"
+        },
+        {
+          "RULE_GROUP": "end_without_win",
+          "RULE": "draw"
+        },
+        {
+          "RULE_GROUP": "paradox_action",
+          "RULE": "permanent_removal"
+        },
+        {
+          "RULE_GROUP": "scenario_priority",
+          "RULE": "conserve_setup"
+        },
+        {
+          "RULE_GROUP": "unlock_tagscreen_behaviour",
+          "RULE": "presence"
+        },
+        {
+          "RULE_GROUP": "viewing_scope",
+          "RULE": "view_entire_board"
+        }
+      ],
+      "comments": [
+        {
+          "TURN_INDEX": 1,
+          "TUTORIAL_COMMENT": "<p>\r\nThe <b>tank</b> can move _STONE_0_forwards_ or _STONE_2_backwards_, and during either it can _STONE_1_turn by a quarter-revolution_.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 2,
+          "TUTORIAL_COMMENT": "<p>\r\nIt can turn to any direction, be it by a _STONE_2_quarter-revolution_ or a _STONE_0_half-revolution_, or it can _STONE_1_wait in place_.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 3,
+          "TUTORIAL_COMMENT": "<p>\r\nThe tank attacks by firing a shot in the direction in which it is facing. This shot destroys the first stone in the line of sight, be it an enemy (like with _STONE_1_this stone_'s attack), or an ally (like with _STONE_2_this stone_'s attack). Hitting a wall interrupts the attack (like with _STONE_0_this stone_'s attack).\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 4,
+          "TUTORIAL_COMMENT": "<p>\r\nFinally, let's talk about time-jumps. The tank may time-jump only in the final time-slice of a round. The tank can pass, in which case it becomes available to time-jump again in the next round's final time-slice, like _STONE_0_this one_...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 5,
+          "TUTORIAL_COMMENT": "<p>\r\n...or it may jump into any previous time-slice, be it the zertoth one, like for _STONE_6_this tank_...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 6,
+          "TUTORIAL_COMMENT": "<p>\r\n...or any other time-slice, like what _STONE_7_this tank_ did.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 7,
+          "TUTORIAL_COMMENT": "<p>\r\nThe tank may swap time-jumps-in, but it has to match the child's azimuth.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 8,
+          "TUTORIAL_COMMENT": "<p>\r\nThe tank captures bases normally.\r\n</p>"
+        }
+      ],
+      "moves": [
+        {
+          "TURN_INDEX": 0,
+          "PLAYER": "GM",
+          "REPRESENTATION": "0+0+0+1+1+1;0+0+0+2+3+0;0+0+0+1+2+0;0+0+1+5+3+;0+1+2+7+3+;0+1+2+7+2+"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+0+0+1+1+2+1+1;2+2+0+1+2+1+3+0;2+1+0+2+3+2+2+1;2+3+0+5+3+5+3+"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+5+0+7+2+7+2+;2+4+0+7+3+7+3+"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+1+2+2+2+2+1;2+0+1+2+1+2+1+3;2+2+1+1+3+1+3+1;2+3+1+5+3+5+3+"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+5+1+7+2+7+2+;2+4+1+7+3+7+3+"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "A",
+          "REPRESENTATION": "3+0+2+2+1+3+2+1+;3+1+2+2+2+3+2+2+;3+2+2+1+3+3+1+3+;2+3+2+5+3+5+3+"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+5+2+7+2+7+2+;2+4+2+7+3+7+3+"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "A",
+          "REPRESENTATION": "6+0+3+2+1;5+1+3+2+2+0+2+2+1+;5+2+3+1+3+1+1+3+1+"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "B",
+          "REPRESENTATION": "6+4+3+7+3"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        }
+      ]
+    },
+    {
+      "header": {
+        "TUTORIAL_ID": 9,
+        "BOARD_ID": 7,
+        "AUTHOR": "batil",
+        "STATUS": "in_progress",
+        "OUTCOME": null,
+        "D_CREATED": "2025-10-02 15:07:15",
+        "D_CHANGED": "2025-10-02 15:22:04"
+      },
+      "ruleset": [
+        {
+          "RULE_GROUP": "deadline",
+          "RULE": "one_day_per_move"
+        },
+        {
+          "RULE_GROUP": "end_without_win",
+          "RULE": "draw"
+        },
+        {
+          "RULE_GROUP": "paradox_action",
+          "RULE": "permanent_removal"
+        },
+        {
+          "RULE_GROUP": "scenario_priority",
+          "RULE": "conserve_setup"
+        },
+        {
+          "RULE_GROUP": "unlock_tagscreen_behaviour",
+          "RULE": "presence"
+        },
+        {
+          "RULE_GROUP": "viewing_scope",
+          "RULE": "view_entire_board"
+        }
+      ],
+      "comments": [
+        {
+          "TURN_INDEX": 1,
+          "TUTORIAL_COMMENT": "<p>\r\nThe _STONE_2_bombardier_ is another interesting stone, with a unique mode of attack.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 2,
+          "TUTORIAL_COMMENT": "<p>\r\nIt's unorientable, and it moves in any of the 4 cardinal directions. It can also choose to wait in place.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 3,
+          "TUTORIAL_COMMENT": "<p>\r\nUnlike other stone types, the bombardier's very attack is retro-causal, and thus, after you attack with it, you have to wait until the next round to see the consequences.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 4,
+          "TUTORIAL_COMMENT": "<p>\r\nIn this time-slice, on its _SQUARE_3,4,1_square_, the _STONE_2_bombardier_ attacks. When attacking, selection mode is launched, with the available squares being in the same spatial position in any of the previous time-slices (akin to its time-jump options, as you will see later).\r\n</p>\r\n<p>\r\nYou can check which square did the bombardier attack through the square inspector!\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 5,
+          "TUTORIAL_COMMENT": "<p>\r\nThe bombardier may time-jump only in the final time-slice onto any previous time-slice, on the same spatial position.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 6,
+          "TUTORIAL_COMMENT": "<p>\r\nLet's see the consequences of the bombardier's attack unfold...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 7,
+          "TUTORIAL_COMMENT": "<p>\r\nThere it is! The flash on the _SQUARE_1,4,1_target square_ destroys all stones on that square and all four adjacent squares, which spelled the doom for <i>B</i>'s _STONE_0_tank_. Keep note of how this saves the _STONE_1_tagger_, which will later become causally free.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 8,
+          "TUTORIAL_COMMENT": "<p>\r\nNote that when selecting the zeroth time-slice, the interface displays its canonical state only, without a transition animation. This means dropping a bomb onto the zeroth time-slice doesn't show the explosion animation, only the resulting carnage--or rather, the resulting quiet.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 9,
+          "TUTORIAL_COMMENT": "<p>\r\nThe bombardier can swap time-jumps-in of other bombardiers of the same allegiance, and, as an unorientable stone, does not need to concern itself with the azimuth.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 10,
+          "TUTORIAL_COMMENT": "<p>\r\nThe bombardier can capture bases normally.\r\n</p>"
+        }
+      ],
+      "moves": [
+        {
+          "TURN_INDEX": 0,
+          "PLAYER": "GM",
+          "REPRESENTATION": "0+1+0+5+2+3;0+0+2+1+2+;0+0+1+1+1+"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+2+0+1+1+2+1+;2+1+0+1+2+1+2+"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+0+0+5+2+4+2+3"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+2+1+2+1+3+1+;2+1+1+1+2+1+2+"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+0+1+4+2+3+2+3"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+2+2+3+1+4+1+;2+1+2+1+2+1+2+"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "B",
+          "REPRESENTATION": "3+0+2+3+2+3+3+2+"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "A",
+          "REPRESENTATION": "3+2+3+4+1+1+4+1+"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+0+3+3+2+2+2+3"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "A",
+          "REPRESENTATION": "5+2+4+4+1+2+4+1++"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "B",
+          "REPRESENTATION": "6+0+4+2+2"
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        }
+      ]
+    },
+    {
+      "header": {
+        "TUTORIAL_ID": 10,
+        "BOARD_ID": 8,
+        "AUTHOR": "batil",
+        "STATUS": "in_progress",
+        "OUTCOME": null,
+        "D_CREATED": "2025-10-02 15:27:47",
+        "D_CHANGED": "2025-10-02 15:33:16"
+      },
+      "ruleset": [
+        {
+          "RULE_GROUP": "deadline",
+          "RULE": "one_day_per_move"
+        },
+        {
+          "RULE_GROUP": "end_without_win",
+          "RULE": "draw"
+        },
+        {
+          "RULE_GROUP": "paradox_action",
+          "RULE": "permanent_removal"
+        },
+        {
+          "RULE_GROUP": "scenario_priority",
+          "RULE": "conserve_setup"
+        },
+        {
+          "RULE_GROUP": "unlock_tagscreen_behaviour",
+          "RULE": "presence"
+        },
+        {
+          "RULE_GROUP": "viewing_scope",
+          "RULE": "view_entire_board"
+        }
+      ],
+      "comments": [],
+      "moves": [
+        {
+          "TURN_INDEX": 0,
+          "PLAYER": "GM",
+          "REPRESENTATION": "0+0+3+2+2+0;0+0+3+2+1+1;0+0+3+2+3+3;0+0+0+1+1+1;0+0+0+1+2+1;0+0+0+1+3+1;0+1+2+8+1+;0+1+2+8+2+;0+1+2+8+3+;0+2+5+6+3+;0+0+1+6+2+;0+0+1+4+3+;0+0+1+4+2+"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+0+2+1+2+1+1;2+0+0+2+2+2+2+1;2+2+0+2+3+2+3+1;2+3+0+1+1+1+1+1;2+4+0+1+2+1+2+1;2+5+0+1+3+1+3+1;2+12+0+4+2+4+2+;2+11+0+4+3+4+3+;2+10+0+6+2+6+2+"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+6+0+8+1+8+1+;2+7+0+8+2+8+2+;2+8+0+8+3+8+3+"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "A",
+          "REPRESENTATION": "3+1+1+2+1+2+2+1+;3+0+1+2+2+2+2+2+;3+2+1+2+3+2+2+3+;2+3+1+1+1+1+1+1;2+4+1+1+2+1+2+1;2+5+1+1+3+1+3+1;2+12+1+4+2+4+2+;2+11+1+4+3+4+3+;2+10+1+6+2+6+2+"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+6+1+8+1+8+1+;2+7+1+8+2+8+2+;2+8+1+8+3+8+3+"
         }
       ]
     }

@@ -1,0 +1,8 @@
+1. preamble
+2. nav (different ingame, tutorial, and tutorial_read_only)
+3. animation_manager
+4. cameraman
+5. events
+6. commander (omit for tutorial_read_only)
+7. inspector
+8. animation setup (general document setup + inbetweens)

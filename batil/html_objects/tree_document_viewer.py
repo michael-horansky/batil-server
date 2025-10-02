@@ -104,13 +104,18 @@ class TreeDocumentViewer(HTMLObject):
             # link from text
             return(f"<a href=\"{href}\" target=\"_blank\">{label}</a>")
 
+        hyperlink_label_charset = "A-Za-z0-9.'\- "
+        bp_charset = "A-Za-z."
+        kw_charset = "A-Za-z_"
+        kw_val_charset = "A-Za-z0-9"
+
         # Magic word patterns
         magic_word_patterns = {
             "--" : (lambda match : "&#8212;"),
-            "_URLKW2_([A-Za-z.]+)<([A-Za-z_]+)=([A-Za-z0-9]+),([A-Za-z_]+)=([A-Za-z0-9]+)>_([A-Za-z0-9.\- ]+)_" : (lambda match : lft(url_for(match.group(1), **{match.group(2) : match.group(3), match.group(4) : match.group(5)}), match.group(6)) ),
-            "_URLKW_([A-Za-z.]+)<([A-Za-z_]+)=([A-Za-z0-9]+)>_([A-Za-z0-9.\- ]+)_" : (lambda match : lft(url_for(match.group(1), **{match.group(2) : match.group(3)}), match.group(4)) ),
-            "_URL_([A-Za-z.]+)_([A-Za-z0-9.\- ]+)_" : (lambda match : lft(url_for(match.group(1)), match.group(2)) ),
-            "_URLEXT_<([A-Za-z0-9.:/\-_]+)>_([A-Za-z0-9.\- ]+)_" : (lambda match : lft(match.group(1), match.group(2)) )
+            f"_URLKW2_([{bp_charset}]+)<([{kw_charset}]+)=([{kw_val_charset}]+),([{kw_charset}]+)=([{kw_val_charset}]+)>_([{hyperlink_label_charset}]+)_" : (lambda match : lft(url_for(match.group(1), **{match.group(2) : match.group(3), match.group(4) : match.group(5)}), match.group(6)) ),
+            f"_URLKW_([{bp_charset}]+)<([{kw_charset}]+)=([{kw_val_charset}]+)>_([{hyperlink_label_charset}]+)_" : (lambda match : lft(url_for(match.group(1), **{match.group(2) : match.group(3)}), match.group(4)) ),
+            f"_URL_([{bp_charset}]+)_([{hyperlink_label_charset}]+)_" : (lambda match : lft(url_for(match.group(1)), match.group(2)) ),
+            f"_URLEXT_<([A-Za-z0-9.:/\-_]+)>_([{hyperlink_label_charset}]+)_" : (lambda match : lft(match.group(1), match.group(2)) )
             }
 
         for pattern, replacer in magic_word_patterns.items():

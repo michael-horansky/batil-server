@@ -2217,7 +2217,6 @@ class Gamemaster():
 
             self.flags_by_turn.append({})
             self.current_turn_index += 1
-            # TODO! Add testing for draw by repetition, otherwise this while loop may become infinite!
 
         # For every player that didn't play their turn yet, but has no causally
         # free stones, an empty command is added
