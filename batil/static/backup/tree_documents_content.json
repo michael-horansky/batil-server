@@ -227,7 +227,7 @@
   {
     "CHAPTER_ID": 26,
     "LABEL": "Index of tutorials",
-    "CONTENT": "_URLKW_tutorial.tutorial<tutorial_id=1>_1. Introduction_\r\n<br>\r\n_URLKW_tutorial.tutorial<tutorial_id=2>_2. Causal freedom and the comb rule_\r\n<br>\r\n_URLKW_tutorial.tutorial<tutorial_id=3>_3. Interference and amnesia_\r\n<br>\r\n_URLKW_tutorial.tutorial<tutorial_id=4>_4. Spatial conflict resolution_",
+    "CONTENT": "_URLKW_tutorial.tutorial<tutorial_id=1>_1. Introduction_\r\n<br>\r\n_URLKW_tutorial.tutorial<tutorial_id=2>_2. Causal freedom and the comb rule_\r\n<br>\r\n_URLKW_tutorial.tutorial<tutorial_id=3>_3. Interference and amnesia_\r\n<br>\r\n_URLKW_tutorial.tutorial<tutorial_id=4>_4. Spatial conflict resolution_\r\n<br>\r\n_URLKW_tutorial.tutorial<tutorial_id=5>_5. Canonisation and swapping_\r\n<br>\r\n_URLKW_tutorial.tutorial<tutorial_id=6>_6. Canonisation and the rule of dogma_",
     "NEXT_CHAPTER": 27,
     "FIRST_SUBCHAPTER": null,
     "PARENT_CHAPTER": 3,
@@ -299,10 +299,37 @@
   {
     "CHAPTER_ID": 34,
     "LABEL": "Interacting with the past",
+    "CONTENT": "<p>\r\nThe heart of Batil is time travel. The players are able to perform actions which define a cause and an effect, with the effect happening in an earlier time-slice than the cause. For such an arrangement, we shall use the terms <b>ante-effect</b> and <b>retro-cause</b>.\r\n</p>\r\n<p>\r\nNaturally, the players cannot <i>affect</i> the state of the board in the previous turns or round, only <i>effect</i> the state of the board in the next turn, which may happen to correspond to an earlier time. This is the heart of the comb rule and why the game is divided into rounds: a <b>round</b> is an interval of assumed consistency, where the game allows players to time-travel as they please, and at the end of each round, <b>canonisation</b> occurs, which ensures the state of the board at the beginning of the next round is \"sensible\", i.e. causally consistent (see Sec. _URLKW2_home.index<section=5,tutorial_guide_chapter=35>_Canonisation_).\r\n</p>\r\n<h3>Time-jumps and other interactions with the past</h3>\r\n<p>\r\nThe most common way to interact with the past is to take a stone and jump with it to an earlier time-slice. This action is split into two parts: a <b>time-jump-out</b>, which is an action of the old version of the stone, taking it off of the board; and a <b>time-jump-in</b>, a progenitor flag which places the new version of the stone onto the board.\r\n</p>\r\n<p>\r\nDifferent stone types can perform time-jumps under different conditions and in different ways which are outlined in Sec. _URLKW2_home.index<section=5,tutorial_guide_chapter=24>_Stone types_. Most importantly, certain stone types are only able to perform a time-jump after reaching the final time-slice of the round, which prevents them from using time-jumps as an easy evasive manoeuver.\r\n</p>\r\n<p>\r\nOther ways of interacting with the past are specific to different stone types, and may entail placing bombs at or other forms of attacking a square in a past time-slice. For an exhaustive list, see Sec. _URLKW2_home.index<section=5,tutorial_guide_chapter=24>_Stone types_.\r\n</p>",
+    "NEXT_CHAPTER": null,
+    "FIRST_SUBCHAPTER": 35,
+    "PARENT_CHAPTER": 23,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 35,
+    "LABEL": "Canonisation",
+    "CONTENT": "<p>\r\nCanonisation occurs between every two consecutive rounds. During canonisation, all ante-effects are subject to being activated or deactivated. For each round, the configuration which determines for each ante-effect placed in all <i>previous</i> rounds whether it is active or passive is called a <b>scenario</b>. Canonisation is then, in short, the process of selecting a specific scenario.\r\n</p>\r\n<p>\r\nFor a scenario to be selected, it has to be <b>causally consistent</b>. This means that for every active effect there exists a cause, and every cause has an active effect. Note that for a cause to count, the corresponding flag must be reached and executed by its stone.\r\n</p>\r\n<p>\r\nWhen canonising a round, the game may find one, multiple, or no causally consistent scenarios (for examples see _URLKW_tutorial.tutorial<tutorial_id=6>_tutorial_). If there exists at least one causally consistent scenario, all candidates are ordered by priority according to specific criteria and the top priority candidate is selected. These criteria can be selected by the players before starting the game, and are further discussed in Sec. _URLKW2_home.index<section=5,tutorial_guide_chapter=25>_Ruleset variations_. If no causally consistent scenarios exist, a paradox is reached. Once again, based on the rules agreed upon by the players, the game may either terminate, or (as per more common rules) attempt to force a causally consistent scenario by deactivating not only player-placed ante-effects, but also the placement of stones on setup. Therefore, a scenario in general entails not only the activity of ante-effects, but also the setup of the first time-slice used for that specific round.\r\n</p>\r\n<p>\r\nFor examples of canonisation, see _URLKW_tutorial.tutorial<tutorial_id=5>_this_ (also explains swapping) and _URLKW_tutorial.tutorial<tutorial_id=6>_this_ (also explains the rule of dogma) tutorial.\r\n</p>\r\n<h3>The canonised and the pre-canonised round</h3>\r\n<p>\r\nAs discussed above, after round <i>R</i> finishes (that is, both players submit their turns for the final time-slice), a scenario is calculated, which is applied to the existing ante-effects and retro-causes for round <i>R+1</i>, whose first time-slice is presumably the active time-slice now. However, this scenario does not make round <i>R+1</i> causally consistent: it is impossible to make round <i>R+1</i> causally consistent before we know what the players do in this round! This scenario makes round <i>R</i> causally consistent. This is why applying this scenario to round <i>R+1</i> makes the round <b>pre-canonised</b>; if we applied the same scenario to round <i>R</i>, that round would be <b>canonised</b>.\r\n</p>\r\n<p>\r\nThis is a very important distinction, because it affects what the player sees when opening the game. The active round is displayed in its pre-canonised state, since we still wait for turns to be submitted for it. However, all the previous rounds are displayed in their canonised state. This means that when you finish a round by submitting your turn for its final time-slice, revisiting that round in the game interface may show completely different behaviour, since a different scenario is applied to it now.\r\n</p>\r\n<p>\r\nWhy is it done in this way? Showing the finished round's canonised form is simply more useful, since this is the form on which the end-of-game conditions are tested. All ante-effects and retro-causes may still be viewed in the square inspector, so no information is lost.\r\n</p>\r\n<p>\r\n<i>Note</i>: One finer detail was omitted in this explanation. In fact, the scenario calculated to find the pre-canonised round <i>R+1</i> is slightly different from the scenario used to find the canonised round <i>R</i>: this subtle difference is discussed in Sec. _URLKW2_home.index<section=5,tutorial_guide_chapter=37>_Rule of dogma_.\r\n</p>",
+    "NEXT_CHAPTER": 36,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 34,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 36,
+    "LABEL": "Swapping",
+    "CONTENT": "Change me",
+    "NEXT_CHAPTER": 37,
+    "FIRST_SUBCHAPTER": null,
+    "PARENT_CHAPTER": 34,
+    "VIEWER": "tutorial_guide"
+  },
+  {
+    "CHAPTER_ID": 37,
+    "LABEL": "Rule of dogma",
     "CONTENT": "Change me",
     "NEXT_CHAPTER": null,
     "FIRST_SUBCHAPTER": null,
-    "PARENT_CHAPTER": 23,
+    "PARENT_CHAPTER": 34,
     "VIEWER": "tutorial_guide"
   }
 ]

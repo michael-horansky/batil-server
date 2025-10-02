@@ -149,7 +149,7 @@ class PageBoardEditor(Page):
                 cur_char = static_representation[y * board_row["X_DIM"] + x]
                 board_static[x][y] = cur_char
 
-        setup_commands = json.loads(setup_representation)
+        setup_commands = decompress_commands(setup_representation)
 
         # To simplify things, we do not deal directly with commands, but simply with a list of stones and a list of bases
         bases = [] # [base index] = {"faction" : "A/B/neutral", "x", "y"}

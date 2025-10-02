@@ -100,7 +100,7 @@ class PageTutorial(Page):
         # We save changes to database
         for turn_index in range(len(new_dynamic_commands)):
             for commander, command_list in new_dynamic_commands[turn_index].items():
-                db.execute("INSERT INTO BOC_TUTORIAL_MOVES (TUTORIAL_ID, TURN_INDEX, PLAYER, REPRESENTATION) VALUES (?, ?, ?, ?)", (self.tutorial_id, turn_index, commander, compress_commands(command_rep)))
+                db.execute("INSERT INTO BOC_TUTORIAL_MOVES (TUTORIAL_ID, TURN_INDEX, PLAYER, REPRESENTATION) VALUES (?, ?, ?, ?)", (self.tutorial_id, turn_index, commander, compress_commands(command_list)))
 
         if output_message.header == "concluded":
             db.execute("UPDATE BOC_TUTORIALS SET STATUS = \"concluded\", OUTCOME = ? WHERE TUTORIAL_ID = ?", (output_message.msg, self.tutorial_id))

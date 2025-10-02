@@ -27,6 +27,20 @@
       "D_CREATED": "2025-10-01 11:24:41",
       "D_CHANGED": "2025-10-01 11:56:17",
       "D_PUBLISHED": null
+    },
+    {
+      "BOARD_ID": 4,
+      "BOARD_NAME": "Tutorial: canonisation",
+      "T_DIM": 4,
+      "X_DIM": 5,
+      "Y_DIM": 5,
+      "STATIC_REPRESENTATION": "XXXXXX   XX   XX   XXXXXX",
+      "SETUP_REPRESENTATION": "0+1+0+1+1+1;0+0+0+1+2+1",
+      "AUTHOR": "batil",
+      "IS_PUBLIC": 0,
+      "D_CREATED": "2025-10-01 19:15:22",
+      "D_CHANGED": "2025-10-01 19:16:38",
+      "D_PUBLISHED": null
     }
   ],
   "tutorials": [
@@ -829,6 +843,420 @@
         },
         {
           "TURN_INDEX": 15,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        }
+      ]
+    },
+    {
+      "header": {
+        "TUTORIAL_ID": 5,
+        "BOARD_ID": 4,
+        "AUTHOR": "batil",
+        "STATUS": "in_progress",
+        "OUTCOME": null,
+        "D_CREATED": "2025-10-01 19:16:51",
+        "D_CHANGED": "2025-10-01 23:43:20"
+      },
+      "ruleset": [
+        {
+          "RULE_GROUP": "deadline",
+          "RULE": "one_day_per_move"
+        },
+        {
+          "RULE_GROUP": "end_without_win",
+          "RULE": "draw"
+        },
+        {
+          "RULE_GROUP": "paradox_action",
+          "RULE": "permanent_removal"
+        },
+        {
+          "RULE_GROUP": "scenario_priority",
+          "RULE": "conserve_setup"
+        },
+        {
+          "RULE_GROUP": "unlock_tagscreen_behaviour",
+          "RULE": "presence"
+        },
+        {
+          "RULE_GROUP": "viewing_scope",
+          "RULE": "view_entire_board"
+        }
+      ],
+      "comments": [
+        {
+          "TURN_INDEX": 1,
+          "TUTORIAL_COMMENT": "<p>\r\nThis tutorial will demonstrate the basics of canonisation, i.e. how does Batil select a scenario for each round.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 2,
+          "TUTORIAL_COMMENT": "<p>\r\nA scenario is simply an object mapping \"active\" or \"inactive\" to every ante-effect, that is, something which happens earlier than its cause. This is to ensure causal consistency.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 3,
+          "TUTORIAL_COMMENT": "<p>\r\nFor example, every act of travelling back in time (specifically the time-jump-in) will require one data-point in every scenario to determine whether it is active or inactive. As such, if there are <i>N</i> ante-effects on board in a round, there will be <i>2^N</i> scenarios to consider at the end of the round during the canonisation process.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 4,
+          "TUTORIAL_COMMENT": "<p>\r\nWe see that <i>A</i>'s _STONE_1_stone_ time-jumps-out. The reason why the corresponding time-jump-in was not displayed in an earlier time-slice in this round is the _URLKW2_home.index<section=5,tutorial_guide_chapter=37>_rule of dogma_, which states that ante-effects added in this round will never manifest when canonising it.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 5,
+          "TUTORIAL_COMMENT": "<p>\r\nThe rule of dogma has another, more important bit to it, which is demonstrated in _URLKW_tutorial.tutorial<tutorial_id=6>_this tutorial_, where we see another way the situation in this game could have unfolded.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 6,
+          "TUTORIAL_COMMENT": "<p>\r\n<i>A</i>'s _STONE_2_new stone_ time-jumps-in onto the board. Note that the game actually treats this stone as a separate entity from _STONE_1_this stone_, which time-jumped-out on the other end of that time portal. The reason for this is that the \"parent-child\" relationship is not set in stone; we will see in the next round how it may be altered using _URLKW2_home.index<section=5,tutorial_guide_chapter=36>_swapping_.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 7,
+          "TUTORIAL_COMMENT": "<p>\r\nThe _STONE_2_child_ interferes with its _STONE_1_parent_, preventing the closure if their world-line. Does this mean the existence of the _STONE_2_child_ is paradoxical and cannot be permitted on the board? Not quite...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 8,
+          "TUTORIAL_COMMENT": "<p>\r\nThe _STONE_2_child_ stands in the same exact spot and with the same exact azimuth as the _STONE_1_parent_ in the previous round. This means that, when time-jumping-out, the child may decide not to create a grand-child, but to become <i>its own parent</i> and close its world-line into a loop. This is done by a process called \"swapping\", where the ante-effect of the child time-jumping-in is selected as the target for the new retro-cause of the child time-jumping-out. You can select the target ante-effect to swap in the square inspector when in selection mode, if there are any available.\r\n</p>\r\n<p>\r\nSelect the child's _SQUARE_3,3,3_square_ and notice that the square inspector lists two time-jumps-out, with the parent's being inactive and the child's being active!\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 9,
+          "TUTORIAL_COMMENT": "<p>\r\n<i>B</i>'s _STONE_0_stone_, which passed at the end of round 0, now decided to time-jump into time-slice 0, linking into a _STONE_3_child of its own_.\r\n</p>\r\n<p>\r\nNow, after seeing the entirety of round 1, you see why <i>A</i>'s _STONE_2_child_ was present even though <i>A</i>'s _STONE_1_parent_ was interfered with and unable to justify the child's existence. In fact, the scenario where the child's time-jump-in activates was the <i>only</i> self-consistent scenario, since having it deactivated would remove the interference on the parent, which would manage to time-jump-out without an activated time-jump-in--which is forbidden.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 10,
+          "TUTORIAL_COMMENT": "<p>\r\nNow <i>B</i>'s _STONE_3_child_ creates new interference by destroying <i>A</i>'s _STONE_1_parent_ for good!\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 11,
+          "TUTORIAL_COMMENT": "<p>\r\nDue to <i>B</i>'s interference, <i>A</i>'s _STONE_2_child_ ends up on a slightly different trajectory, but it manages to get back and once again swap its own time-jump-in, justifying its own existence.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 12,
+          "TUTORIAL_COMMENT": "<p>\r\nYou can see that the _STONE_2_child_'s _SQUARE_3,3,3_square_ now lists two deactivated time-jump-outs, one for round 0 and one for round 1. However, the child's loop is closed still. Now, consider this: there are two self-consistent scenarios available.\r\n</p>\r\n<ol>\r\n<li>\r\nHaving the child's time-jump-in active means the stone is placed on the board, allowing it to justify its own existence later on.\r\n</li>\r\n<li>\r\nHaving the child's time-jump-in inactive would mean the stone is not placed on board, and since its parent was interfered with and thus unable to reach the time-jump-out square, too, no time-jump-out would occur.\r\n</li>\r\n</ol>"
+        },
+        {
+          "TURN_INDEX": 13,
+          "TUTORIAL_COMMENT": "<p>\r\nSo why is it the first scenario that we saw in the canonised state of this round, not the second one? Simply because it has a higher priority. This game was started with the \"Shield-and-spear\" scenario priority rule, which you can read about _URLKW2_home.index<section=5,tutorial_guide_chapter=25>_here_. This rule tries to keep the most recently added ante-effects active, and since keeping the child's time-jump-in active didn't mean deactivating any other ante-effects, it can stay. The fact is, in this case, any choice of the scenario priority rule would prefer to keep the child's time-jump-in active.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 14,
+          "TUTORIAL_COMMENT": "<p>\r\nOne important note about swapping is: why is it useful? Instead of keeping a stone with a known trajectory we have to interfere with in order to gain control over, why wouldn't we just always create a new stone?\r\n</p>\r\n<p>\r\nYou can certainly do that, but keeping a previously established stone may be more useful than you think. For example, if the stone is an early \"ancestor\" in a long world-line of stones, removing it during canonisation necessarily removes all the children, too (unless you link onto a later point in the world-line with... exactly, <i>swapping</i> again). Also, creating a closed loop means you have a stone on board which may be doing something useful without requiring another of your stones to \"become it\", which is, if you think about it, the only way to truly \"increase\" the number of stones in your army.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 15,
+          "TUTORIAL_COMMENT": "<p>\r\nThere are definitely advantages to always creating new stones and <b>surfing</b> on the tide of dogmatic inconsistency (if this sentence confuses you, read the section on the _URLKW2_home.index<section=5,tutorial_guide_chapter=37>_rule of dogma_), but in the end, you want to have an advantage in the canonised rounds, not the pre-canonised ones, since only the former count when deciding who won the game. So: happy swapping!\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 16,
+          "TUTORIAL_COMMENT": "<p>\r\nAnd if you want to know what happens when <i>no</i> scenario is self-consistent, read the section about _URLKW2_home.index<section=5,tutorial_guide_chapter=25>_ruleset variations_, or better yet, try _URLKW_tutorial.tutorial<tutorial_id=6>_this tutorial_, where the rule of dogma is also discussed.\r\n</p>"
+        }
+      ],
+      "moves": [
+        {
+          "TURN_INDEX": 0,
+          "PLAYER": "GM",
+          "REPRESENTATION": "0+1+0+1+1+1;0+0+0+1+2+1"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+0+1+2+2+2+1"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+0+0+1+1+1+1+1"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+1+2+2+3+2+2"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+0+1+1+1+1+1+1"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+2+3+2+3+3+2"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+0+2+1+1+2+1+2"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "A",
+          "REPRESENTATION": "5+1+3+3+3+1+3+3+2+"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "B",
+          "REPRESENTATION": "6+0+3+2+1"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+2+1+3+3+3+2+2"
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+2+2+3+3+3+3+2;2+1+2+2+2+2+3+3"
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "A",
+          "REPRESENTATION": "6+1+3+2+3;5+2+3+3+3+1+3+3+2+8"
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "B",
+          "REPRESENTATION": "5+0+3+2+1+0+2+1+2+"
+        },
+        {
+          "TURN_INDEX": 9,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 9,
+          "PLAYER": "B",
+          "REPRESENTATION": "3+3+0+2+1+1+2+1+"
+        },
+        {
+          "TURN_INDEX": 10,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 10,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+3+1+2+1+2+1+3"
+        },
+        {
+          "TURN_INDEX": 11,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+2+2+3+2+3+3+2"
+        },
+        {
+          "TURN_INDEX": 11,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+3+2+2+1+2+1+3"
+        },
+        {
+          "TURN_INDEX": 12,
+          "PLAYER": "A",
+          "REPRESENTATION": "5+2+3+3+3+1+3+3+2+8"
+        },
+        {
+          "TURN_INDEX": 12,
+          "PLAYER": "B",
+          "REPRESENTATION": "5+3+3+3+1+0+3+1+3+"
+        },
+        {
+          "TURN_INDEX": 13,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        }
+      ]
+    },
+    {
+      "header": {
+        "TUTORIAL_ID": 6,
+        "BOARD_ID": 4,
+        "AUTHOR": "batil",
+        "STATUS": "in_progress",
+        "OUTCOME": null,
+        "D_CREATED": "2025-10-01 22:17:56",
+        "D_CHANGED": "2025-10-01 23:40:21"
+      },
+      "ruleset": [
+        {
+          "RULE_GROUP": "deadline",
+          "RULE": "one_day_per_move"
+        },
+        {
+          "RULE_GROUP": "end_without_win",
+          "RULE": "draw"
+        },
+        {
+          "RULE_GROUP": "paradox_action",
+          "RULE": "permanent_removal"
+        },
+        {
+          "RULE_GROUP": "scenario_priority",
+          "RULE": "conserve_setup"
+        },
+        {
+          "RULE_GROUP": "unlock_tagscreen_behaviour",
+          "RULE": "presence"
+        },
+        {
+          "RULE_GROUP": "viewing_scope",
+          "RULE": "view_entire_board"
+        }
+      ],
+      "comments": [
+        {
+          "TURN_INDEX": 1,
+          "TUTORIAL_COMMENT": "<p>\r\nThis tutorial explores canonisation when paradoxes occur, and how the rule of dogma causes inconsistencies to persist in the pre-canonised round. It is a bit tricky to follow, so make sure to be familiar with _URLKW_tutorial.tutorial<tutorial_id=5>_this tutorial_ beforehand.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 2,
+          "TUTORIAL_COMMENT": "<p>\r\nThe round 0 unfolds exactly as in the previous tutorial.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 3,
+          "TUTORIAL_COMMENT": "<p>\r\nPlease note the rule \"Auditors of Reality\" was selected for this game. This rule states that upon reaching a paradox, the very action of adding stones on setup becomes subject to scenario-by-scenario deactivation. Specifically, if a setup stone gets deactivated in order to prevent a paradox in a certain round, it may never be activated for the rest of the game. Compare this to \"Hulot's Holiday\", which allows for setup stones to be reactivated in later rounds.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 4,
+          "TUTORIAL_COMMENT": "<p>\r\nThis deactivation of setup placements of stones ensures there is always at least one self-consistent scenario: for example the one where no stones are present on the board. Let's see now what happens after <i>A</i>'s _STONE_1_stone_ jumps back in time...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 5,
+          "TUTORIAL_COMMENT": "<p>\r\n...aaand there it is. The _STONE_1_stone_ got deactivated from setup due to causing a paradox. Since round 1 has also concluded, we are now viewing its canonised form, so you won't be able to see the stone's trajectories, but what essentially happened is the same as in round 1 of the previous tutorial, except <i>A</i>'s child didn't swap its own time-jump-in, and thus its existence was impossible. However, if its time-jump-in got deactivated in the canonised scenario, nothing would have prevented its parent from reaching the scheduled time-jump-out, which would require the child's existence. In other words, it's a paradox! And the only way to resolve it was to remove the parent altogether from the board...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 6,
+          "TUTORIAL_COMMENT": "<p>\r\nHowever, I will tell you what did happen whilst this round was unfolding. The child navigated over to _SQUARE_1,2,3_this square_ and time-jumped-out into the zeroth time-slice. Don't believe me? Check the square inspector for this square on time-slice _SQUARE_0,2,3_zero_ and _SQUARE_3,2,3_three_ to see the inactive time-jump-in and time-jump-out, respectively!\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 7,
+          "TUTORIAL_COMMENT": "<p>\r\nNote that the time-jump-in on _SQUARE_0,2,3_this square_ doesn't get the orange highlight, because it's an ante-effect added in this round. The rule of dogma states that such ante-effects are <i>never</i> active in the round they were added in, but <i>always</i> active in the next round (that is, in its pre-canonised state).\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 8,
+          "TUTORIAL_COMMENT": "<p>\r\nLook at all these inactive time-jumps-out! Two of them are actually dogmatic, and as such their corresponding time-jumps-in will be activated in the next round. The next round is actually still in progress, and thus we will see them in its pre-canonised state. These two time-jumps-out are the one on _SQUARE_3,2,3_this_ and _SQUARE_3,1,1_this_ square.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 9,
+          "TUTORIAL_COMMENT": "<p>\r\nAnd just like that, <i>A</i>'s _STONE_3_new tank_ time-jumps-in on the designated spot, even though the corresponding retro-cause didn't get activated in the last round. This is what the rule of dogma is ultimately about: whatever retro-causal shenanigans you put in motion, you <i>will</i> see their consequences at least once, that is, in the pre-canonised state of the very next round, which will also give you a chance of retroactively justify them. If this wasn't the case, the game would be very rigid, as adding time-jumps could lead to them never actually manifesting.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 10,
+          "TUTORIAL_COMMENT": "<p>\r\nJust as <i>A</i>'s new tank becomes causally free, <i>B</i> also has a tank time-jump-in. However, since happens on the _SQUARE_1,1,1_same square_ where its parent sits idly, the explosion rule of spatial conflict resolution causes both parent and child to be destroyed. This is once more the rule of dogma, even more directly, in practice: the child's existence was never consistent, as it immediately on spawning contradicts its own cause, but we still see the time-jump-in get activated and all of this chicanery unfold, all because the corresponding time-jump-out was added in the last round, and this is still the pre-canonised version of this round.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 11,
+          "TUTORIAL_COMMENT": "<p>\r\n<i>B</i>'s impossible child is destroyed, and thus won't go anywhere. If we let the game unfold into the next round, chances are, the child (and probably also the parent) would vanish from the canonised version of this round, and also from all the subsequent rounds.\r\n</p>\r\n<p>\r\nHowever, the same is not necessarily true about <i>A</i>'s impossible child. We saw it become causally free on an _SQUARE_0,2,3_earlier square_, and it is possible that, as this round progresses, the stone moves somewhere else and then time-jumps-out again. What that means is a bit strange. Always the stone gets erased during canonisation, but its child manifests in the next round whilst it remains pre-canonised. This cycle can theoretically keep going indefinitely.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 12,
+          "TUTORIAL_COMMENT": "<p>\r\nWhat was described in the previous turn is referred to as <b>surfing</b>, because the stone needs to keep balancing on the \"wave\" of propagating rounds. The effects and occurrences which break self-consistency in pre-canonised rounds due to the rule of dogma are called <b>dogmatic inconsistency</b>. A little bit of inconsistency isn't harmful! Especially since it's not persistent, as every round is eventually canonised.\r\n</p>\r\n<p>\r\nThe process of surfing can end in one of three ways: either the stone fails to time-jump-out and its world-line disappears in the next canonisation, or it somehow justifies the existence of one of its ancestors, securing its existence in the canonised state of that round, or the game ends. A surfing stone cannot capture bases, since captures only count in the canonised versions of rounds, but it can shake up the game in other ways!\r\n</p>"
+        }
+      ],
+      "moves": [
+        {
+          "TURN_INDEX": 0,
+          "PLAYER": "GM",
+          "REPRESENTATION": "0+1+0+1+1+1;0+0+0+1+2+1"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+0+1+2+2+2+1"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+0+0+1+1+1+1+1"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+1+2+2+3+2+2"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+0+1+1+1+1+1+1"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+2+3+2+3+3+2"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+0+2+1+1+2+1+2"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "A",
+          "REPRESENTATION": "5+1+3+3+3+1+3+3+2+"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "B",
+          "REPRESENTATION": "6+0+3+2+1"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+2+1+3+3+3+2+3"
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+2+2+2+2+1+3;2+2+2+3+3+2+3+3"
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "A",
+          "REPRESENTATION": "5+2+3+2+3+0+2+3+3+;6+1+3+2+2"
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "B",
+          "REPRESENTATION": "5+0+3+1+1+1+1+1+2+"
+        },
+        {
+          "TURN_INDEX": 9,
           "PLAYER": "B",
           "REPRESENTATION": ""
         }
