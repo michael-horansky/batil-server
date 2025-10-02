@@ -449,7 +449,9 @@ animation_manager.change_process_preparation = function(animation_args) {
         if (inbetweens[round_n][s_time][s_process]["dest_stones"].length > 0) {
             animation_manager.add_TAE_class("TAE_causal_freedom_marker");
             for (let stone_index = 0; stone_index < inbetweens[round_n][s_time][s_process]["dest_stones"].length; stone_index++) {
-                animation_manager.create_causal_freedom_marker(inbetweens[round_n][s_time][s_process]["dest_stones_states"][stone_index][0], inbetweens[round_n][s_time][s_process]["dest_stones_states"][stone_index][1]);
+                if (stone_endpoints[selected_round][inbetweens[round_n][s_time][s_process]["dest_stones"][stone_index]]["end"]["event"] == "causally_free") {
+                    animation_manager.create_causal_freedom_marker(inbetweens[round_n][s_time][s_process]["dest_stones_states"][stone_index][0], inbetweens[round_n][s_time][s_process]["dest_stones_states"][stone_index][1]);
+                }
             }
         }
     }
@@ -610,7 +612,12 @@ animation_manager.change_round_get_frame = function(animation_args) {
 
     // If we're halfway done, show the new round
     if (animation_manager.current_frame_key / animation_manager.total_frames > 0.5 && (visible_round != new_round || visible_timeslice != new_timeslice)) {
-        show_canon_board_slice(new_round, new_timeslice);
+        if (new_timeslice == 0) {
+            // if we move into the zeroth time-slice, we show the board as is on setup, so that the other elements appearing (TJIs, explosions...) can be animated
+            show_canon_board_slice(0, new_timeslice);
+        } else {
+            show_canon_board_slice(new_round, new_timeslice);
+        }
     }
 
 }

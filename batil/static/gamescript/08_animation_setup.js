@@ -72,8 +72,81 @@ const process_keys = ["flags", "pushes", "destructions", "tagscreens", "canon"];
 const inbetweens = [];
 for (let inbetween_round_index = 0; inbetween_round_index <= active_round; inbetween_round_index++) {
     inbetweens.push([]);
+
     for (let inbetween_time = 0; inbetween_time < t_dim; inbetween_time++) {
         inbetweens[inbetween_round_index].push(new Object());
+
+        if (inbetween_time == 0) {
+            // We add a special inbetween object which describes the "setup" start process for the setup -> time-slice 0 animation (i.e. the new time jumps)
+            let start_process = "setup";
+            inbetweens[inbetween_round_index][inbetween_time][start_process] = new Object();
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["cont_stones"] = [];
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["cont_stones_states"] = [[], []];
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["dest_stones"] = [];
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["dest_stones_states"] = [];
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["new_stones"] = [];
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["new_stones_states"] = [];
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["hide_stones"] = [];
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["new_time_jumps"] = [[], []];
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["old_time_jumps"] = [[], []];
+            let is_redundant = true;
+            let end_process = process_keys[0];
+            let end_time = 0;
+            for (let stone_ID_index = 0; stone_ID_index < flat_stone_IDs.length; stone_ID_index++) {
+                let start_state = stone_trajectories[0][inbetween_time]["canon"][flat_stone_IDs[stone_ID_index]];
+                let end_state = stone_trajectories[inbetween_round_index][end_time][end_process][flat_stone_IDs[stone_ID_index]];
+                if (start_state == null) {
+                    if (end_state == null) {
+                        inbetweens[inbetween_round_index][inbetween_time][start_process]["hide_stones"].push(flat_stone_IDs[stone_ID_index]);
+                    } else {
+                        inbetweens[inbetween_round_index][inbetween_time][start_process]["new_stones"].push(flat_stone_IDs[stone_ID_index]);
+                        inbetweens[inbetween_round_index][inbetween_time][start_process]["new_stones_states"].push(end_state.slice());
+                        is_redundant = false;
+                    }
+                } else {
+                    if (end_state == null) {
+                        inbetweens[inbetween_round_index][inbetween_time][start_process]["dest_stones"].push(flat_stone_IDs[stone_ID_index]);
+                        inbetweens[inbetween_round_index][inbetween_time][start_process]["dest_stones_states"].push(start_state.slice());
+                        is_redundant = false;
+                    } else {
+                        inbetweens[inbetween_round_index][inbetween_time][start_process]["cont_stones"].push(flat_stone_IDs[stone_ID_index]);
+                        let start_state_copy = start_state.slice();
+                        let end_state_copy = end_state.slice();
+                        if (!(arrays_equal(start_state, end_state))) {
+                            is_redundant = false;
+                        }
+                        // If the stone rotates, we want to choose the sensible rotation direction
+                        if (end_state_copy[2] - start_state_copy[2] > 2) {
+                            end_state_copy[2] -= 4;
+                        }
+                        if (end_state_copy[2] - start_state_copy[2] < -2) {
+                            end_state_copy[2] += 4;
+                        }
+                        inbetweens[inbetween_round_index][inbetween_time][start_process]["cont_stones_states"][0].push(start_state_copy);
+                        inbetweens[inbetween_round_index][inbetween_time][start_process]["cont_stones_states"][1].push(end_state_copy);
+
+                    }
+                }
+            }
+            for (let x = 0; x < x_dim; x++) {
+                for (let y = 0; y < y_dim; y++) {
+                    let used_tj_marker = inds(time_jumps[inbetween_round_index], [end_time, x, y, "used"]);
+                    let unused_tj_marker = inds(time_jumps[inbetween_round_index], [end_time, x, y, "unused"]);
+                    if (used_tj_marker != undefined) {
+                        inbetweens[inbetween_round_index][inbetween_time][start_process]["new_time_jumps"][0].push(`used_time_jump_marker_${x}_${y}`);
+                        inbetweens[inbetween_round_index][inbetween_time][start_process]["new_time_jumps"][1].push(`used_${used_tj_marker}`);
+                        is_redundant = false;
+                    }
+                    if (unused_tj_marker != undefined) {
+                        inbetweens[inbetween_round_index][inbetween_time][start_process]["new_time_jumps"][0].push(`unused_time_jump_marker_${x}_${y}`);
+                        inbetweens[inbetween_round_index][inbetween_time][start_process]["new_time_jumps"][1].push(`unused_${unused_tj_marker}`);
+                        is_redundant = false;
+                    }
+                }
+            }
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["redundant"] = is_redundant;
+        }
+
         for (let inbetween_process_index = 0; inbetween_process_index < process_keys.length; inbetween_process_index++) {
             let start_process = process_keys[inbetween_process_index];
             inbetweens[inbetween_round_index][inbetween_time][start_process] = new Object();

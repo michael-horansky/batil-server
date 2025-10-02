@@ -27,3 +27,27 @@ function select_round(new_round_n, new_timeslice = null) {
     //document.getElementById("navigation_label").innerText = `Selected timeslice ${selected_timeslice}, selected round ${selected_round}`;
     update_game_log_nav(selected_timeslice, selected_round);
 }
+
+// ----------------------------- Stone highlight ------------------------------
+
+var highlighted_stone = null;
+function set_stone_highlight(stone_ID) {
+    if (stone_ID != highlighted_stone && highlighted_stone != null) {
+        // Change of the guard
+        document.getElementById(`stone_${highlighted_stone}`).style.filter = "";
+    }
+    highlighted_stone = stone_ID
+    if (stone_ID != null) {
+        document.getElementById(`stone_${stone_ID}`).style.filter = "url(#spotlight)";
+    }
+}
+
+
+function stone_highlight(stone_ID) {
+    return `<span class=\"stone_highlight\" onmouseenter=\"set_stone_highlight(${stone_ID})\" onmouseleave=\"set_stone_highlight(null)\" onclick=\"cameraman.track_stone(${stone_ID})\">${stone_properties[stone_ID]["stone_type"].toUpperCase()} [P. ${stone_properties[stone_ID]["allegiance"]}]</span>`;
+}
+
+function square_highlight(t, x, y) {
+    return `<span class=\"square_highlight\" onclick=\"go_to_square(${t},${x},${y})\">(${t},${x},${y})</tspan>`;
+}
+

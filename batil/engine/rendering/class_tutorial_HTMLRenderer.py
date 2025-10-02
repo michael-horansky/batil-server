@@ -58,9 +58,27 @@ class TutorialHTMLRenderer(Renderer):
     def close_body(self):
         # We actually leave the <body> tag open for possible scripts to be slapped onto the end
         if self.client_role == "editor":
-            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='boc_tutorial.js') }\"></script>")
+            #self.commit_to_output(f"  <script src=\"{ url_for('static', filename='boc_tutorial.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/01_preamble.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/02_nav_tutorial.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/03_animation_manager.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/04_cameraman.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/05_events.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/06_commander.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/07_inspector.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/08_animation_setup.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/09_display_setup_tutorial.js') }\"></script>")
         else:
-            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='boc_tutorial_read_only.js') }\"></script>")
+            #self.commit_to_output(f"  <script src=\"{ url_for('static', filename='boc_tutorial_read_only.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/01_preamble.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/02_nav_tutorial_read_only.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/03_animation_manager.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/04_cameraman.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/05_events.js') }\"></script>")
+            # we omit the commander script
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/07_inspector.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/08_animation_setup.js') }\"></script>")
+            self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/09_display_setup_tutorial_read_only.js') }\"></script>")
 
     def commit_to_output(self, html_object):
         self.structured_output.append(html_object)

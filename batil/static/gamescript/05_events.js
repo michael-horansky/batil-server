@@ -4,6 +4,12 @@
 
 function parse_keydown_event(event) {
     //alert(event.key);
+    // If the focus is on a textbox, we ignore keypresses
+    if (event.target.tagName === "INPUT" ||
+        event.target.tagName === "TEXTAREA" ||
+        event.target.isContentEditable) {
+        return;
+    }
     switch(event.key) {
         case "z":
             show_prev_timeslice();
@@ -196,6 +202,14 @@ function show_next_round() {
     if (round_navigation_enabled && (selected_round < active_round)) {
         select_round(selected_round += 1);
         animation_manager.add_to_queue([["change_round", selected_round, selected_timeslice, ">>", "up"], ["reset_to_canon", selected_round, selected_timeslice]]);
+        if (selected_timeslice == 0) {
+            // We also show how the setup changed
+            animation_manager.add_to_queue([["change_process", selected_round, 0, "setup", false]]);
+            for (let process_key_index = 0; process_key_index < process_keys.length - 1; process_key_index++) {
+                animation_manager.add_to_queue([["change_process", selected_round, 0, process_keys[process_key_index], false]]);
+            }
+            animation_manager.add_to_queue([["reset_to_canon", selected_round, 0]]);
+        }
     }
 }
 

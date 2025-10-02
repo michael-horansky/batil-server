@@ -32,6 +32,10 @@ if (last_displayed_turn < current_turn) {
         // The game crossed into a new round. Let's ffw to it
         animation_manager.add_to_queue([["change_round", active_round, 0, ">|", "up"], ["reset_to_canon", active_round, 0]]);
         last_displayed_timeslice = 0;
+        animation_manager.add_to_queue([["change_process", active_round, 0, "setup", false]]);
+        for (let process_key_index = 0; process_key_index < process_keys.length - 1; process_key_index++) {
+            animation_manager.add_to_queue([["change_process", active_round, 0, process_keys[process_key_index], false]]);
+        }
     }
 
     //select_round(active_round, last_displayed_timeslice);
