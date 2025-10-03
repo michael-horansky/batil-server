@@ -502,14 +502,14 @@ animation_manager.create_board_action_marker = function(board_action) {
             break;
 
         case "tagscreen_unlock":
-            // lock tagscreen
+            // unlock tagscreen
             let tag_unlock_cloud = make_smoke_cloud(`TAE_tagscreen_unlock`, `TAE_tagscreen_unlock_${board_action[1]}_${board_action[2]}`);
             tag_unlock_cloud.style.transform = `translate(${100 * board_action[1] + 50}px,${100 * board_action[2] + 50}px)`;
             document.getElementById("board_layer_4").appendChild(tag_unlock_cloud);
             break;
 
         case "tagscreen_hide":
-            // lock tagscreen
+            // smokescreen
             let tag_hide_cloud = make_smoke_cloud(`TAE_tagscreen_hide`, `TAE_tagscreen_hide_${board_action[1]}_${board_action[2]}`);
             tag_hide_cloud.style.transform = `translate(${100 * board_action[1] + 50}px,${100 * board_action[2] + 50}px)`;
             document.getElementById("board_layer_4").appendChild(tag_hide_cloud);

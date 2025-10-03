@@ -627,12 +627,12 @@ hr {
     stroke-width : 2;
 }
 .cloud_canvas_TAE_tagscreen_unlock {
-    fill : #B8C4A9;
+    fill : #F4E9D7;
     stroke : black;
     stroke-width : 2;
 }
 .cloud_canvas_TAE_tagscreen_hide {
-    fill : lightgrey;
+    fill : #B6CACE;
     stroke : black;
     stroke-width : 2;
 }
@@ -644,12 +644,12 @@ hr {
 
 .cloud_bg_TAE_tagscreen_unlock {
     stroke : none;
-    fill : #B8C4A9;
+    fill : #F4E9D7;
 }
 
 .cloud_bg_TAE_tagscreen_hide {
     stroke : none;
-    fill : lightgrey;
+    fill : #B6CACE;
 }
 
 .cloud_fg_TAE_tagscreen_lock {

@@ -1897,7 +1897,7 @@
         "STATUS": "in_progress",
         "OUTCOME": null,
         "D_CREATED": "2025-10-02 19:25:34",
-        "D_CHANGED": "2025-10-02 19:36:06"
+        "D_CHANGED": "2025-10-03 12:27:47"
       },
       "ruleset": [
         {
@@ -1925,7 +1925,80 @@
           "RULE": "view_entire_board"
         }
       ],
-      "comments": [],
+      "comments": [
+        {
+          "TURN_INDEX": 1,
+          "TUTORIAL_COMMENT": "<p>\r\nThe tagger is a rather funky stone type. In this example, both <i>A</i> and <i>B</i> _STONE_1_each_ _STONE_4_have_ a tagger of their own.\r\n</p>\r\n<p>\r\nThe tagger is unopposable and unorientable and it moves by jumping like a horse.\r\n</p>\r\n<p>\r\nThe tagger can't attack, instead it has an action called <i>tag</i>. Tagging deploys a <b>tagscreen</b> which bestows unique effects on the stones on the 4 adjacent squares, and sometimes on the tagger, too. There are three types of tagscreens:\r\n</p>\r\n<ul>\r\n<li>\r\n<mark>Lock tagscreen</mark>: disables the marked stones' ability to jump back in time.\r\n</li>\r\n<li>\r\n<mark>Unlock tagscreen</mark>: undoes the effect of the lock tagscreen or renders stones causally free.\r\n</li>\r\n<li>\r\n<mark>Smokescreen</mark>: hides self and adjacent stones from attacks and explosions for one turn.\r\n</li>\r\n</ul>"
+        },
+        {
+          "TURN_INDEX": 2,
+          "TUTORIAL_COMMENT": "<p>\r\nIn this time-slice, <i>A</i>'s _STONE_1_tagger_ deploys a smokescreen, which affects itself and an allied tank. Both <i>A</i>'s _STONE_2_tank_ and <i>B</i>'s _STONE_3_tank_ fire their attacks; <i>B</i>'s _STONE_3_tank_'s attack misses due to the smokescreen, but <i>A</i>'s _STONE_2_tank_ is still able to fire from the smoke and hit the target.\r\n</p>\r\n<p>\r\nYou may think it's overpowered to allow the hidden stone to finish executing its attack, but if that wasn't the case, <i>B</i>'s _STONE_3_tank_ would be able to just fire again in the next turn and kill <i>A</i>'s _STONE_2_tank_ as it emerges from the tagscreen.\r\n</p>\r\n<p>\r\nMeanwhile, <i>B</i>'s _STONE_4_tagger_ deploys a lock tagscreen. Not discerning between ally and enemy, it affects itself and both <i>A</i>'s _STONE_0_bombardier_ and <i>B</i>'s _STONE_5_sniper_. You see that tagscreens are applied after moving but before attacking."
+        },
+        {
+          "TURN_INDEX": 3,
+          "TUTORIAL_COMMENT": "<p>\r\n<i>A</i>'s _STONE_1_tagger_ and _STONE_2_tank_ will emerge from the smokescreen, and thus in this turn commands may not be placed for them. The in-game mechanic of the smokescreen is, naturally, related to time-travel: it is literally just jumping <i>forward</i> in time by one time-slice. As such, this action cannot be played in the second-to-last time-slice of a round, because there wouldn't be time to emerge back.\r\n</p>\r\n<p>\r\nIn the meantime, <i>B</i>'s _STONE_4_tagger_ deploys an unlock tagscreen, allowing the allied _STONE_5_sniper_ (and also itself!) to time-jump again. Remember that the sniper can time-jump in any time-slice, so restoring that ability is very helpful for <i>B</i>.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 4,
+          "TUTORIAL_COMMENT": "<p>\r\nRemember that <i>A</i>'s _STONE_0_bombardier_ is still causally locked, so let's see if we can help it.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 5,
+          "TUTORIAL_COMMENT": "<p>\r\n<i>A</i>'s _STONE_1_tagger_ deploys an unlock tagscreen to allow the allied _STONE_0_bombardier_ to time-jump in the next time-slice--however, <i>B</i>'s _STONE_4_tagger_ wants to prevent that, so it casts another lock tagscreen. Because the ruleset for this game contains the rule \"Antidote\", both tagscreens cancel each other out, and the _STONE_0_bombardier_ remains in the state in which it was before--that is, causally locked. For other options for how the rules for this may be, see Sec. _URLKW2_home.index<section=5,tutorial_guide_chapter=25>_Ruleset variations_.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 6,
+          "TUTORIAL_COMMENT": "<p>\r\nHowever, <i>B</i> made a mistake, since it marked all of its stones as causally locked, so all of them (and <i>A</i>'s _STONE_0_bombardier_) have to pass. Let's say <i>A</i>'s _STONE_2_tank_ passes as well, so let's see how can <i>A</i>'s _STONE_1_tagger_ jump back in time.\r\n</p>\r\n<p>\r\nTaggers can jump back in time whenever (although after using a lock tagscreen, they have to unlock themselves or have another tagger unlock them), but they can only either jump into the same time-slice (which is still retro-causal, so it only manifests in the next round), or into the previous time-slice. All of these actions are treated as a <i>jump</i>, which also covers the classic spatial movement. So to jump in time with a tagger, just select <i>jump</i> and then navigate to a previous timeslice by pressing Z.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 7,
+          "TUTORIAL_COMMENT": "<p>\r\nNot much will be happening for a while, since <i>A</i>'s _STONE_7_tagger_ (highlighting the child here) only appears in time-slice 4, so feel free to fast-forward to _SQUARE_4,2,2_this square_.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 8,
+          "TUTORIAL_COMMENT": "<p>\r\nKeep going!\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 9,
+          "TUTORIAL_COMMENT": "<p>\r\nTwo more time-slices...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 10,
+          "TUTORIAL_COMMENT": "<p>\r\nOne more!\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 11,
+          "TUTORIAL_COMMENT": "<p>\r\nThere it is! <i>A</i>'s _STONE_7_tagger_ emerges from the time-jump-in, only to immediately jump back in time again. The red highlight means the square hosts both a time-jump-in and a time-jump-out, as you can check for yourself in the square inspector.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 12,
+          "TUTORIAL_COMMENT": "<p>\r\nAs you can see, the tagger is a very powerful and mobile stone, but it doesn't have much board presence, since it disappears for almost an entire round every time it time-jumps-out. Also, it may be tricky to protect its world-line from disruptions!\r\n</p>\r\n<p>\r\nLet's progress to the next round and see what the tagger does next...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 13,
+          "TUTORIAL_COMMENT": "<p>\r\nThe tagger will emerge in time-slice 3, so feel free to skip to _SQUARE_3,2,3_this square_.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 14,
+          "TUTORIAL_COMMENT": "<p>\r\n...or navigate there manually!\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 15,
+          "TUTORIAL_COMMENT": "<p>\r\nJust one more time-slice...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 16,
+          "TUTORIAL_COMMENT": "<p>\r\nThere's <i>A</i>'s _STONE_8_tagger_! Now observe this: <i>A</i>'s _STONE_2_tank_ isn't causally locked by a tagscreen, but it does follow a certain trajectory laid down for it in round 0 until it reaches the final time-slice, where, since we always passed with it, it prompts <i>A</i> to give it a time-jump destination. However, <i>A</i>'s _STONE_8_tagger_ deploys an unlock tagscreen...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 17,
+          "TUTORIAL_COMMENT": "<p>\r\n...and the unlock tagscreen hits both <i>A</i>'s _STONE_2_tank_ and the tagger's _STONE_7_previous iteration_. This makes <i>both of these stones causally free</i>. The side-effect of the unlock tagscreen (or its main feature--depends on how you conceptualise it) is that it's a very easy way of causing <b>interference</b> to gain more control over your army.\r\n</p>\r\n<p>\r\nThe tagger's _STONE_7_previous iteration_ is crucial to justify the _STONE_8_tagger_'s existence, so it will simply swap the time-jump-in it caused in the last round, so that the world-line doesn't break. However, <i>A</i>'s _STONE_2_tank_ takes advantage of its new-found freedom and chooses a new action.\r\n</p>\r\n<p>\r\nNote that, like any other interference, the same unlock tagscreen will not make the marked stones causally free again in the next round.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 18,
+          "TUTORIAL_COMMENT": "<p>\r\n<i>A</i>'s _STONE_8_tagger_ time-jumped into the same time-slice, but, as discussed before, we will see it emerge in the next round.\r\n</p>\r\n<p>\r\nYou are now acquainted with the unique moveset of the tagger. Note that it can swap other taggers' time-jumps-in (and that's extremely useful specifically for this stone type), and it can capture bases just fine.\r\n</p>"
+        }
+      ],
       "moves": [
         {
           "TURN_INDEX": 0,
@@ -1951,6 +2024,161 @@
           "TURN_INDEX": 2,
           "PLAYER": "B",
           "REPRESENTATION": "4+4+1+4+1+0;2+5+1+5+1+5+1+3;2+6+1+5+3+5+3+;3+3+1+6+4+2+6+4+"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+0+2+3+1+2+1+"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "B",
+          "REPRESENTATION": "4+4+2+4+1+1;2+5+2+5+1+5+1+3;2+6+2+5+3+5+3+"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+0+3+2+1+3+1+;2+1+3+3+3+2+1+;2+2+3+3+4+2+4+0"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+4+3+4+1+4+1+;2+6+3+5+3+5+2+;2+5+3+5+1+5+1+3"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "A",
+          "REPRESENTATION": "4+1+4+2+1+1;2+0+4+3+1+3+1+;2+2+4+2+4+2+3+0"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "B",
+          "REPRESENTATION": "4+4+4+4+1+0;2+5+4+5+1+5+1+3;2+6+4+5+2+4+2+"
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "A",
+          "REPRESENTATION": "5+1+5+2+1+4+2+2++;6+2+5+2+3"
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 9,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 9,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 10,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 10,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 11,
+          "PLAYER": "A",
+          "REPRESENTATION": "5+7+4+2+2+3+2+3++"
+        },
+        {
+          "TURN_INDEX": 11,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 12,
+          "PLAYER": "A",
+          "REPRESENTATION": "6+2+5+2+3"
+        },
+        {
+          "TURN_INDEX": 12,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 13,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 13,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 14,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 14,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 15,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 15,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 16,
+          "PLAYER": "A",
+          "REPRESENTATION": "4+8+3+2+3+1"
+        },
+        {
+          "TURN_INDEX": 16,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 17,
+          "PLAYER": "A",
+          "REPRESENTATION": "5+7+4+2+2+3+2+3++39;2+2+4+2+4+2+4+3;5+8+4+2+3+4+4+3++"
+        },
+        {
+          "TURN_INDEX": 17,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 18,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
         }
       ]
     }

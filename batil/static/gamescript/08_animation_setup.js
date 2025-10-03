@@ -175,13 +175,25 @@ for (let inbetween_round_index = 0; inbetween_round_index <= active_round; inbet
                     end_process = process_keys[inbetween_process_index + 1];
                     end_time = inbetween_time;
                 }
-                // If start process is "tagscreens", then the animation shows stone and board actions. Therefore if any such actions exist, this animation is not redundant, even if no stone state changes.
+                // If start process if "destructions", tagscreens present make the animation not redundant
+                // If start process is "tagscreens", then the animation shows stone and board actions. Therefore if any such (non-tagscreen) actions exist, this animation is not redundant, even if no stone state changes.
+                if (start_process == "destructions") {
+                    for (let b_i = 0; b_i < board_actions[inbetween_round_index][inbetween_time].length; b_i++) {
+                        if (["tagscreen_lock", "tagscreen_unlock", "tagscreen_hide"].includes(board_actions[inbetween_round_index][inbetween_time][b_i][0])) {
+                            is_redundant = false;
+                            break;
+                        }
+                    }
+                }
                 if (start_process == "tagscreens") {
                     if (stone_actions[inbetween_round_index][inbetween_time].length > 0) {
                         is_redundant = false;
                     }
-                    if (board_actions[inbetween_round_index][inbetween_time].length > 0) {
-                        is_redundant = false;
+                    for (let b_i = 0; b_i < board_actions[inbetween_round_index][inbetween_time].length; b_i++) {
+                        if (!["tagscreen_lock", "tagscreen_unlock", "tagscreen_hide"].includes(board_actions[inbetween_round_index][inbetween_time][b_i][0])) {
+                            is_redundant = false;
+                            break;
+                        }
                     }
                 }
 

@@ -1682,7 +1682,7 @@ class Gamemaster():
                             aff_x, aff_y = affected_position
                             self.board_dynamic[t][aff_x][aff_y].remove_stones()"""
                     if len(self.board_actions[t][x][y]["tagscreen_lock"]) != 0:
-                        print(f"A lock tagscreen was deployed at ({t},{x},{y})!")
+                        self.print_log(f"A lock tagscreen was deployed at ({t},{x},{y})!", 1)
                         # Lock tagscreens are silent, and so they don't interfere with the stones
                         affected_positions = self.get_adjanced_positions(x, y, number_of_steps = 1)
                         for affected_position in affected_positions:
@@ -1690,7 +1690,7 @@ class Gamemaster():
                             if self.board_dynamic[t][aff_x][aff_y].occupied:
                                 self.stones[self.board_dynamic[t][aff_x][aff_y].stones[0]].has_been_tag_locked = True
                     if len(self.board_actions[t][x][y]["tagscreen_unlock"]) != 0:
-                        print(f"An unlock tagscreen was deployed at ({t},{x},{y})!")
+                        self.print_log(f"An unlock tagscreen was deployed at ({t},{x},{y})!", 1)
                         max_originator = max(self.board_actions[t][x][y]["tagscreen_unlock"])
 
                         affected_positions = self.get_adjanced_positions(x, y, number_of_steps = 1)
@@ -1714,7 +1714,7 @@ class Gamemaster():
                                     self.stones[affected_stone_ID].unlock_tag_max_flag_ID_this_turn = stone_latest_flag_ID[affected_stone_ID]
                                 self.stones[affected_stone_ID].has_been_tag_unlocked_this_turn = True
                     if len(self.board_actions[t][x][y]["tagscreen_hide"]) != 0:
-                        print(f"A hide tagscreen was deployed at ({t},{x},{y})!")
+                        self.print_log(f"A hide tagscreen was deployed at ({t},{x},{y})!", 1)
                         max_originator = max(self.board_actions[t][x][y]["tagscreen_hide"])
 
                         affected_positions = self.get_adjanced_positions(x, y, number_of_steps = 1)
