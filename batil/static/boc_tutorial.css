@@ -602,6 +602,73 @@ hr {
     position : absolute;
 }
 
+.TAE_tagscreen_lock {
+    position : absolute;
+    transform-origin : 0 0;
+}
+
+.TAE_tagscreen_unlock {
+    position : absolute;
+    transform-origin : 0 0;
+}
+
+.TAE_tagscreen_hide {
+    position : absolute;
+    transform-origin : 0 0;
+}
+
+.cloud_layer {
+    transform-origin : 0 0;
+}
+
+.cloud_canvas_TAE_tagscreen_lock {
+    fill : #D97D55;
+    stroke : black;
+    stroke-width : 2;
+}
+.cloud_canvas_TAE_tagscreen_unlock {
+    fill : #B8C4A9;
+    stroke : black;
+    stroke-width : 2;
+}
+.cloud_canvas_TAE_tagscreen_hide {
+    fill : lightgrey;
+    stroke : black;
+    stroke-width : 2;
+}
+
+.cloud_bg_TAE_tagscreen_lock {
+    stroke : none;
+    fill : #D97D55;
+}
+
+.cloud_bg_TAE_tagscreen_unlock {
+    stroke : none;
+    fill : #B8C4A9;
+}
+
+.cloud_bg_TAE_tagscreen_hide {
+    stroke : none;
+    fill : lightgrey;
+}
+
+.cloud_fg_TAE_tagscreen_lock {
+    fill : none;
+    stroke : black;
+    stroke-width : 2;
+}
+.cloud_fg_TAE_tagscreen_unlock {
+    fill : none;
+    stroke : black;
+    stroke-width : 2;
+}
+.cloud_fg_TAE_tagscreen_hide {
+    fill : none;
+    stroke : black;
+    stroke-width : 2;
+}
+
+
 #board_animation_overlay_text {
     font-size : 15em;
 }

@@ -132,10 +132,29 @@ function animated_scalar_transformation(val_start, val_end, total_frames, frame_
     switch (method) {
         case "traverse":
             return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.1, 1]);
+            break;
         case "boomerang":
             return val_start + (val_end - val_start) * cubic_bezier_boomerang(frame_key / total_frames, [0.2, 2.1]);
+            break;
         case "linear":
             return val_start + (val_end - val_start) * frame_key / total_frames;
+            break;
+        case "cloud_layer_0":
+            return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.0, 2.0]);
+            break;
+        case "cloud_layer_1":
+            return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.0, 1.75]);
+            break;
+        case "cloud_layer_2":
+            return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.0, 1.5]);
+            break;
+        case "cloud_layer_3":
+            return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.0, 1.2]);
+            break;
+        case "cloud_opacity":
+            return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.1, 0.0]);
+            break;
+
     }
     /*if (method == "traverse") {
         return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.1, 1]);

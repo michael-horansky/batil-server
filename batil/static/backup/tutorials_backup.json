@@ -97,6 +97,20 @@
       "D_CREATED": "2025-10-02 15:23:39",
       "D_CHANGED": "2025-10-02 15:27:35",
       "D_PUBLISHED": null
+    },
+    {
+      "BOARD_ID": 9,
+      "BOARD_NAME": "Stone showcase: tagger",
+      "T_DIM": 6,
+      "X_DIM": 8,
+      "Y_DIM": 6,
+      "STATIC_REPRESENTATION": "XXXXXXXXX      XX      XX      XX      XXXXXXXXX",
+      "SETUP_REPRESENTATION": "0+0+1+1+1+;0+0+2+1+2+;0+0+0+3+4+1;0+1+0+6+4+3;0+1+2+6+2+;0+1+3+5+1+3;0+1+1+5+3+",
+      "AUTHOR": "batil",
+      "IS_PUBLIC": 0,
+      "D_CREATED": "2025-10-02 19:24:14",
+      "D_CHANGED": "2025-10-02 19:25:09",
+      "D_PUBLISHED": null
     }
   ],
   "tutorials": [
@@ -1872,6 +1886,71 @@
           "TURN_INDEX": 4,
           "PLAYER": "B",
           "REPRESENTATION": ""
+        }
+      ]
+    },
+    {
+      "header": {
+        "TUTORIAL_ID": 11,
+        "BOARD_ID": 9,
+        "AUTHOR": "batil",
+        "STATUS": "in_progress",
+        "OUTCOME": null,
+        "D_CREATED": "2025-10-02 19:25:34",
+        "D_CHANGED": "2025-10-02 19:36:06"
+      },
+      "ruleset": [
+        {
+          "RULE_GROUP": "deadline",
+          "RULE": "one_day_per_move"
+        },
+        {
+          "RULE_GROUP": "end_without_win",
+          "RULE": "draw"
+        },
+        {
+          "RULE_GROUP": "paradox_action",
+          "RULE": "permanent_removal"
+        },
+        {
+          "RULE_GROUP": "scenario_priority",
+          "RULE": "conserve_setup"
+        },
+        {
+          "RULE_GROUP": "unlock_tagscreen_behaviour",
+          "RULE": "presence"
+        },
+        {
+          "RULE_GROUP": "viewing_scope",
+          "RULE": "view_entire_board"
+        }
+      ],
+      "comments": [],
+      "moves": [
+        {
+          "TURN_INDEX": 0,
+          "PLAYER": "GM",
+          "REPRESENTATION": "0+0+1+1+1+;0+0+2+1+2+;0+0+0+3+4+1;0+1+0+6+4+3;0+1+2+6+2+;0+1+3+5+1+3;0+1+1+5+3+"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+0+1+2+3+3+;2+2+0+3+4+3+4+1;2+0+0+1+1+2+1+"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+5+0+5+1+5+1+3;2+4+0+6+2+4+1+;2+6+0+5+3+5+3+;2+3+0+6+4+6+4+3"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+0+1+2+1+3+1+;4+1+1+3+3+2;3+2+1+3+4+2+3+4+"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "B",
+          "REPRESENTATION": "4+4+1+4+1+0;2+5+1+5+1+5+1+3;2+6+1+5+3+5+3+;3+3+1+6+4+2+6+4+"
         }
       ]
     }

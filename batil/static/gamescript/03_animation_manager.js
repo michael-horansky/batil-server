@@ -176,6 +176,75 @@ function show_ids_at_state(list_of_ids, scale = null, opacity = null) {
 // ---------------------------- Animation manager -----------------------------
 // ----------------------------------------------------------------------------
 
+// --------------------------- elements generators ----------------------------
+
+function add_arc_to_element(element, base_class, x_i, y_i, x_f, y_f, rad_x, rad_y = -1, arc_param = 0) {
+    if (rad_y == -1) {
+        rad_y = rad_x;
+    }
+    element.appendChild(make_SVG_element("path", {
+        class : `cloud_bg_${base_class}`,
+        d : `M 0 0 L ${x_i} ${y_i} A ${rad_x} ${rad_y} 0 ${arc_param} 1 ${x_f} ${y_f} Z`
+    }));
+    element.appendChild(make_SVG_element("path", {
+        class : `cloud_fg_${base_class}`,
+        d : `M ${x_i} ${y_i} A ${rad_x} ${rad_y} 0 ${arc_param} 1 ${x_f} ${y_f}`
+    }));
+}
+
+function make_smoke_cloud(base_class, base_id) {
+    let master_group = make_SVG_element("g", {
+        class : base_class,
+        id : base_id,
+        x : 0,
+        y : 0
+    });
+
+    let cloud_layers = [];
+    for (i = 0; i < 4; i++) {
+        cloud_layers.push(make_SVG_element("g", {
+            class : "cloud_layer",
+            x : 0,
+            y : 0
+        }));
+        cloud_layers[i].classList.add(`cloud_layer_${i}`);
+    }
+
+    // layer 0
+    cloud_layers[0].appendChild(make_SVG_element("path", {
+        class : `cloud_canvas_${base_class}`,
+        d : "M -20, 70 A 30 30 0 0 1 -70 40 A 45 45 0 0 1 -70, -20 A 35 35 0 0 1 -30 -65 A 45 45 0 0 1 30 -80 A 40 40 0 0 1 60 -20 A 35 35 0 0 1 55 40 A 45 45 0 0 1 -20 70"
+    }));
+
+    // layer 1
+    add_arc_to_element(cloud_layers[1], base_class, 80, 10, 45, 40, 25);
+    add_arc_to_element(cloud_layers[1], base_class, -60, 50, -70, 10, 20);
+    add_arc_to_element(cloud_layers[1], base_class, 35, -60, 55, -40, 16, 16, 1);
+
+    // layer 2
+    add_arc_to_element(cloud_layers[2], base_class, 10, 70, -22, 65, 15, 20);
+    add_arc_to_element(cloud_layers[2], base_class, -70, 20, -60, -50, 40);
+    add_arc_to_element(cloud_layers[2], base_class, 10, -70, 35, -50, 20, 20, 1);
+    add_arc_to_element(cloud_layers[2], base_class, 75, -20, 70, 15, 15, 15, 1);
+
+    // layer 3
+    add_arc_to_element(cloud_layers[3], base_class, -60, -40, -20, -65, 20);
+    add_arc_to_element(cloud_layers[3], base_class, 50, -47, 75, -10, 20);
+
+    for (i = 0; i < 4; i++) {
+        master_group.appendChild(cloud_layers[i]);
+    }
+
+    master_group.setAttribute("opacity", 0.0);
+
+    return master_group;
+
+
+
+}
+
+
+
 const animation_manager = new Object();
 animation_manager.animation_queue = [];
 animation_manager.animation_daemon = null;
@@ -302,7 +371,7 @@ animation_manager.add_TAE_class = function(TAE_class_name) {
     }
 }
 animation_manager.create_causal_freedom_marker = function(pos_x, pos_y) {
-    let new_group = make_SVG_element("g", {
+    let causal_freedom_marker_group = make_SVG_element("g", {
         class : "TAE_causal_freedom_marker",
         id : `causal_freedom_marker_${pos_x}_${pos_y}`,
         x : 0,
@@ -311,28 +380,29 @@ animation_manager.create_causal_freedom_marker = function(pos_x, pos_y) {
         height : 100,
         display : "none"
     });
-    document.getElementById("board_layer_4").appendChild(new_group);
-    question_mark = make_SVG_element("text", {
+    document.getElementById("board_layer_4").appendChild(causal_freedom_marker_group);
+    let question_mark = make_SVG_element("text", {
         x : 30,
         y : 80,
         "font-size" : "5em"
     });
     question_mark.textContent = "?";
-    new_group.appendChild(question_mark);
-    new_group.style.transform = `translate(${100 * pos_x}px,${100 * pos_y}px)`;
+    causal_freedom_marker_group.appendChild(question_mark);
+    causal_freedom_marker_group.style.transform = `translate(${100 * pos_x}px,${100 * pos_y}px)`;
     // No need to add a separate TAE, since these are updated by-class
 }
 animation_manager.create_stone_action_marker = function(stone_action) {
     switch(true) {
         case arrays_equal(stone_action.slice(0,2), ["tank", "attack"]):
-            new_group = make_SVG_element("g", {
+            let tank_attack_group = make_SVG_element("g", {
                 class : "TAE_tank_attack",
                 id : `TAE_tank_attack_${stone_action[2]}_${stone_action[3]}`,
                 x : 0,
                 y : 0
             });
-            document.getElementById("board_layer_2").appendChild(new_group);
-            laser_line = make_SVG_element("line", {
+            document.getElementById("board_layer_2").appendChild(tank_attack_group);
+            let tank_laser_outline = make_SVG_element("line", {
+                class : "TAE_tank_laser_outline",
                 x1 : 50,
                 y1 : 50,
                 x2 : 50 + 100*(stone_action[4]-stone_action[2]),
@@ -340,8 +410,19 @@ animation_manager.create_stone_action_marker = function(stone_action) {
                 "stroke" : "red",
                 "stroke-width" : 7
             });
-            new_group.appendChild(laser_line);
-            new_group.style.transform = `translate(${100 * stone_action[2]}px,${100 * stone_action[3]}px)`;
+            tank_laser_outline.setAttribute("opacity", 0.0);
+            tank_attack_group.appendChild(tank_laser_outline);
+            let tank_laser_line = make_SVG_element("line", {
+                id : `TAE_tank_attack_${stone_action[2]}_${stone_action[3]}_line`,
+                x1 : 50,
+                y1 : 50,
+                x2 : 50,// + 100*(stone_action[4]-stone_action[2]),
+                y2 : 50,// + 100*(stone_action[5]-stone_action[3]),
+                "stroke" : "red",
+                "stroke-width" : 7
+            });
+            tank_attack_group.appendChild(tank_laser_line);
+            tank_attack_group.style.transform = `translate(${100 * stone_action[2]}px,${100 * stone_action[3]}px)`;
 
             animation_manager.temporary_animation_elements.push({
                 "id" : `TAE_tank_attack_${stone_action[2]}_${stone_action[3]}`,
@@ -354,14 +435,14 @@ animation_manager.create_stone_action_marker = function(stone_action) {
 
             break;
         case arrays_equal(stone_action.slice(0,2), ["sniper", "attack"]):
-            new_group = make_SVG_element("g", {
+            let sniper_attack_group = make_SVG_element("g", {
                 class : "TAE_sniper_attack",
                 id : `TAE_sniper_attack_${stone_action[2]}_${stone_action[3]}`,
                 x : 0,
                 y : 0
             });
-            document.getElementById("board_layer_2").appendChild(new_group);
-            laser_line = make_SVG_element("line", {
+            document.getElementById("board_layer_2").appendChild(sniper_attack_group);
+            let sniper_laser_line = make_SVG_element("line", {
                 x1 : 50 - 2*(stone_action[4]-stone_action[2]),
                 y1 : 50 - 2*(stone_action[5]-stone_action[3]),
                 x2 : 50 + 2*(stone_action[4]-stone_action[2]),
@@ -369,8 +450,8 @@ animation_manager.create_stone_action_marker = function(stone_action) {
                 "stroke" : "red",
                 "stroke-width" : 5
             });
-            new_group.appendChild(laser_line);
-            new_group.style.transform = `translate(${100 * stone_action[2]}px,${100 * stone_action[3]}px)`;
+            sniper_attack_group.appendChild(sniper_laser_line);
+            sniper_attack_group.style.transform = `translate(${100 * stone_action[2]}px,${100 * stone_action[3]}px)`;
 
             animation_manager.temporary_animation_elements.push({
                 "id" : `TAE_sniper_attack_${stone_action[2]}_${stone_action[3]}`,
@@ -389,29 +470,51 @@ animation_manager.create_board_action_marker = function(board_action) {
     switch(board_action[0]) {
         case "explosion":
             // a bomb explosion! The marker is a big red cross
-            new_group = make_SVG_element("g", {
+            let explosion_group = make_SVG_element("g", {
                 class : "TAE_explosion",
                 id : `TAE_explosion_${board_action[1]}_${board_action[2]}`,
                 x : 0,
                 y : 0
             });
-            new_group.setAttribute("opacity", "0");
-            new_scaling_group = make_SVG_element("g", {
+            explosion_group.setAttribute("opacity", "0");
+            let explosion_scaling_group = make_SVG_element("g", {
                 class : "TAE_explosion_scaling",
                 id : `TAE_explosion_scaling_${board_action[1]}_${board_action[2]}`,
                 x : 0,
                 y : 0
             });
-            new_scaling_group.setAttribute("transform-origin", `50px 50px`);
-            document.getElementById("board_layer_2").appendChild(new_group);
-            explosion_cross = make_SVG_element("path", {
+            explosion_scaling_group.setAttribute("transform-origin", `50px 50px`);
+            document.getElementById("board_layer_2").appendChild(explosion_group);
+            let explosion_cross = make_SVG_element("path", {
                 d : "M45,45 L45,-55 L55,-55 L55,45 L155,45 L155,55 L55,55 L55,155 L45,155 L45,55 L-55,55 L-55,45 Z",
                 "fill" : "red"
             });
-            new_group.appendChild(new_scaling_group);
-            new_scaling_group.appendChild(explosion_cross);
-            new_group.style.transform = `translate(${100 * board_action[1]}px,${100 * board_action[2]}px)`;
+            explosion_group.appendChild(explosion_scaling_group);
+            explosion_scaling_group.appendChild(explosion_cross);
+            explosion_group.style.transform = `translate(${100 * board_action[1]}px,${100 * board_action[2]}px)`;
             break;
+
+        case "tagscreen_lock":
+            // lock tagscreen
+            let tag_lock_cloud = make_smoke_cloud(`TAE_tagscreen_lock`, `TAE_tagscreen_lock_${board_action[1]}_${board_action[2]}`);
+            tag_lock_cloud.style.transform = `translate(${100 * board_action[1] + 50}px,${100 * board_action[2] + 50}px)`;
+            document.getElementById("board_layer_4").appendChild(tag_lock_cloud);
+            break;
+
+        case "tagscreen_unlock":
+            // lock tagscreen
+            let tag_unlock_cloud = make_smoke_cloud(`TAE_tagscreen_unlock`, `TAE_tagscreen_unlock_${board_action[1]}_${board_action[2]}`);
+            tag_unlock_cloud.style.transform = `translate(${100 * board_action[1] + 50}px,${100 * board_action[2] + 50}px)`;
+            document.getElementById("board_layer_4").appendChild(tag_unlock_cloud);
+            break;
+
+        case "tagscreen_hide":
+            // lock tagscreen
+            let tag_hide_cloud = make_smoke_cloud(`TAE_tagscreen_hide`, `TAE_tagscreen_hide_${board_action[1]}_${board_action[2]}`);
+            tag_hide_cloud.style.transform = `translate(${100 * board_action[1] + 50}px,${100 * board_action[2] + 50}px)`;
+            document.getElementById("board_layer_4").appendChild(tag_hide_cloud);
+            break;
+
     }
 }
 
@@ -423,10 +526,32 @@ animation_manager.update_temporary_animation_elements = function(frame_key) {
     show_class_at_state("TAE_explosion", null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, frame_key));
     show_class_at_state("TAE_explosion_scaling", animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, frame_key));
 
+    show_class_at_state("TAE_tank_laser_outline", null, animated_scalar_transformation(0.0, 0.2, animation_manager.total_frames, frame_key, "boomerang"));
+
+    for (i = 0; i < 4; i++) {
+        show_class_at_state(`cloud_layer_${i}`, animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, frame_key, `cloud_layer_${i}`));
+    }
+    show_class_at_state("TAE_tagscreen_lock", null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, frame_key, "cloud_opacity"));
+    show_class_at_state("TAE_tagscreen_unlock", null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, frame_key, "cloud_opacity"));
+    show_class_at_state("TAE_tagscreen_hide", null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, frame_key, "cloud_opacity"));
+
+
     for (TAE_i = 0; TAE_i < animation_manager.temporary_animation_elements.length; TAE_i++) {
         let cur_TAE = animation_manager.temporary_animation_elements[TAE_i];
         let cur_DOM_element = document.getElementById(cur_TAE["id"]);
         switch(cur_TAE["class"]) {
+            case "TAE_tank_attack":
+                let cur_x_front = animated_scalar_transformation(50, 50 + 100*(cur_TAE["target_x"]-cur_TAE["x"]), animation_manager.total_frames, frame_key, "cloud_layer_3");
+                let cur_y_front = animated_scalar_transformation(50, 50 + 100*(cur_TAE["target_y"]-cur_TAE["y"]), animation_manager.total_frames, frame_key, "cloud_layer_3");
+                let cur_x_back = animated_scalar_transformation(50 + 100*(cur_TAE["target_x"]-cur_TAE["x"]), 50, animation_manager.total_frames, animation_manager.total_frames - frame_key, "cloud_layer_3");
+                let cur_y_back = animated_scalar_transformation(50 + 100*(cur_TAE["target_y"]-cur_TAE["y"]), 50, animation_manager.total_frames, animation_manager.total_frames - frame_key, "cloud_layer_3");
+                let laser_line = document.getElementById(`TAE_tank_attack_${cur_TAE["x"]}_${cur_TAE["y"]}_line`);
+                laser_line.setAttribute("x1", cur_x_back);
+                laser_line.setAttribute("y1", cur_y_back);
+                laser_line.setAttribute("x2", cur_x_front);
+                laser_line.setAttribute("y2", cur_y_front);
+                break;
+
             case "TAE_sniper_attack":
                 let cur_x = animated_scalar_transformation(100 * cur_TAE["x"], 100 * cur_TAE["target_x"], animation_manager.total_frames, frame_key);
                 let cur_y = animated_scalar_transformation(100 * cur_TAE["y"], 100 * cur_TAE["target_y"], animation_manager.total_frames, frame_key);
@@ -449,14 +574,25 @@ animation_manager.change_process_preparation = function(animation_args) {
         if (inbetweens[round_n][s_time][s_process]["dest_stones"].length > 0) {
             animation_manager.add_TAE_class("TAE_causal_freedom_marker");
             for (let stone_index = 0; stone_index < inbetweens[round_n][s_time][s_process]["dest_stones"].length; stone_index++) {
-                if (stone_endpoints[selected_round][inbetweens[round_n][s_time][s_process]["dest_stones"][stone_index]]["end"]["event"] == "causally_free") {
+                if (stone_endpoints[visible_round][inbetweens[round_n][s_time][s_process]["dest_stones"][stone_index]]["end"]["event"] == "causally_free") {
                     animation_manager.create_causal_freedom_marker(inbetweens[round_n][s_time][s_process]["dest_stones_states"][stone_index][0], inbetweens[round_n][s_time][s_process]["dest_stones_states"][stone_index][1]);
                 }
             }
         }
     }
 
-    // Create various markers for stone and board actions when s_process = "tagscreens"
+    // Create markers for tags when end_process = "tagscreens"
+    if (s_process == "destructions") {
+        animation_manager.total_frames = 80;
+        for (let board_action_index = 0; board_action_index < board_actions[round_n][s_time].length; board_action_index++) {
+            let cur_board_action = board_actions[round_n][s_time][board_action_index];
+            if (["tagscreen_lock", "tagscreen_unlock", "tagscreen_hide"].includes(cur_board_action[0])) {
+                animation_manager.add_TAE_class(`TAE_${cur_board_action[0]}`);
+                animation_manager.create_board_action_marker(cur_board_action);
+            }
+        }
+    }
+    // Create various markers for stone and board actions when end_process = "canon"
     if (s_process == "tagscreens") {
         for (let stone_action_index = 0; stone_action_index < stone_actions[round_n][s_time].length; stone_action_index++) {
             let cur_stone_action = stone_actions[round_n][s_time][stone_action_index];
@@ -465,8 +601,10 @@ animation_manager.change_process_preparation = function(animation_args) {
         }
         for (let board_action_index = 0; board_action_index < board_actions[round_n][s_time].length; board_action_index++) {
             let cur_board_action = board_actions[round_n][s_time][board_action_index];
-            animation_manager.add_TAE_class(`TAE_${cur_board_action[0]}`);
-            animation_manager.create_board_action_marker(cur_board_action);
+            if (!["tagscreen_lock", "tagscreen_unlock", "tagscreen_hide"].includes(cur_board_action[0])) {
+                animation_manager.add_TAE_class(`TAE_${cur_board_action[0]}`);
+                animation_manager.create_board_action_marker(cur_board_action);
+            }
         }
     }
 
@@ -506,11 +644,16 @@ animation_manager.change_process_get_frame = function(animation_args) {
 
     show_stones_at_state(inbetweens[round_n][s_time][s_process]["cont_stones"], animated_matrix_transformation(inbetweens[round_n][s_time][s_process]["cont_stones_states"][0], inbetweens[round_n][s_time][s_process]["cont_stones_states"][1], animation_manager.total_frames, contextual_frame_key));
     // Dest stones: if s_process = "canon", the stones will not be placed on "flags", which means they weren't destroyed, but are causally free.
-    if (s_process != "canon") {
-        show_stones_at_state(inbetweens[round_n][s_time][s_process]["dest_stones"], inbetweens[round_n][s_time][s_process]["dest_stones_states"], animated_scalar_transformation(1, 2, animation_manager.total_frames, contextual_frame_key), animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, contextual_frame_key));
-    } else {
-        show_stones_at_state(inbetweens[round_n][s_time][s_process]["dest_stones"], inbetweens[round_n][s_time][s_process]["dest_stones_states"], null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, contextual_frame_key));
-        //show_class_at_state("TAE_causal_freedom_marker", null, animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, contextual_frame_key, "boomerang"));
+    //              if s_process = "destructions", the stones have vanished as tagscreens were being resolved, which means they were hidden, and shouldn't engorge
+    switch(s_process) {
+        case "canon":
+            show_stones_at_state(inbetweens[round_n][s_time][s_process]["dest_stones"], inbetweens[round_n][s_time][s_process]["dest_stones_states"], null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, contextual_frame_key));
+            break;
+        case "destructions":
+            show_stones_at_state(inbetweens[round_n][s_time][s_process]["dest_stones"], inbetweens[round_n][s_time][s_process]["dest_stones_states"], null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, contextual_frame_key));
+            break;
+        default:
+            show_stones_at_state(inbetweens[round_n][s_time][s_process]["dest_stones"], inbetweens[round_n][s_time][s_process]["dest_stones_states"], animated_scalar_transformation(1, 2, animation_manager.total_frames, contextual_frame_key), animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, contextual_frame_key));
     }
     show_stones_at_state(inbetweens[round_n][s_time][s_process]["new_stones"], inbetweens[round_n][s_time][s_process]["new_stones_states"], 1, animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, contextual_frame_key));
     show_ids_at_state(inbetweens[round_n][s_time][s_process]["new_time_jumps"][0], null, animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, contextual_frame_key));
