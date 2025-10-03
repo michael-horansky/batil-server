@@ -548,7 +548,8 @@ class Gamemaster():
     def place_stone_on_board(self, pos, stone_ID, stone_properties):
         # If the square is already occupied or unavailable, we track the square in a list of conflicting squares
         if self.board_dynamic[pos.t][pos.x][pos.y].occupied or (not self.is_square_available(pos.x, pos.y)):
-            self.conflicting_squares[pos.t].append((pos.x,pos.y))
+            if (pos.x,pos.y) not in self.conflicting_squares[pos.t]:
+                self.conflicting_squares[pos.t].append((pos.x,pos.y))
         self.board_dynamic[pos.t][pos.x][pos.y].add_stone(stone_ID, stone_properties)
 
     def remove_stone_from_game(self, stone_ID):
@@ -1132,10 +1133,13 @@ class Gamemaster():
                 continue
             elif len(explosive_stones_present) == 1 and not self.stones[explosive_stones_present[0]].susceptible_to_own_explosion:
                 # The explosive stone survives, all other die
+                marked_to_remove = []
                 for other_stone_ID in self.board_dynamic[t][x][y].stones:
                     if other_stone_ID == explosive_stones_present[0]:
                         continue
-                    self.board_dynamic[t][x][y].remove_stone(other_stone_ID)
+                    marked_to_remove.append(other_stone_ID)
+                for marked_stone_ID in marked_to_remove:
+                    self.board_dynamic[t][x][y].remove_stone(marked_stone_ID)
                 # We remove the conflict
                 if (x,y) in self.conflicting_squares[t]:
                     self.conflicting_squares[t].remove((x, y))

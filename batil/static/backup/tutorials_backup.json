@@ -111,6 +111,20 @@
       "D_CREATED": "2025-10-02 19:24:14",
       "D_CHANGED": "2025-10-02 19:25:09",
       "D_PUBLISHED": null
+    },
+    {
+      "BOARD_ID": 10,
+      "BOARD_NAME": "Stone showcase: wildcard",
+      "T_DIM": 6,
+      "X_DIM": 5,
+      "Y_DIM": 6,
+      "STATIC_REPRESENTATION": "XXXXXX   XX   XX   XX   XXXXXX",
+      "SETUP_REPRESENTATION": "1+3+2+4;0+0+4+1+1+;0+0+0+1+2+1;0+0+3+3+3+0;0+1+1+2+3+;0+1+0+1+3+3",
+      "AUTHOR": "batil",
+      "IS_PUBLIC": 0,
+      "D_CREATED": "2025-10-03 12:34:13",
+      "D_CHANGED": "2025-10-03 12:41:28",
+      "D_PUBLISHED": null
     }
   ],
   "tutorials": [
@@ -2177,6 +2191,205 @@
         },
         {
           "TURN_INDEX": 18,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        }
+      ]
+    },
+    {
+      "header": {
+        "TUTORIAL_ID": 12,
+        "BOARD_ID": 10,
+        "AUTHOR": "batil",
+        "STATUS": "in_progress",
+        "OUTCOME": null,
+        "D_CREATED": "2025-10-03 12:41:45",
+        "D_CHANGED": "2025-10-03 13:19:10"
+      },
+      "ruleset": [
+        {
+          "RULE_GROUP": "deadline",
+          "RULE": "one_day_per_move"
+        },
+        {
+          "RULE_GROUP": "end_without_win",
+          "RULE": "draw"
+        },
+        {
+          "RULE_GROUP": "paradox_action",
+          "RULE": "permanent_removal"
+        },
+        {
+          "RULE_GROUP": "scenario_priority",
+          "RULE": "conserve_setup"
+        },
+        {
+          "RULE_GROUP": "unlock_tagscreen_behaviour",
+          "RULE": "presence"
+        },
+        {
+          "RULE_GROUP": "viewing_scope",
+          "RULE": "view_entire_board"
+        }
+      ],
+      "comments": [
+        {
+          "TURN_INDEX": 1,
+          "TUTORIAL_COMMENT": "<p>\r\nThe _STONE_1_wildcard_ is an interesting stone type. Firstly, it moves diagonally by 1 square, and, being unopposable, is unable to push other stones.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 2,
+          "TUTORIAL_COMMENT": "<p>\r\nThe wildcard attacks other pieces in a unique way--instead of firing a weapon, it jumps on top of a target square and captures it. This capture does not discriminate between ally and enemy--see how the wildcard devours an allied _STONE_3_sniper_!\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 3,
+          "TUTORIAL_COMMENT": "<p>\r\nThe wildcard has a special disadvantage--it cannot capture bases. Let's see it try.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 4,
+          "TUTORIAL_COMMENT": "<p>\r\nAfter the wildcard captures some enemies, you will see it leaves the base behind still neutral.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 5,
+          "TUTORIAL_COMMENT": "<p>\r\nAs you can see, the wildcard captures occur before impasse reverts the _STONE_4_bombardier_'s move. For more details, see the tutorial about _URLKW_tutorial.tutorial<tutorial_id=4>_spatial conflict resolution_.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 6,
+          "TUTORIAL_COMMENT": "<p>\r\nThe wildcard can actually time-jump-out in any time-slice, not just the final one. And it is exactly its time-jump properties which make it so strong, as you will see in the next round.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 7,
+          "TUTORIAL_COMMENT": "<p>\r\n<i>A</i>'s _STONE_6_tank_ will emerge from the time-jump-in in the next time-slice...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 8,
+          "TUTORIAL_COMMENT": "<p>\r\n...and the wildcard will do just the same.\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 9,
+          "TUTORIAL_COMMENT": "<p>\r\nLet's see the _STONE_7_wildcard_ jump onto the _SQUARE_2,1,1_square_ where the _STONE_6_stone_ time-jumped-in earlier in this round. What's the plan here?\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 10,
+          "TUTORIAL_COMMENT": "<p>\r\nHere's the doozy: the wildcard can <i>swap any allied stone's time-jump-in, regardless of the type or orientation</i>. Here it swaps the allied _STONE_6_tank_'s time-jump-in!\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 11,
+          "TUTORIAL_COMMENT": "<p>\r\nThis is incredibly powerful, as the wildcard essentially becomes a blank slate you can \"turn\" into a copy of any of your other stones. However, <i>A</i> made some mistakes here, and since the tank which _STONE_2_originally time-jumped-out_ wasn't interfered and will attempt to do just the same. Two retro-causes for one ante-effect are forbidden, so this will lead to a paradox...\r\n</p>"
+        },
+        {
+          "TURN_INDEX": 12,
+          "TUTORIAL_COMMENT": "<p>\r\nAnd now you know what the wildcard moves like!\r\n</p>"
+        }
+      ],
+      "moves": [
+        {
+          "TURN_INDEX": 0,
+          "PLAYER": "GM",
+          "REPRESENTATION": "1+3+2+4;0+0+4+1+1+;0+0+0+1+2+1;0+0+3+3+3+0;0+1+1+2+3+;0+1+0+1+3+3"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+0+1+1+2+2+;2+2+0+1+2+1+2+1;2+3+0+3+3+3+3+0"
+        },
+        {
+          "TURN_INDEX": 1,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+5+0+1+3+1+3+3;2+4+0+2+3+2+3+"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+1+2+2+3+3+;2+3+1+3+3+3+3+0;2+2+1+1+2+1+2+1"
+        },
+        {
+          "TURN_INDEX": 2,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+5+1+1+3+1+3+3;2+4+1+2+3+2+3+"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+2+3+3+2+4+;2+2+2+1+2+1+2+1"
+        },
+        {
+          "TURN_INDEX": 3,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+5+2+1+3+1+3+3;2+4+2+2+3+2+3+"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+1+3+2+4+1+3+;2+2+3+1+2+1+2+0"
+        },
+        {
+          "TURN_INDEX": 4,
+          "PLAYER": "B",
+          "REPRESENTATION": "2+4+3+2+3+1+3+;2+5+3+1+3+1+3+3"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+2+4+1+2+1+1+1;2+1+4+1+3+2+2+"
+        },
+        {
+          "TURN_INDEX": 5,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "A",
+          "REPRESENTATION": "5+2+5+1+1+1+1+1+1+;5+1+5+2+2+2+2+2++"
+        },
+        {
+          "TURN_INDEX": 6,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "A",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 7,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+6+1+1+1+2+1+2"
+        },
+        {
+          "TURN_INDEX": 8,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 9,
+          "PLAYER": "A",
+          "REPRESENTATION": "2+7+2+2+2+1+1+;3+6+2+2+1+3+2+1+"
+        },
+        {
+          "TURN_INDEX": 9,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 10,
+          "PLAYER": "A",
+          "REPRESENTATION": "5+7+3+1+1+1+1+1++26;2+6+3+2+1+2+1+2"
+        },
+        {
+          "TURN_INDEX": 10,
+          "PLAYER": "B",
+          "REPRESENTATION": ""
+        },
+        {
+          "TURN_INDEX": 11,
           "PLAYER": "B",
           "REPRESENTATION": ""
         }
