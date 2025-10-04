@@ -65,8 +65,6 @@ class PageTutorial(Page):
 
     def resolve_tutorial_comments_edit(self):
         db = get_db()
-        for key, val in request.form.items():
-            print(f"{key} -> {val}")
 
         if "tcf_action" in request.form:
             if request.form.get("tcf_action") == "edit_tutorial_comment":
@@ -172,7 +170,7 @@ class PageTutorial(Page):
         if not self.refuse_render:
             self.prepare_renderer()
 
-        self.html_open("boc_tutorial")
+        self.html_open()
 
         if self.refuse_render:
             self.structured_html.append("ERROR")

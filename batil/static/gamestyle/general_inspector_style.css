@@ -1,0 +1,86 @@
+/* ------------------------------------- */
+/* This is a style-sheet for inspectors  */
+/* in general.                           */
+/* This stylesheet is to be used by the  */
+/* game interface, tutorial interface,   */
+/* and board editor interface.           */
+/* ------------------------------------- */
+
+/* ---------- Inspector style ---------- */
+
+.inspector {
+    overflow : scroll;
+}
+
+.inspector_title {
+    width : 100%;
+    text-align : center;
+}
+
+.inspector_table {
+    width : 100%;
+    table-layout : fixed;
+}
+
+.stone_inspector_table_label, .base_inspector_table_label {
+    width : 100px;
+    padding-top : 10px;
+    padding-left : 10px;
+    padding-right : 10px;
+    font-weight : bold;
+}
+
+.square_inspector_table_label {
+    width : 175px;
+    padding-top : 10px;
+    padding-left : 10px;
+    padding-right : 10px;
+    font-weight : bold;
+}
+
+.inspector_table_value {
+    padding-top : 10px;
+    padding-right : 10px;
+}
+
+.swap_effect_option_button {
+    width : 100px;
+    padding-top : 10px;
+    padding-bottom : 10px;
+    padding-left : 10px;
+    padding-right : 10px;
+    font-weight : bold;
+}
+
+.swap_effect_option_button:hover {
+    cursor: pointer;
+    background-color : lightgreen;
+}
+
+.swap_effect_option_description {
+    padding-top : 10px;
+    padding-right : 10px;
+}
+
+.square_highlight {
+    background-color : #af9dd4;
+}
+.square_highlight:hover {
+    cursor : pointer;
+    background-color : #b798f5;
+}
+
+.stone_highlight {
+    background-color : #b2c49b;
+}
+.stone_highlight:hover {
+    cursor : pointer;
+    background-color : #cef59d;
+}
+.inline_command {
+    background-color : #d6a99f;
+}
+.inline_command:hover {
+    cursor : pointer;
+    background-color : #fca692;
+}

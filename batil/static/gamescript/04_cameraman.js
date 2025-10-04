@@ -93,6 +93,10 @@ cameraman.reposition_board_elements = function() {
         }
         document.getElementById(`azimuth_indicator_${azimuth}`).style.transform = `translate(${offset_x}px,${offset_y}px)`;
     }
+    if (["TUTORIAL", "TUTORIAL_READ_ONLY", "GAME"].includes(client_access_context)) {
+        document.getElementById("board_animation_overlay_bg").setAttribute("width", cameraman.board_dimensions.width);
+        document.getElementById("board_animation_overlay_bg").setAttribute("height", cameraman.board_dimensions.height);
+    }
 }
 
 cameraman.apply_camera = function() {
@@ -148,7 +152,7 @@ cameraman.apply_tracking = function(tracking_stone_state = null) {
 //   2. Resetting the camera, e.g. by pressing the "R" key
 //   3. Turning on a different camera mode, e.g. "go to square"
 cameraman.track_stone = function(stone_ID) {
-    if (!inspector.selection_mode_enabled) {
+    if (!inspector.selection_mode_enabled && ["TUTORIAL", "TUTORIAL_READ_ONLY", "GAME"].includes(client_access_context)) {
         // If null, tracking is turned off
 
         // We refuse to track a stone not placed on the board in this round

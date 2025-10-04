@@ -1,3 +1,17 @@
+
+function find_stone_at_pos(x, y) {
+    for (let faction_i = 0; faction_i < all_factions.length; faction_i++) {
+        for (let stone_i = 0; stone_i < faction_armies[all_factions[faction_i]].length; stone_i++) {
+            if (stone_trajectories[selected_round][visible_timeslice]["canon"][faction_armies[all_factions[faction_i]][stone_i]] != null) {
+                if (arrays_equal(stone_trajectories[selected_round][visible_timeslice]["canon"][faction_armies[all_factions[faction_i]][stone_i]].slice(0,2), [x, y])) {
+                    return faction_armies[all_factions[faction_i]][stone_i];
+                }
+            }
+        }
+    }
+    return null;
+}
+
 // -------------------------------- Inspector ---------------------------------
 
 const inspector = new Object();

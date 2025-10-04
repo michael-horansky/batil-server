@@ -66,8 +66,13 @@ all_factions.forEach(function(faction, faction_index) {
 //     "new_stones_states" : [state matrix for created stones at next process],
 //     "hide_stones" : [list of stone IDs of stones which are not placed on board at either this or the next process],
 //     "new_time_jumps" : [list of used and unused time jump marker ids to fade in, corresponding list of types],
-//     "old_time_jumps" : [list of used and unused time jump marker ids to fade out, corresponding list of types]
+//     "old_time_jumps" : [list of used and unused time jump marker ids to fade out, corresponding list of types],
+//     "captured_bases" : [list of captured base IDs, list of old allegiances, list of new allegiances],
+//     "stable_bases" : [list of uncaptured base IDs, list of allegiances] -- only non-empty when end_process is canon!
 // }
+
+// The process tagscreens -> canon is never redundant, since we need to let the sand in the hourglasses fall
+
 const process_keys = ["flags", "pushes", "destructions", "tagscreens", "canon"];
 const inbetweens = [];
 for (let inbetween_round_index = 0; inbetween_round_index <= active_round; inbetween_round_index++) {
@@ -89,6 +94,8 @@ for (let inbetween_round_index = 0; inbetween_round_index <= active_round; inbet
             inbetweens[inbetween_round_index][inbetween_time][start_process]["hide_stones"] = [];
             inbetweens[inbetween_round_index][inbetween_time][start_process]["new_time_jumps"] = [[], []];
             inbetweens[inbetween_round_index][inbetween_time][start_process]["old_time_jumps"] = [[], []];
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["captured_bases"] = [[], [], []];
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["stable_bases"] = [[], []];
             let is_redundant = true;
             let end_process = process_keys[0];
             let end_time = 0;
@@ -159,6 +166,8 @@ for (let inbetween_round_index = 0; inbetween_round_index <= active_round; inbet
             inbetweens[inbetween_round_index][inbetween_time][start_process]["hide_stones"] = [];
             inbetweens[inbetween_round_index][inbetween_time][start_process]["new_time_jumps"] = [[], []];
             inbetweens[inbetween_round_index][inbetween_time][start_process]["old_time_jumps"] = [[], []];
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["captured_bases"] = [[], [], []];
+            inbetweens[inbetween_round_index][inbetween_time][start_process]["stable_bases"] = [[], []];
             // We initialise the current inbetween
             if (inbetween_time == t_dim - 1 && start_process == "canon") {
                 // This is the final state of the final timeslice, and therefore cannot be animated into a "next" state.
@@ -274,6 +283,32 @@ for (let inbetween_round_index = 0; inbetween_round_index <= active_round; inbet
                         }
                     }
                 }
+
+                // If the end process is canon, then we need to check if any base was captured
+                if (end_process == "canon") {
+                    for (let b_i = 0; b_i < bases.length; b_i++) {
+                        is_redundant = false;
+                        let old_allegiance = null;
+                        if (inbetween_time == 0) {
+                            // we compare to the setup
+                            old_allegiance = base_trajectories[0][0][bases[b_i]][2];
+                        } else {
+                            old_allegiance = base_trajectories[inbetween_round_index][inbetween_time - 1][bases[b_i]][2];
+                        }
+                        let new_allegiance = base_trajectories[inbetween_round_index][inbetween_time][bases[b_i]][2];
+                        if (old_allegiance != new_allegiance) {
+                            // base was captured
+                            inbetweens[inbetween_round_index][inbetween_time][start_process]["captured_bases"][0].push(`base_${bases[b_i]}`);
+                            inbetweens[inbetween_round_index][inbetween_time][start_process]["captured_bases"][1].push(old_allegiance);
+                            inbetweens[inbetween_round_index][inbetween_time][start_process]["captured_bases"][2].push(new_allegiance);
+                        } else {
+                            // base is stable
+                            inbetweens[inbetween_round_index][inbetween_time][start_process]["stable_bases"][0].push(`base_${bases[b_i]}`);
+                            inbetweens[inbetween_round_index][inbetween_time][start_process]["stable_bases"][1].push(old_allegiance);
+                        }
+                    }
+                }
+
 
                 inbetweens[inbetween_round_index][inbetween_time][start_process]["redundant"] = is_redundant;
             }

@@ -1,3 +1,75 @@
+// ----------------------------- Animation logic ------------------------------
+// A preamble helpful for certain mathematically-heavy animations, such as
+// hourglass sand level calculation
+
+const hourglass_height = 70;
+const hourglass_width = 56;
+const hourglass_contour_thickness = 1;
+
+function hourglass_sand_level(total_height, time_slice) {
+    let cur_height = 0.0;
+    for (let i = 0; i < time_slice; i++) {
+        let h_diff = (total_height / 2.0 - cur_height);
+        cur_height += ( h_diff - Math.sqrt(h_diff * h_diff - total_height * total_height / (4.0 * (t_dim - 1))) );
+    }
+    return cur_height;
+}
+
+function hourglass_paths_from_height(time_slice) {
+    // returns a list [path of bottom, path of top]
+    // If either item is null, that part is simply set to invisible
+    let x_corner_left = 50 - hourglass_width / 2 + hourglass_contour_thickness;
+    let y_corner_up = 50 - hourglass_height / 2 + hourglass_contour_thickness;
+    let x_corner_right = 50 + hourglass_width / 2 - hourglass_contour_thickness;
+    let y_corner_down = 50 + hourglass_height / 2 - hourglass_contour_thickness;
+    if (time_slice == 0) {
+        // Triangle up
+        return [
+            null,
+            [[x_corner_left,y_corner_up], [x_corner_right,y_corner_up], [50,50 - hourglass_contour_thickness]]
+            ];
+    }
+    if (time_slice == t_dim - 1) {
+        // Triangle down
+        return [
+            [[x_corner_left,y_corner_down], [x_corner_right,y_corner_down], [50,50 + hourglass_contour_thickness]],
+            null
+            ];
+    }
+    // General case
+    let bottom_pile_height = hourglass_sand_level(hourglass_height - 2 * hourglass_contour_thickness, time_slice);
+    let top_pile_height = hourglass_height / 2 - hourglass_contour_thickness - bottom_pile_height;
+    let bottom_pile_half_width = (hourglass_width - 2 * hourglass_contour_thickness) * (1 - 2 * bottom_pile_height / (hourglass_height - 2 * hourglass_contour_thickness)) / 2;
+    let top_pile_half_width = (hourglass_width - 2 * hourglass_contour_thickness) * top_pile_height / (hourglass_height - 2 * hourglass_contour_thickness);
+
+    return [
+            [[x_corner_left,y_corner_down], [x_corner_right,y_corner_down], [50 + bottom_pile_half_width,y_corner_down - bottom_pile_height], [50 - bottom_pile_half_width,y_corner_down - bottom_pile_height]],
+            [[50 - top_pile_half_width,y_corner_up + bottom_pile_height], [50 + top_pile_half_width,y_corner_up + bottom_pile_height], [50,50 - hourglass_contour_thickness]]
+        ];
+
+}
+
+function list_of_points_to_path(list_of_points) {
+    if (list_of_points.length == 0) {
+        return "";
+    }
+    let res = `${list_of_points[0][0]},${list_of_points[0][1]}`;
+    list_of_points.forEach(function(point, index) {
+        if (index > 0) {
+            res += ` ${list_of_points[index][0]},${list_of_points[index][1]}`;
+        }
+    });
+    return res;
+}
+
+function flip_vertically(list_of_points) {
+    let res = [];
+    list_of_points.forEach(function(point, index) {
+        res.push([list_of_points[index][0], 100 - list_of_points[index][1]]);
+    });
+    return res;
+}
+
 
 function show_canon_board_slice(round_n, timeslice){
     visible_round = round_n;
@@ -71,22 +143,51 @@ function show_time_jumps_at_time(round_n, time) {
 }
 
 function show_bases_at_time(round_n, time) {
+    // Since all bases have the same sand level, we just need to calculate its properties once
+    let sand_paths = hourglass_paths_from_height(time);
     for (let base_i = 0; base_i < bases.length; base_i++) {
         let base_ID = bases[base_i];
         let x = base_trajectories[round_n][time][base_ID][0];
         let y = base_trajectories[round_n][time][base_ID][1];
         let allegiance = base_trajectories[round_n][time][base_ID][2];
-        document.getElementById(`base_${base_ID}`).style.transform = `translate(${100 * x}px,${100 * y}px)`;
-        switch(allegiance) {
-            case "neutral":
-                document.getElementById(`base_${base_ID}_indicator`).style.fill = 'yellow';
-                break;
-            case "A":
-                document.getElementById(`base_${base_ID}_indicator`).style.fill = 'green';
-                break;
-            case "B":
-                document.getElementById(`base_${base_ID}_indicator`).style.fill = 'red';
-                break;
+
+        // Find the important DOM elements
+        let DOM_parent_group = document.getElementById(`base_${base_ID}`);
+        let DOM_sand_bottom = document.getElementById(`base_${base_ID}_hourglass_sand_bottom`);
+        let DOM_sand_top = document.getElementById(`base_${base_ID}_hourglass_sand_top`);
+
+        DOM_parent_group.style.transform = `translate(${100 * x}px,${100 * y}px)`;
+        DOM_parent_group.setAttribute("class", `base ${base_class_for_base(allegiance)}`);
+
+        // Get rid of all animation effects
+        DOM_sand_bottom.classList.remove("sand_fading");
+        DOM_sand_top.classList.remove("sand_fading");
+        DOM_sand_bottom.style.opacity = 1;
+        DOM_sand_top.style.opacity = 1;
+        document.getElementById(`base_${base_ID}_rotation`).style.transform = "";
+        inbetweens[round_n][time]["tagscreens"]["captured_bases"][0].forEach(function(captured_base_ID, index) {
+            let base_trans_bottom = document.getElementById(`${captured_base_ID}_hourglass_sand_bottom_transitory`);
+            let base_trans_top = document.getElementById(`${captured_base_ID}_hourglass_sand_top_transitory`);
+            // We make them visible but transparent, and in the color of the new allegiance
+            base_trans_bottom.style.visibility = "hidden";
+            base_trans_bottom.setAttribute("class", `hourglass_sand_bottom_transitory`);
+            base_trans_top.style.visibility = "hidden";
+            base_trans_top.setAttribute("class", `hourglass_sand_top_transitory`);
+
+        });
+
+        // Update sand paths
+        if (sand_paths[0] != null) {
+            DOM_sand_bottom.setAttribute("points", list_of_points_to_path(sand_paths[0]));
+            DOM_sand_bottom.style.visibility = "visible";
+        } else {
+            DOM_sand_bottom.style.visibility = "hidden";
+        }
+        if (sand_paths[1] != null) {
+            DOM_sand_top.setAttribute("points", list_of_points_to_path(sand_paths[1]));
+            DOM_sand_top.style.visibility = "visible";
+        } else {
+            DOM_sand_top.style.visibility = "hidden";
         }
     }
 }
@@ -144,11 +245,13 @@ function show_stones_at_state(local_stone_list, state_matrix, scale = null, opac
     });
 }
 
-function show_class_at_state(class_name, scale = null, opacity = null) {
+function show_class_at_state(class_name, scale = null, opacity = null, rotation = null) {
     let class_elements = document.getElementsByClassName(class_name);
     for (let class_index = 0; class_index < class_elements.length; class_index++) {
         if (scale != null) {
             class_elements[class_index].style.transform = `scale(${scale})`;
+        } else if (rotation != null) {
+            class_elements[class_index].style.transform = `rotate(${rotation}deg)`;
         }
         if (opacity != null) {
             class_elements[class_index].style.opacity = `${opacity}`;
@@ -157,12 +260,14 @@ function show_class_at_state(class_name, scale = null, opacity = null) {
     }
 }
 
-function show_ids_at_state(list_of_ids, scale = null, opacity = null) {
+function show_ids_at_state(list_of_ids, scale = null, opacity = null, rotation = null) {
     for (let id_index = 0; id_index < list_of_ids.length; id_index++) {
         cur_element = document.getElementById(list_of_ids[id_index]);
         if (cur_element != undefined) {
             if (scale != null) {
                 cur_element.style.transform = `scale(${scale})`;
+            } else if (rotation != null) {
+                cur_element.style.transform = `rotate(${rotation}deg)`;
             }
             if (opacity != null) {
                 cur_element.style.opacity = `${opacity}`;
@@ -610,25 +715,110 @@ animation_manager.change_process_preparation = function(animation_args) {
 
     // Prepare time jump markers
     inbetweens[round_n][s_time][s_process]["new_time_jumps"][0].forEach(function(time_jump_mark, index) {
-        time_jump_element = document.getElementById(time_jump_mark);
+        let new_time_jump_element = document.getElementById(time_jump_mark);
         if (play_backwards) {
-            time_jump_element.style.opacity = "1";
+            new_time_jump_element.style.opacity = "1";
         } else {
-            time_jump_element.style.opacity = "0";
+            new_time_jump_element.style.opacity = "0";
         }
-        time_jump_element.style.fill = `url(#grad_${inbetweens[round_n][s_time][s_process]["new_time_jumps"][1][index]})`;
-        time_jump_element.style.visibility = "visible";
+        new_time_jump_element.style.fill = `url(#grad_${inbetweens[round_n][s_time][s_process]["new_time_jumps"][1][index]})`;
+        new_time_jump_element.style.visibility = "visible";
     });
     inbetweens[round_n][s_time][s_process]["old_time_jumps"][0].forEach(function(time_jump_mark, index) {
-        time_jump_element = document.getElementById(time_jump_mark);
+        let old_time_jump_element = document.getElementById(time_jump_mark);
         if (play_backwards) {
-            time_jump_element.style.opacity = "0";
+            old_time_jump_element.style.opacity = "0";
         } else {
-            time_jump_element.style.opacity = "1";
+            old_time_jump_element.style.opacity = "1";
         }
-        time_jump_element.style.fill = `url(#grad_${inbetweens[round_n][s_time][s_process]["old_time_jumps"][1][index]})`;
-        time_jump_element.style.visibility = "visible";
+        old_time_jump_element.style.fill = `url(#grad_${inbetweens[round_n][s_time][s_process]["old_time_jumps"][1][index]})`;
+        old_time_jump_element.style.visibility = "visible";
     });
+
+    // Prepare base capture markers
+    if (s_process == "tagscreens") {
+
+        // We set the underlying hourglass to its previous state
+        if (s_time == 0) {
+            show_bases_at_time(0, 0);
+        } else {
+            show_bases_at_time(round_n, s_time - 1);
+        }
+
+        let transitory_sand_paths = hourglass_paths_from_height(s_time);
+
+        inbetweens[round_n][s_time][s_process]["captured_bases"][0].forEach(function(captured_base_ID, index) {
+            let captured_base_trans_bottom = document.getElementById(`${captured_base_ID}_hourglass_sand_bottom_transitory`);
+            let captured_base_trans_top = document.getElementById(`${captured_base_ID}_hourglass_sand_top_transitory`);
+            // We make them visible but transparent, and in the color of the new allegiance
+
+            document.getElementById(captured_base_ID).setAttribute("class", `base ${base_class_for_base(inbetweens[round_n][s_time][s_process]["captured_bases"][1][index])}`);
+            if (play_backwards) {
+                document.getElementById(`${captured_base_ID}_hourglass_sand_bottom`).opacity = 0;
+                document.getElementById(`${captured_base_ID}_hourglass_sand_top`).opacity = 0;
+                document.getElementById(`${captured_base_ID}_rotation`).style.transform = "rotate(180)";
+            }
+
+            // Update sand paths
+            if (transitory_sand_paths[0] != null) {
+                captured_base_trans_bottom.setAttribute("points", list_of_points_to_path(flip_vertically(transitory_sand_paths[0])));
+                captured_base_trans_bottom.style.visibility = "visible";
+            } else {
+                captured_base_trans_bottom.style.visibility = "hidden";
+            }
+            if (transitory_sand_paths[1] != null) {
+                captured_base_trans_top.setAttribute("points", list_of_points_to_path(flip_vertically(transitory_sand_paths[1])));
+                captured_base_trans_top.style.visibility = "visible";
+            } else {
+                captured_base_trans_top.style.visibility = "hidden";
+            }
+
+            captured_base_trans_bottom.setAttribute("class", `hourglass_sand_bottom_transitory_active ${inbetweens[round_n][s_time][s_process]["captured_bases"][2][index]}_hourglass_sand_bottom_transitory`);
+            captured_base_trans_top.setAttribute("class", `hourglass_sand_top_transitory_active ${inbetweens[round_n][s_time][s_process]["captured_bases"][2][index]}_hourglass_sand_top_transitory`);
+
+            captured_base_trans_bottom.style.opacity = play_backwards ? 1 : 0;
+            captured_base_trans_top.style.opacity = play_backwards ? 1 : 0;
+
+            document.getElementById(`${captured_base_ID}_hourglass_sand_bottom`).classList.add("sand_fading");
+            document.getElementById(`${captured_base_ID}_hourglass_sand_top`).classList.add("sand_fading");
+
+        });
+
+        inbetweens[round_n][s_time][s_process]["stable_bases"][0].forEach(function(stable_base_ID, index) {
+            // These just need their transitory sands unflipped and ready to crossfade
+            let stable_base_trans_bottom = document.getElementById(`${stable_base_ID}_hourglass_sand_bottom_transitory`);
+            let stable_base_trans_top = document.getElementById(`${stable_base_ID}_hourglass_sand_top_transitory`);
+            if (play_backwards) {
+                document.getElementById(`${stable_base_ID}_hourglass_sand_bottom`).opacity = 0;
+                document.getElementById(`${stable_base_ID}_hourglass_sand_top`).opacity = 0;
+            }
+
+            // Update sand paths
+            if (transitory_sand_paths[0] != null) {
+                stable_base_trans_bottom.setAttribute("points", list_of_points_to_path(transitory_sand_paths[0]));
+                stable_base_trans_bottom.style.visibility = "visible";
+            } else {
+                stable_base_trans_bottom.style.visibility = "hidden";
+            }
+            if (transitory_sand_paths[1] != null) {
+                stable_base_trans_top.setAttribute("points", list_of_points_to_path(transitory_sand_paths[1]));
+                stable_base_trans_top.style.visibility = "visible";
+            } else {
+                stable_base_trans_top.style.visibility = "hidden";
+            }
+
+            stable_base_trans_bottom.setAttribute("class", `hourglass_sand_bottom_transitory_active ${inbetweens[round_n][s_time][s_process]["stable_bases"][1][index]}_hourglass_sand_bottom_transitory`);
+            stable_base_trans_top.setAttribute("class", `hourglass_sand_top_transitory_active ${inbetweens[round_n][s_time][s_process]["stable_bases"][1][index]}_hourglass_sand_top_transitory`);
+
+            stable_base_trans_bottom.style.opacity = play_backwards ? 1 : 0;
+            stable_base_trans_top.style.opacity = play_backwards ? 1 : 0;
+
+            document.getElementById(`${stable_base_ID}_hourglass_sand_bottom`).classList.add("sand_fading");
+            document.getElementById(`${stable_base_ID}_hourglass_sand_top`).classList.add("sand_fading");
+
+        });
+
+    }
 
 }
 animation_manager.change_process_get_frame = function(animation_args) {
@@ -672,6 +862,13 @@ animation_manager.change_process_get_frame = function(animation_args) {
             cameraman.used_by_an_animation = true;
         }
     }
+
+    // Show captured bases turning over and changing color
+    show_ids_at_state(append_to_list_of_strings(inbetweens[round_n][s_time][s_process]["captured_bases"][0], "_rotation"), null, null, animated_scalar_transformation(0, 180, animation_manager.total_frames, contextual_frame_key));
+    show_class_at_state("hourglass_sand_bottom_transitory_active", null, animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, contextual_frame_key));
+    show_class_at_state("hourglass_sand_top_transitory_active", null, animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, contextual_frame_key));
+    show_class_at_state("sand_fading", null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, contextual_frame_key));
+
 }
 animation_manager.change_process_cleanup = function(animation_args) {
     let round_n = animation_args[0];
@@ -700,6 +897,42 @@ animation_manager.change_process_cleanup = function(animation_args) {
             document.getElementById(new_time_jump_id).style.visibility = "hidden";
         });
     }
+    // Hide base capture markers
+    inbetweens[round_n][s_time][s_process]["captured_bases"][0].forEach(function(captured_base_ID, index) {
+        document.getElementById(`${captured_base_ID}_hourglass_sand_bottom`).classList.remove("sand_fading");
+        document.getElementById(`${captured_base_ID}_hourglass_sand_top`).classList.remove("sand_fading");
+        document.getElementById(`${captured_base_ID}_hourglass_sand_bottom`).style.opacity = 1;
+        document.getElementById(`${captured_base_ID}_hourglass_sand_top`).style.opacity = 1;
+
+        let base_trans_bottom = document.getElementById(`${captured_base_ID}_hourglass_sand_bottom_transitory`);
+        let base_trans_top = document.getElementById(`${captured_base_ID}_hourglass_sand_top_transitory`);
+        // We make them visible but transparent, and in the color of the new allegiance
+        base_trans_bottom.style.visibility = "hidden";
+        base_trans_bottom.setAttribute("class", `hourglass_sand_bottom_transitory`);
+        base_trans_top.style.visibility = "hidden";
+        base_trans_top.setAttribute("class", `hourglass_sand_top_transitory`);
+
+        if (play_backwards) {
+            document.getElementById(captured_base_ID).setAttribute("class", `base ${base_class_for_base(inbetweens[round_n][s_time][s_process]["captured_bases"][1][index])}`);
+        } else {
+            document.getElementById(captured_base_ID).setAttribute("class", `base ${base_class_for_base(inbetweens[round_n][s_time][s_process]["captured_bases"][2][index])}`);
+        }
+
+    });
+    inbetweens[round_n][s_time][s_process]["stable_bases"][0].forEach(function(stable_base_ID, index) {
+        document.getElementById(`${stable_base_ID}_hourglass_sand_bottom`).classList.remove("sand_fading");
+        document.getElementById(`${stable_base_ID}_hourglass_sand_top`).classList.remove("sand_fading");
+        document.getElementById(`${stable_base_ID}_hourglass_sand_bottom`).style.opacity = 1;
+        document.getElementById(`${stable_base_ID}_hourglass_sand_top`).style.opacity = 1;
+
+        let stable_base_trans_bottom = document.getElementById(`${stable_base_ID}_hourglass_sand_bottom_transitory`);
+        let stable_base_trans_top = document.getElementById(`${stable_base_ID}_hourglass_sand_top_transitory`);
+        // We make them visible but transparent, and in the color of the new allegiance
+        stable_base_trans_bottom.style.visibility = "hidden";
+        stable_base_trans_bottom.setAttribute("class", `hourglass_sand_bottom_transitory`);
+        stable_base_trans_top.style.visibility = "hidden";
+        stable_base_trans_top.setAttribute("class", `hourglass_sand_top_transitory`);
+    });
     // Update camera
     cameraman.used_by_an_animation = false;
     // Only if the tracking stone changed position or recently appeared, we reset the highlight
@@ -788,7 +1021,7 @@ animation_manager.add_animation("change_round", {
     "preparation" : animation_manager.change_round_preparation,
     "frame" : animation_manager.change_round_get_frame,
     "cleanup" : animation_manager.change_round_cleanup,
-    "total_frames" : 100,
+    "total_frames" : 150,
     "frame_latency" : 2
 });
 

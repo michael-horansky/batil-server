@@ -368,7 +368,7 @@ class PageGame(Page):
         # Finally, we prepare the rendering object
         self.prepare_renderer()
 
-        self.html_open("boc_ingame")
+        self.html_open()
 
         self.structured_html.append(self.renderer.structured_output)
 

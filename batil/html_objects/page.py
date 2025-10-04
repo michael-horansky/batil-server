@@ -28,13 +28,20 @@ class Page(HTMLObject):
         if request.method == 'POST':
             pass
 
-    def html_open(self, stylesheet):
-        self.structured_html.append([
-                "<!doctype html>",
-                f"<title>{self.title} - Batil</title>",
-                f"<link rel=\"stylesheet\" href=\"{ url_for('static', filename=str(stylesheet)+'.css') }\">",
-                f"<link rel=\"shortcut icon\" href=\"{ url_for('static', filename='favicon.ico') }\">"
-            ])
+    def html_open(self, stylesheet = None):
+        if stylesheet is None:
+            self.structured_html.append([
+                    "<!doctype html>",
+                    f"<title>{self.title} - Batil</title>",
+                    f"<link rel=\"shortcut icon\" href=\"{ url_for('static', filename='favicon.ico') }\">"
+                ])
+        else:
+            self.structured_html.append([
+                    "<!doctype html>",
+                    f"<title>{self.title} - Batil</title>",
+                    f"<link rel=\"stylesheet\" href=\"{ url_for('static', filename=str(stylesheet)+'.css') }\">",
+                    f"<link rel=\"shortcut icon\" href=\"{ url_for('static', filename='favicon.ico') }\">"
+                ])
 
     def html_navbar(self):
         navlist = []

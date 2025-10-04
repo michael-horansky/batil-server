@@ -8,16 +8,18 @@
 
 import numpy as np
 
+import os
 import json
 
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
+    Blueprint, flash, g, redirect, render_template, request, url_for, current_app
 )
 
 
 from batil.engine.rendering.class_Renderer import Renderer
 from batil.engine.rendering.class_Abstract_Output import Abstract_Output
 
+element_source_keywords = ["base"]
 
 class HTMLRenderer(Renderer):
 
@@ -48,16 +50,57 @@ class HTMLRenderer(Renderer):
                 if (self.render_object.stone_properties[faction_stone_ID]["stone_type"] not in self.required_stone_types):
                     self.required_stone_types.append(self.render_object.stone_properties[faction_stone_ID]["stone_type"])
 
+        # ----------------------- Element html sources ------------------------
+
+        self.element_sources = {} # {keyword : list of element dicts}
+        for kw in element_source_keywords:
+            source_file = open(os.path.join(current_app.root_path, "engine", "rendering", "element_html", f"{kw}.json"), "r")
+            self.element_sources[kw] = json.load(source_file)
+
+    # ----------------------- Data manipulation methods -----------------------
+
+    def element_source_to_rep(self, element_kw, base_class = None, base_id = None):
+        # every sub-element gets its normal class plus {base_class}_{normal class}
+        # and if given, indexed as base_id_{normal class}
+        res = []
+        for el in self.element_sources[element_kw]:
+
+
+            if base_id is None:
+                el_attributes = ""
+            else:
+                if "element_id" in el.keys():
+                    el_attributes = f"id=\"{base_id}_{el["element_id"]}\""
+                else:
+                    # we assume the element_class is unique
+                    el_attributes = f"id=\"{base_id}_{el["element_class"]}\""
+
+            if base_class is None:
+                el_attributes += f" class=\"{el["element_class"]}\""
+            else:
+                el_attributes += f" class=\"{el["element_class"]} {base_class}_{el["element_class"]}\""
+            for attr in el.keys():
+                if attr in ["element", "element_id", "element_class"]:
+                    continue
+                el_attributes += f" {attr}=\"{el[attr]}\""
+            res.append(f"<{el["element"]} {el_attributes}></{el["element"]}>")
+        return(res)
+
     # ------------------- Output file communication methods -------------------
 
     def open_body(self):
         self.commit_to_output([
+                f"<link rel=\"stylesheet\" href=\"{ url_for('static', filename='gamestyle/elements_style.css') }\">",
+                f"<link rel=\"stylesheet\" href=\"{ url_for('static', filename='gamestyle/animation_style.css') }\">",
+                f"<link rel=\"stylesheet\" href=\"{ url_for('static', filename='gamestyle/general_inspector_style.css') }\">",
+                f"<link rel=\"stylesheet\" href=\"{ url_for('static', filename='gamestyle/action_table_style.css') }\">",
+                f"<link rel=\"stylesheet\" href=\"{ url_for('static', filename='boc_ingame.css') }\">",
                 "<body onkeydown=\"parse_keydown_event(event)\" onkeyup=\"parse_keyup_event(event)\">"
             ])
 
     def close_body(self):
         # We actually leave the <body> tag open for possible scripts to be slapped onto the end
-        #self.commit_to_output(f"  <script src=\"{ url_for('static', filename='boc_ingame.js') }\"></script>")
+        self.commit_to_output(f"  <script>\nconst client_access_context = \"GAME\";\n</script>")
         self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/01_preamble.js') }\"></script>")
         self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/02_nav.js') }\"></script>")
         self.commit_to_output(f"  <script src=\"{ url_for('static', filename='gamescript/03_animation_manager.js') }\"></script>")
@@ -478,11 +521,13 @@ class HTMLRenderer(Renderer):
         stone_object.append("</g>")
         return(stone_object)
 
-    def create_base(self, base_ID):
+    def create_base(self, base_ID, base_allegiance):
         iden = self.encode_base_ID(base_ID)
         base_object = [
-            f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"base\" id=\"{iden}\" transform-origin=\"50px 50px\" style=\"pointer-events:none\">",
-            f"  <circle cx=\"50\" cy=\"50\" r=\"25\" class=\"base_indicator\" id=\"{iden}_indicator\" />",
+            f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"base base_{base_allegiance}\" id=\"{iden}\" transform-origin=\"50px 50px\" style=\"pointer-events:none\">",
+            f"  <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"base_rotation\" id=\"{iden}_rotation\" transform-origin=\"50px 50px\" style=\"pointer-events:none\">",
+            self.element_source_to_rep("base", None, iden),
+            f"  </g>",
             f"</g>"
         ]
         return(base_object)

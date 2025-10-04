@@ -1,12 +1,12 @@
-// ----------------------------------------------------------------------------
-// --------------------------- Rendering constants ----------------------------
-// ----------------------------------------------------------------------------
 
-const stone_command_btn_width = 100;
-const stone_command_btn_height = 83;
 
-const choice_option_btn_width = 120;
-const choice_option_btn_height = 83;
+const is_orientable = {
+    "tank" : true,
+    "bombardier" : false,
+    "tagger" : false,
+    "sniper" : true,
+    "wildcard" : false
+};
 
 // ----------------------------------------------------------------------------
 // --------------------------- HTML DOM management ----------------------------
@@ -58,19 +58,6 @@ function is_flag_at_pos(flag_ID, t, x, y) {
         alert(`[Flag ID: ${flag_ID}] properties requested at (${t},${x},${y}) but flag does not exist.`);
     }
     return (reverse_causality_flag_properties[flag_ID]["t"] == t && reverse_causality_flag_properties[flag_ID]["x"] == x && reverse_causality_flag_properties[flag_ID]["y"] == y);
-}
-
-function find_stone_at_pos(x, y) {
-    for (let faction_i = 0; faction_i < all_factions.length; faction_i++) {
-        for (let stone_i = 0; stone_i < faction_armies[all_factions[faction_i]].length; stone_i++) {
-            if (stone_trajectories[selected_round][visible_timeslice]["canon"][faction_armies[all_factions[faction_i]][stone_i]] != null) {
-                if (arrays_equal(stone_trajectories[selected_round][visible_timeslice]["canon"][faction_armies[all_factions[faction_i]][stone_i]].slice(0,2), [x, y])) {
-                    return faction_armies[all_factions[faction_i]][stone_i];
-                }
-            }
-        }
-    }
-    return null;
 }
 
 function bound(val, lower_bound, upper_bound) {
@@ -202,5 +189,21 @@ function inds(obj, inds, to_str = true) {
         }
     }
     return obj_stack[inds.length];
+}
+
+// String logic
+
+function append_to_list_of_strings(list_of_strings, suffix) {
+    let res = [];
+    list_of_strings.forEach(function(string_element, index) {
+        res.push(`${string_element}${suffix}`);
+    });
+    return res;
+}
+
+// Standard converters
+
+function base_class_for_base(allegiance) {
+    return `base_${allegiance}`;
 }
 

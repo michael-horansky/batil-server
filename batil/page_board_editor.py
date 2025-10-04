@@ -21,9 +21,6 @@ class PageBoardEditor(Page):
         self.load_board()
 
     def resolve_board_edit_submission(self):
-        for key, val in request.form.items():
-            print(f"  {key} --> {val} ({type(val)})")
-
         static_stone_data_file = current_app.open_resource("engine/stones/stone_properties.json")
         static_stone_data = json.load(static_stone_data_file)
         static_stone_data_file.close()
@@ -196,7 +193,7 @@ class PageBoardEditor(Page):
 
         self.prepare_renderer()
 
-        self.html_open("boc_board_editor")
+        self.html_open()
 
         self.structured_html.append(self.renderer.structured_output)
 

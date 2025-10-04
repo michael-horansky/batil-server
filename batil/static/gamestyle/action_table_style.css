@@ -1,0 +1,89 @@
+/* ------------------------------------- */
+/* This is a style-sheet for action      */
+/* tables in general.                    */
+/* This stylesheet is to be used by the  */
+/* game interface, tutorial interface,   */
+/* and board editor interface.           */
+/* ------------------------------------- */
+
+/* -------- Action table style --------- */
+
+.action_table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: inherit;
+  font-size : 20px;
+  /*margin-top: 1em;*/
+  box-shadow: 0 2px 8px rgba(80,80,80,0.07);
+  background: #fff;
+  /*border-radius: 8px;*/
+  overflow: hidden;
+}
+.action_table thead tr {
+  background-color: #eee;
+  color: #222;
+  font-weight: bold;
+  border-bottom: 2px solid #bbb;
+}
+.action_table_header, .action_table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ececec;
+  position: relative;
+}
+.action_table tbody tr:last-child td {
+  border-bottom: none;
+}
+.action_table tbody tr {
+  transition: background 0.2s;
+}
+.action_table tbody tr.selected,
+.action_table tbody tr[data-selected="true"] {
+  background-color: #ffeeba;
+}
+.action_table_button {
+  font-family: inherit;
+  padding: 6px 16px;
+  margin: 0 2px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.action_table_column_button {
+  font-family: inherit;
+  padding: 6px 16px;
+  margin: 2px 2px;
+  border-radius: 6px;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.action_table_column_button:disabled {
+  pointer-events: none;
+}
+.action_table_actions_header {
+    text-align: center;
+    font-weight: 500;
+    border-left: 1px solid #ddd; /* faint separator */
+    /*background: #fafafa;         /* matches subtle header look */
+}
+.action_table_col_link {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  text-decoration: none;
+  text-align: left;
+  color: inherit;
+  padding: 12px 16px;
+}
+.action_table_col_link:hover {
+  background: #f0f0f0;
+}
