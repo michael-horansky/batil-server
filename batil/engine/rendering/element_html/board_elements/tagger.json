@@ -1,0 +1,27 @@
+[
+    {
+        "element" : "polygon",
+        "element_class" : "tagger_top_face",
+        "points" : "21,41 50,20 79,41 50,50"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "tagger_face_unlock",
+        "points" : "79,41 68,74 50,50"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "tagger_face_hide",
+        "points" : "68,74 32,74 50,50"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "tagger_face_lock",
+        "points" : "32,74 21,41 50,50"
+    },
+    {
+        "element" : "polyline",
+        "element_class" : "tagger_outline",
+        "points" : "50,20 79,41 68,74 32,74 21,41 50,20 79,41"
+    }
+]

@@ -1,0 +1,270 @@
+[
+    {
+        "element" : "g",
+        "element_class" : "explosion_layer explosion_layer_0"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "explosion_canvas",
+        "points" : "39,88 100,150 86,73 153,36 92,9 124,-40 73,-14 40,-61 26,-1 -41,-17 0,29 -49,89 12,69 0,132 50,100"
+    },
+    {
+        "element" : "/g"
+    },
+    {
+        "element" : "g",
+        "element_class" : "explosion_layer explosion_layer_1"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_bg",
+        "d" : "M 50 50 L 130 60 A 30 30 0 0 1 85 90 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_fg",
+        "d" : "M 130 60 A 30 30 0 0 1 85 90"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_bg",
+        "d" : "M 50 50 L 85 -10 A 16 16 0 1 1 115 10 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_fg",
+        "d" : "M 85 -10 A 16 16 0 1 1 115 10"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_bg",
+        "d" : "M 50 50 L 10 98 A 20 20 0 0 1 -9 66 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_fg",
+        "d" : "M 10 98 A 20 20 0 0 1 -9 66"
+    },
+    {
+        "element" : "/g"
+    },
+    {
+        "element" : "g",
+        "element_class" : "explosion_layer explosion_layer_2"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_bg",
+        "d" : "M 50 50 L 91 87 A 20 20 0 0 1 60 108 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_fg",
+        "d" : "M 91 87 A 20 20 0 0 1 60 108"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_bg",
+        "d" : "M 50 50 L -20 70 A 40 40 0 0 1 -10 0 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_fg",
+        "d" : "M -20 70 A 40 40 0 0 1 -10 0"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_bg",
+        "d" : "M 50 50 L 17 -6 A 36 36 0 0 1 88 -8 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_fg",
+        "d" : "M 17 -6 A 36 36 0 0 1 88 -8"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_bg",
+        "d" : "M 50 50 L 125 30 A 15 15 0 1 1 120 65 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_fg",
+        "d" : "M 125 30 A 15 15 0 1 1 120 65"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_bg",
+        "d" : "M 50 50 L 42 110 A 20 20 0 0 1 4 92 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_fg",
+        "d" : "M 42 110 A 20 20 0 0 1 4 92"
+    },
+    {
+        "element" : "/g"
+    },
+    {
+        "element" : "g",
+        "element_class" : "explosion_layer explosion_layer_3"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_bg",
+        "d" : "M 50 50 L -10 10 A 20 20 0 0 1 30 -15 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_fg",
+        "d" : "M -10 10 A 20 20 0 0 1 30 -15"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_bg",
+        "d" : "M 50 50 L -6 77 A 11 11 0 1 1 -20 63 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_fg",
+        "d" : "M -6 77 A 11 11 0 1 1 -20 63"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_bg",
+        "d" : "M 50 50 L 100 3 A 20 20 0 0 1 125 40 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_fg",
+        "d" : "M 100 3 A 20 20 0 0 1 125 40"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_bg",
+        "d" : "M 50 50 L 70 100 A 20 20 0 0 1 35 110 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "explosion_fg",
+        "d" : "M 70 100 A 20 20 0 0 1 35 110"
+    },
+    {
+        "element" : "/g"
+    },
+    {
+        "element" : "g",
+        "element_class" : "explosion_layer explosion_layer_4"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "explosion_bg",
+        "points" : "50,50 25,85 -8,108 8,67"
+    },
+    {
+        "element" : "polyline",
+        "element_class" : "explosion_fg",
+        "points" : "25,85 -8,108 8,67"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "explosion_bg",
+        "points" : "50,50 88,16 140,19 106,41"
+    },
+    {
+        "element" : "polyline",
+        "element_class" : "explosion_fg",
+        "points" : "88,16 140,19 106,41"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "explosion_bg",
+        "points" : "50,50 2,4 -6,-30 20,-13"
+    },
+    {
+        "element" : "polyline",
+        "element_class" : "explosion_fg",
+        "points" : "2,4 -6,-30 20,-13"
+    },
+    {
+        "element" : "/g"
+    },
+    {
+        "element" : "g",
+        "element_class" : "explosion_layer explosion_layer_5"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "explosion_bg",
+        "points" : "50,50 76,10 122,-3 90,30"
+    },
+    {
+        "element" : "polyline",
+        "element_class" : "explosion_fg",
+        "points" : "76,10 122,-3 90,30"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "explosion_bg",
+        "points" : "50,50 104,53 134,88 90,73"
+    },
+    {
+        "element" : "polyline",
+        "element_class" : "explosion_fg",
+        "points" : "104,53 134,88 90,73"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "explosion_bg",
+        "points" : "50,50 1,55 -43,36 -2,25"
+    },
+    {
+        "element" : "polyline",
+        "element_class" : "explosion_fg",
+        "points" : "1,55 -43,36 -2,25"
+    },
+    {
+        "element" : "/g"
+    },
+    {
+        "element" : "g",
+        "element_class" : "explosion_layer explosion_layer_6"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "explosion_bg",
+        "points" : "50,50 42,0 62,-49 64,0"
+    },
+    {
+        "element" : "polyline",
+        "element_class" : "explosion_fg",
+        "points" : "42,0 62,-49 64,0"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "explosion_bg",
+        "points" : "50,50 62,76 47,109 35,69"
+    },
+    {
+        "element" : "polyline",
+        "element_class" : "explosion_fg",
+        "points" : "62,76 47,109 35,69"
+    },
+    {
+        "element" : "/g"
+    },
+    {
+        "element" : "g",
+        "element_class" : "explosion_flash",
+        "element_id" : "scaling",
+        "transform-origin" : "50px 50px"
+    },
+    {
+        "element" : "path",
+        "element_class" : "flash_boom",
+        "d" : "M50,43 L120,10 L57,50 L120,120 L50,57 L-20,90 L43,50 L-20,-20 Z"
+    },
+    {
+        "element" : "/g"
+    }
+]

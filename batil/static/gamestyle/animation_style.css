@@ -33,55 +33,85 @@
 }
 
 .cloud_layer {
-    transform-origin : 0 0;
+    transform-origin : 50px 50px;
 }
 
-.cloud_canvas_TAE_tagscreen_lock {
+.TAE_tagscreen_lock_cloud_canvas {
     fill : #D97D55;
     stroke : black;
     stroke-width : 2;
 }
-.cloud_canvas_TAE_tagscreen_unlock {
+.TAE_tagscreen_unlock_cloud_canvas {
     fill : #F4E9D7;
     stroke : black;
     stroke-width : 2;
 }
-.cloud_canvas_TAE_tagscreen_hide {
+.TAE_tagscreen_hide_cloud_canvas {
     fill : #B6CACE;
     stroke : black;
     stroke-width : 2;
 }
 
-.cloud_bg_TAE_tagscreen_lock {
+.TAE_tagscreen_lock_cloud_bg {
     stroke : none;
     fill : #D97D55;
 }
 
-.cloud_bg_TAE_tagscreen_unlock {
+.TAE_tagscreen_unlock_cloud_bg {
     stroke : none;
     fill : #F4E9D7;
 }
 
-.cloud_bg_TAE_tagscreen_hide {
+.TAE_tagscreen_hide_cloud_bg {
     stroke : none;
     fill : #B6CACE;
 }
 
-.cloud_fg_TAE_tagscreen_lock {
+.TAE_tagscreen_lock_cloud_fg {
     fill : none;
     stroke : black;
     stroke-width : 2;
 }
-.cloud_fg_TAE_tagscreen_unlock {
+.TAE_tagscreen_unlock_cloud_fg {
     fill : none;
     stroke : black;
     stroke-width : 2;
 }
-.cloud_fg_TAE_tagscreen_hide {
+.TAE_tagscreen_hide_cloud_fg {
     fill : none;
     stroke : black;
     stroke-width : 2;
 }
+
+
+/* Explosion */
+
+
+.explosion_layer {
+    transform-origin: 50px 50px;
+}
+.explosion_canvas {
+    fill : #303030;
+    stroke : black;
+    stroke-width : 2;
+}
+
+.explosion_bg {
+    stroke : none;
+    fill : #606060;
+}
+.explosion_fg {
+    fill : none;
+    stroke : black;
+    stroke-width : 2;
+}
+
+.flash_boom {
+    fill : red;
+}
+
+
+
 
 
 #board_animation_overlay_text {

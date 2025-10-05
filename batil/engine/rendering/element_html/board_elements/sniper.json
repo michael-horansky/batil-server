@@ -1,0 +1,64 @@
+[
+    {
+        "element" : "line",
+        "element_class" : "sniper_foot",
+        "element_id" : "sniper_foot_top_left",
+        "x1" : 39,
+        "y1" : 25,
+        "x2" : 25,
+        "y2" : 39
+    },
+    {
+        "element" : "line",
+        "element_class" : "sniper_foot",
+        "element_id" : "sniper_foot_top_right",
+        "x1" : 61,
+        "y1" : 25,
+        "x2" : 75,
+        "y2" : 39
+    },
+    {
+        "element" : "line",
+        "element_class" : "sniper_foot",
+        "element_id" : "sniper_foot_bottom_left",
+        "x1" : 39,
+        "y1" : 75,
+        "x2" : 25,
+        "y2" : 61
+    },
+    {
+        "element" : "line",
+        "element_class" : "sniper_foot",
+        "element_id" : "sniper_foot_bottom_right",
+        "x1" : 61,
+        "y1" : 75,
+        "x2" : 75,
+        "y2" : 61
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "sniper_left_leg",
+        "points" : "25,25 30,25 75,70 75,75 70,75 25,30"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "sniper_right_leg",
+        "points" : "75,25 70,25 25,70 25,75 30,75 75,30"
+    },
+    {
+        "element" : "line",
+        "element_class" : "sniper_gun",
+        "x1" : 50,
+        "y1" : 50,
+        "x2" : 50,
+        "y2" : 20
+    },
+    {
+        "element" : "rect",
+        "element_class" : "sniper_nest",
+        "x" : 40,
+        "y" : 40,
+        "width" : 20,
+        "height" : 20
+    }
+]

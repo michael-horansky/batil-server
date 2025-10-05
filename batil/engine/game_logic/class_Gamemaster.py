@@ -62,6 +62,7 @@ class Gamemaster():
         self.available_board_actions = [ # This is just a reference list, and should not be changed
                 "destruction",      # destroys stone at position if exists
                 "explosion",        # destroys stones at position and adjanced positions if exist
+                "capture",          # mine or capture; cosmetic only
                 "tagscreen_lock",   # tags stones at position and adjanced positions as unable to travel back in time (doesn't update max flag ID)
                 "tagscreen_unlock", # tags stones at position and adjanced positions as able to travel back in time, or updates their max_flag_ID to originator ID
                 "tagscreen_hide"    # removes stones at position and adjanced positions and places them onto the board in the next time-slice (also updated their max flag ID)
@@ -1149,6 +1150,8 @@ class Gamemaster():
                 # We remove the conflict
                 if (x,y) in self.conflicting_squares[t]:
                     self.conflicting_squares[t].remove((x, y))
+            # now we mark this square for rendering_output
+            self.board_actions[t][x][y]["capture"].append(-1) # placeholder flag for cosmetic action
 
         # 4 Explosion
         # We remove all stones from all remaining conflicting squares
@@ -1871,6 +1874,8 @@ class Gamemaster():
                                 self.place_stone_on_board(STPos(t+1, x, y), cur_flag.stone_ID, self.board_dynamic[t][x][y].stone_properties[cur_flag.stone_ID])
                                 self.stone_causal_freedom[cur_flag.stone_ID] = t+1
                                 self.board_actions[t+1][x][y][f"tagscreen_{cur_flag.flag_args[0]}"].append(cur_flag_ID)
+                                if save_to_output:
+                                    self.rendering_output.add_stone_effect(rendering_round, t+1, "destructions", [stone_ID, f"tagscreen_{cur_flag.flag_args[0]}"])
                             if cur_flag.flag_type == "spawn_bomb":
                                 self.board_actions[t+1][x][y]["explosion"].append(cur_flag_ID)
                         # The following flags remove the stone from the board, and as such are the only flags which can be placed at t = t_dim - 1

@@ -1,0 +1,22 @@
+[
+    {
+        "element" : "polygon",
+        "element_class" : "tank_body",
+        "points" : "65,24 80,50 65,76 35,76 20,50 35,24 65,24 80,50"
+    },
+    {
+        "element" : "rect",
+        "element_class" : "tank_barrel",
+        "x" : 45,
+        "y" : 10,
+        "width" : 10,
+        "height" : 45
+    },
+    {
+        "element" : "circle",
+        "element_class" : "tank_hatch",
+        "cx" : 50,
+        "cy" : 50,
+        "r" : 12
+    }
+]

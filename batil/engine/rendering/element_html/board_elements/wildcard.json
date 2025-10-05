@@ -1,0 +1,27 @@
+[
+    {
+        "element" : "circle",
+        "element_class" : "wildcard_body",
+        "cx" : 50,
+        "cy" : 50,
+        "r" : 30
+    },
+    {
+        "element" : "line",
+        "element_class" : "wildcard_halo",
+        "element_id" : "wildcard_halo_left",
+        "x1" : 26,
+        "y1" : 26,
+        "x2" : 74,
+        "y2" : 74
+    },
+    {
+        "element" : "line",
+        "element_class" : "wildcard_halo",
+        "element_id" : "wildcard_halo_right",
+        "x1" : 26,
+        "y1" : 74,
+        "x2" : 74,
+        "y2" : 26
+    }
+]

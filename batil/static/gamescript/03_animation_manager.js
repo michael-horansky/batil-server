@@ -1,4 +1,28 @@
 // ----------------------------- Animation logic ------------------------------
+const board_action_marker_TAE_classes = ["explosion", "capture", "tagscreen_lock", "tagscreen_unlock", "tagscreen_hide"];
+// board_action_marker_dictionary[TAE_class] = [template_name, base_class, board_layer]
+const board_action_marker_dictionary = {
+    "explosion" : ["TAE_explosion", 4],
+    "capture" : ["TAE_capture", 4],
+    "tagscreen_lock" : ["TAE_tagscreen", 4],
+    "tagscreen_unlock" : ["TAE_tagscreen", 4],
+    "tagscreen_hide" : ["TAE_tagscreen", 4]
+}
+const board_actions_by_s_process = {
+    "flags" : [],
+    "pushes" : ["capture"],
+    "destructions" : ["tagscreen_lock", "tagscreen_unlock", "tagscreen_hide"],
+    "tagscreens" : ["explosion"],
+    "canon" : []
+}
+const required_total_frames = {
+    "tagscreen_lock" : 80,
+    "tagscreen_unlock" : 80,
+    "tagscreen_hide" : 80,
+    "explosion" : 60,
+    "capture" : 60
+}
+
 // A preamble helpful for certain mathematically-heavy animations, such as
 // hourglass sand level calculation
 
@@ -6,7 +30,15 @@ const hourglass_height = 70;
 const hourglass_width = 56;
 const hourglass_contour_thickness = 1;
 
-function hourglass_sand_level(total_height, time_slice) {
+// Calculated properties of the hourglass
+const x_corner_left = 50 - hourglass_width / 2 + hourglass_contour_thickness;
+const y_corner_up = 50 - hourglass_height / 2 + hourglass_contour_thickness;
+const x_corner_right = 50 + hourglass_width / 2 - hourglass_contour_thickness;
+const y_corner_down = 50 + hourglass_height / 2 - hourglass_contour_thickness;
+
+var sand_levels = [[50 - hourglass_width / 2 + hourglass_contour_thickness, 50 + hourglass_height / 2 - hourglass_contour_thickness]]; // [t] = [x, y] for the left corner of the bottom sand pile. Invert x to get the right; invert y to get the top pile.
+
+/*function hourglass_sand_level(total_height, time_slice) {
     let cur_height = 0.0;
     for (let i = 0; i < time_slice; i++) {
         let h_diff = (total_height / 2.0 - cur_height);
@@ -47,7 +79,63 @@ function hourglass_paths_from_height(time_slice) {
             [[50 - top_pile_half_width,y_corner_up + bottom_pile_height], [50 + top_pile_half_width,y_corner_up + bottom_pile_height], [50,50 - hourglass_contour_thickness]]
         ];
 
+}*/
+
+var cur_height = 0.0;
+for (let i = 1; i < t_dim - 1; i++) {
+    let h_diff = ((hourglass_height - 2 * hourglass_contour_thickness) / 2.0 - cur_height);
+    cur_height += ( h_diff - Math.sqrt(h_diff * h_diff - (hourglass_height - 2 * hourglass_contour_thickness) * (hourglass_height - 2 * hourglass_contour_thickness) / (4.0 * (t_dim - 1))) );
+
+    // i is the right t
+    sand_levels.push([50 - (hourglass_width - 2 * hourglass_contour_thickness) * (1 - 2 * cur_height / (hourglass_height - 2 * hourglass_contour_thickness)) / 2, y_corner_down - cur_height]);
 }
+sand_levels.push([50, 50 + hourglass_contour_thickness]);
+
+function hourglass_paths_from_height(time_slice, clip_prev_time_slice = false) {
+    if (time_slice == 0) {
+        // Triangle up (cannot clip prev timeslice as there isnt such a thing)
+        if (clip_prev_time_slice) {
+            return [null, null];
+        }
+        return [
+            null,
+            [[x_corner_left,y_corner_up], [x_corner_right,y_corner_up], [50,50 - hourglass_contour_thickness]]
+        ];
+    }
+    if (time_slice == t_dim - 1) {
+        // Triangle down
+        if (clip_prev_time_slice) {
+            return [
+                [[100 - sand_levels[time_slice - 1][0], sand_levels[time_slice - 1][1]], [sand_levels[time_slice - 1][0], sand_levels[time_slice - 1][1]], [50,50 + hourglass_contour_thickness]],
+                [[sand_levels[time_slice - 1][0], 100 - sand_levels[time_slice - 1][1]], [100 - sand_levels[time_slice - 1][0], 100 - sand_levels[time_slice - 1][1]], [50,50 - hourglass_contour_thickness]]
+            ];
+        } else {
+            return [
+                [[x_corner_left,y_corner_down], [x_corner_right,y_corner_down], [50,50 + hourglass_contour_thickness]],
+                null
+            ];
+        }
+    }
+    if (clip_prev_time_slice) {
+        if (time_slice == 1) {
+            return [
+                [[x_corner_left, y_corner_down], [x_corner_right, y_corner_down], [sand_levels[time_slice][0], sand_levels[time_slice][1]], [100 - sand_levels[time_slice][0], sand_levels[time_slice][1]]],
+                [[x_corner_left,y_corner_up], [x_corner_right,y_corner_up], [100 - sand_levels[time_slice][0], 100 - sand_levels[time_slice][1]], [sand_levels[time_slice][0], 100 - sand_levels[time_slice][1]]]
+            ];
+        }
+        return [
+            [[100 - sand_levels[time_slice - 1][0], sand_levels[time_slice - 1][1]], [sand_levels[time_slice - 1][0], sand_levels[time_slice - 1][1]], [sand_levels[time_slice][0], sand_levels[time_slice][1]], [100 - sand_levels[time_slice][0], sand_levels[time_slice][1]]],
+            [[sand_levels[time_slice - 1][0], 100 - sand_levels[time_slice - 1][1]], [100 - sand_levels[time_slice - 1][0], 100 - sand_levels[time_slice - 1][1]], [100 - sand_levels[time_slice][0], 100 - sand_levels[time_slice][1]], [sand_levels[time_slice][0], 100 - sand_levels[time_slice][1]]]
+        ];
+    } else {
+        return [
+            [[x_corner_left, y_corner_down], [x_corner_right, y_corner_down], [100 - sand_levels[time_slice][0], sand_levels[time_slice][1]], [sand_levels[time_slice][0], sand_levels[time_slice][1]]],
+            [[sand_levels[time_slice][0], 100 - sand_levels[time_slice][1]], [100 - sand_levels[time_slice][0], 100 - sand_levels[time_slice][1]], [50,50 - hourglass_contour_thickness]]
+        ];
+    }
+
+}
+
 
 function list_of_points_to_path(list_of_points) {
     if (list_of_points.length == 0) {
@@ -282,6 +370,45 @@ function show_ids_at_state(list_of_ids, scale = null, opacity = null, rotation =
 // ----------------------------------------------------------------------------
 
 // --------------------------- elements generators ----------------------------
+
+// Cloners
+
+
+function clone_unidentified_template_group(template_group_id) {
+    const clone = document.getElementById(template_group_id).cloneNode(true);
+    return clone;
+}
+
+function clone_TAE(TAE_type, base_class, specific_ID) {
+    const clone = document.getElementById(`${TAE_type}_template`).cloneNode(true);
+
+    // Helper: update IDs recursively
+    function updateIds(node) {
+        // Update class
+        if (node.classList) {
+            let added_class_names = [];
+            Array.from(node.classList).forEach(function(class_name, class_index) {
+                added_class_names.push(`${base_class}_${class_name}`);
+            });
+            added_class_names.forEach(function(added_class_name, added_class_name_index) {
+                node.classList.add(added_class_name);
+            });
+        }
+
+        if (node.id) {
+            node.id = node.id.replace(`${TAE_type}_template`, `${specific_ID}`);
+        }
+        // Recurse into children
+        for (let child of node.children) {
+            updateIds(child);
+        }
+    }
+
+    updateIds(clone);
+    return clone;
+}
+
+// Drawers
 
 function add_arc_to_element(element, base_class, x_i, y_i, x_f, y_f, rad_x, rad_y = -1, arc_param = 0) {
     if (rad_y == -1) {
@@ -570,57 +697,18 @@ animation_manager.create_stone_action_marker = function(stone_action) {
             break;
     }
 }
-animation_manager.create_board_action_marker = function(board_action) {
-    // board_action = [action type, x, y]
-    switch(board_action[0]) {
-        case "explosion":
-            // a bomb explosion! The marker is a big red cross
-            let explosion_group = make_SVG_element("g", {
-                class : "TAE_explosion",
-                id : `TAE_explosion_${board_action[1]}_${board_action[2]}`,
-                x : 0,
-                y : 0
-            });
-            explosion_group.setAttribute("opacity", "0");
-            let explosion_scaling_group = make_SVG_element("g", {
-                class : "TAE_explosion_scaling",
-                id : `TAE_explosion_scaling_${board_action[1]}_${board_action[2]}`,
-                x : 0,
-                y : 0
-            });
-            explosion_scaling_group.setAttribute("transform-origin", `50px 50px`);
-            document.getElementById("board_layer_2").appendChild(explosion_group);
-            let explosion_cross = make_SVG_element("path", {
-                d : "M45,45 L45,-55 L55,-55 L55,45 L155,45 L155,55 L55,55 L55,155 L45,155 L45,55 L-55,55 L-55,45 Z",
-                "fill" : "red"
-            });
-            explosion_group.appendChild(explosion_scaling_group);
-            explosion_scaling_group.appendChild(explosion_cross);
-            explosion_group.style.transform = `translate(${100 * board_action[1]}px,${100 * board_action[2]}px)`;
-            break;
+animation_manager.create_board_action_marker = function(board_action_type, board_action) {
+    // board_action = [x, y] or other contextual data
+    let template_name = board_action_marker_dictionary[board_action_type][0];
+    let base_class = `TAE_${board_action_type}`;
+    let board_layer = board_action_marker_dictionary[board_action_type][1];
 
-        case "tagscreen_lock":
-            // lock tagscreen
-            let tag_lock_cloud = make_smoke_cloud(`TAE_tagscreen_lock`, `TAE_tagscreen_lock_${board_action[1]}_${board_action[2]}`);
-            tag_lock_cloud.style.transform = `translate(${100 * board_action[1] + 50}px,${100 * board_action[2] + 50}px)`;
-            document.getElementById("board_layer_4").appendChild(tag_lock_cloud);
-            break;
-
-        case "tagscreen_unlock":
-            // unlock tagscreen
-            let tag_unlock_cloud = make_smoke_cloud(`TAE_tagscreen_unlock`, `TAE_tagscreen_unlock_${board_action[1]}_${board_action[2]}`);
-            tag_unlock_cloud.style.transform = `translate(${100 * board_action[1] + 50}px,${100 * board_action[2] + 50}px)`;
-            document.getElementById("board_layer_4").appendChild(tag_unlock_cloud);
-            break;
-
-        case "tagscreen_hide":
-            // smokescreen
-            let tag_hide_cloud = make_smoke_cloud(`TAE_tagscreen_hide`, `TAE_tagscreen_hide_${board_action[1]}_${board_action[2]}`);
-            tag_hide_cloud.style.transform = `translate(${100 * board_action[1] + 50}px,${100 * board_action[2] + 50}px)`;
-            document.getElementById("board_layer_4").appendChild(tag_hide_cloud);
-            break;
-
-    }
+    let board_action_marker_element = clone_TAE(template_name, base_class, `${base_class}_${board_action[0]}_${board_action[1]}`);
+    board_action_marker_element.setAttribute("class", base_class);
+    board_action_marker_element.setAttribute("id", `${base_class}_${board_action[0]}_${board_action[1]}`);
+    board_action_marker_element.style.opacity = 0;
+    board_action_marker_element.style.transform = `translate(${100 * board_action[0]}px,${100 * board_action[1]}px)`;
+    document.getElementById(`board_layer_${board_layer}`).appendChild(board_action_marker_element);
 }
 
 animation_manager.update_temporary_animation_elements = function(frame_key) {
@@ -628,8 +716,17 @@ animation_manager.update_temporary_animation_elements = function(frame_key) {
 
     // Firstly we deal with the by-class elements for which no fancy calculation is needed, such as the causal freedom markers
     show_class_at_state("TAE_causal_freedom_marker", null, animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, frame_key, "boomerang"));
-    show_class_at_state("TAE_explosion", null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, frame_key));
-    show_class_at_state("TAE_explosion_scaling", animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, frame_key));
+
+    // bombardier explosion
+    show_class_at_state("TAE_explosion", null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, frame_key, "cloud_opacity"));
+    show_class_at_state("explosion_flash", animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, frame_key));
+    for (i = 0; i < 7; i++) {
+        show_class_at_state(`explosion_layer_${i}`, animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, frame_key, `explosion_layer_${i}`));
+    }
+
+    // capture explosion
+    show_class_at_state("TAE_capture", null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, frame_key, "cloud_opacity"));
+    //show_class_at_state("capture_flash", animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, frame_key));
 
     show_class_at_state("TAE_tank_laser_outline", null, animated_scalar_transformation(0.0, 0.2, animation_manager.total_frames, frame_key, "boomerang"));
 
@@ -666,6 +763,53 @@ animation_manager.update_temporary_animation_elements = function(frame_key) {
     }
 }
 
+// Stone effects
+
+animation_manager.prepare_stone_effect = function(effect_array) {
+    let stone_ID = effect_array[0];
+    switch(effect_array[1]) {
+        case "tagscreen_lock":
+            document.getElementById(`${stone_ID}_tagger_face_lock`).classList.add("active");
+            document.getElementById(`${stone_ID}_tagger_face_unlock`).classList.add("disabled");
+            document.getElementById(`${stone_ID}_tagger_face_hide`).classList.add("disabled");
+            break;
+        case "tagscreen_unlock":
+            document.getElementById(`${stone_ID}_tagger_face_unlock`).classList.add("active");
+            document.getElementById(`${stone_ID}_tagger_face_lock`).classList.add("disabled");
+            document.getElementById(`${stone_ID}_tagger_face_hide`).classList.add("disabled");
+            break;
+        case "tagscreen_hide":
+            document.getElementById(`${stone_ID}_tagger_face_hide`).classList.add("active");
+            document.getElementById(`${stone_ID}_tagger_face_lock`).classList.add("disabled");
+            document.getElementById(`${stone_ID}_tagger_face_unlock`).classList.add("disabled");
+            break;
+    }
+}
+
+
+animation_manager.cleanup_stone_effect = function(effect_array) {
+    let stone_ID = effect_array[0];
+    switch(effect_array[1]) {
+        case "tagscreen_lock":
+            document.getElementById(`${stone_ID}_tagger_face_lock`).classList.remove("active");
+            document.getElementById(`${stone_ID}_tagger_face_unlock`).classList.remove("disabled");
+            document.getElementById(`${stone_ID}_tagger_face_hide`).classList.remove("disabled");
+            break;
+        case "tagscreen_unlock":
+            document.getElementById(`${stone_ID}_tagger_face_unlock`).classList.remove("active");
+            document.getElementById(`${stone_ID}_tagger_face_lock`).classList.remove("disabled");
+            document.getElementById(`${stone_ID}_tagger_face_hide`).classList.remove("disabled");
+            break;
+        case "tagscreen_hide":
+            document.getElementById(`${stone_ID}_tagger_face_hide`).classList.remove("active");
+            document.getElementById(`${stone_ID}_tagger_face_lock`).classList.remove("disabled");
+            document.getElementById(`${stone_ID}_tagger_face_unlock`).classList.remove("disabled");
+            break;
+    }
+}
+
+
+
 // --------------------------- shift_frame methods ----------------------------
 
 // change_process
@@ -687,30 +831,30 @@ animation_manager.change_process_preparation = function(animation_args) {
     }
 
     // Create markers for tags when end_process = "tagscreens"
-    if (s_process == "destructions") {
-        animation_manager.total_frames = 80;
-        for (let board_action_index = 0; board_action_index < board_actions[round_n][s_time].length; board_action_index++) {
-            let cur_board_action = board_actions[round_n][s_time][board_action_index];
-            if (["tagscreen_lock", "tagscreen_unlock", "tagscreen_hide"].includes(cur_board_action[0])) {
-                animation_manager.add_TAE_class(`TAE_${cur_board_action[0]}`);
-                animation_manager.create_board_action_marker(cur_board_action);
+    board_actions_by_s_process[s_process].forEach(function(board_action_type, index) {
+        for (let board_action_index = 0; board_action_index < board_actions[round_n][s_time][board_action_type].length; board_action_index++) {
+            if (board_action_marker_TAE_classes.includes(board_action_type)) {
+                animation_manager.add_TAE_class(`TAE_${board_action_type}`);
+                animation_manager.create_board_action_marker(board_action_type, board_actions[round_n][s_time][board_action_type][board_action_index]);
+                if (required_total_frames[board_action_type] > animation_manager.total_frames) {
+                    animation_manager.total_frames = required_total_frames[board_action_type];
+                }
             }
         }
-    }
-    // Create various markers for stone and board actions when end_process = "canon"
+    });
+    // Create various markers for stone actions when end_process = "canon"
     if (s_process == "tagscreens") {
         for (let stone_action_index = 0; stone_action_index < stone_actions[round_n][s_time].length; stone_action_index++) {
             let cur_stone_action = stone_actions[round_n][s_time][stone_action_index];
             animation_manager.add_TAE_class(`TAE_${cur_stone_action[0]}_${cur_stone_action[1]}`);
             animation_manager.create_stone_action_marker(cur_stone_action);
         }
-        for (let board_action_index = 0; board_action_index < board_actions[round_n][s_time].length; board_action_index++) {
-            let cur_board_action = board_actions[round_n][s_time][board_action_index];
-            if (!["tagscreen_lock", "tagscreen_unlock", "tagscreen_hide"].includes(cur_board_action[0])) {
-                animation_manager.add_TAE_class(`TAE_${cur_board_action[0]}`);
-                animation_manager.create_board_action_marker(cur_board_action);
-            }
-        }
+    }
+    // Notify stones which have effects associated
+    if (s_process != "setup") {
+        stone_effects[round_n][s_time][s_process].forEach(function(effect_array, effect_index) {
+            animation_manager.prepare_stone_effect(effect_array);
+        });
     }
 
     // Prepare time jump markers
@@ -745,7 +889,8 @@ animation_manager.change_process_preparation = function(animation_args) {
             show_bases_at_time(round_n, s_time - 1);
         }
 
-        let transitory_sand_paths = hourglass_paths_from_height(s_time);
+        let next_sand_paths = hourglass_paths_from_height(s_time);
+        let clipped_sand_paths = hourglass_paths_from_height(s_time, true);
 
         inbetweens[round_n][s_time][s_process]["captured_bases"][0].forEach(function(captured_base_ID, index) {
             let captured_base_trans_bottom = document.getElementById(`${captured_base_ID}_hourglass_sand_bottom_transitory`);
@@ -760,14 +905,14 @@ animation_manager.change_process_preparation = function(animation_args) {
             }
 
             // Update sand paths
-            if (transitory_sand_paths[0] != null) {
-                captured_base_trans_bottom.setAttribute("points", list_of_points_to_path(flip_vertically(transitory_sand_paths[0])));
+            if (next_sand_paths[0] != null) {
+                captured_base_trans_bottom.setAttribute("points", list_of_points_to_path(flip_vertically(next_sand_paths[0])));
                 captured_base_trans_bottom.style.visibility = "visible";
             } else {
                 captured_base_trans_bottom.style.visibility = "hidden";
             }
-            if (transitory_sand_paths[1] != null) {
-                captured_base_trans_top.setAttribute("points", list_of_points_to_path(flip_vertically(transitory_sand_paths[1])));
+            if (next_sand_paths[1] != null) {
+                captured_base_trans_top.setAttribute("points", list_of_points_to_path(flip_vertically(next_sand_paths[1])));
                 captured_base_trans_top.style.visibility = "visible";
             } else {
                 captured_base_trans_top.style.visibility = "hidden";
@@ -794,27 +939,27 @@ animation_manager.change_process_preparation = function(animation_args) {
             }
 
             // Update sand paths
-            if (transitory_sand_paths[0] != null) {
-                stable_base_trans_bottom.setAttribute("points", list_of_points_to_path(transitory_sand_paths[0]));
+            if (clipped_sand_paths[0] != null) {
+                stable_base_trans_bottom.setAttribute("points", list_of_points_to_path(clipped_sand_paths[0]));
                 stable_base_trans_bottom.style.visibility = "visible";
             } else {
                 stable_base_trans_bottom.style.visibility = "hidden";
             }
-            if (transitory_sand_paths[1] != null) {
-                stable_base_trans_top.setAttribute("points", list_of_points_to_path(transitory_sand_paths[1]));
+            if (clipped_sand_paths[1] != null) {
+                stable_base_trans_top.setAttribute("points", list_of_points_to_path(clipped_sand_paths[1]));
                 stable_base_trans_top.style.visibility = "visible";
             } else {
                 stable_base_trans_top.style.visibility = "hidden";
             }
 
             stable_base_trans_bottom.setAttribute("class", `hourglass_sand_bottom_transitory_active ${inbetweens[round_n][s_time][s_process]["stable_bases"][1][index]}_hourglass_sand_bottom_transitory`);
-            stable_base_trans_top.setAttribute("class", `hourglass_sand_top_transitory_active ${inbetweens[round_n][s_time][s_process]["stable_bases"][1][index]}_hourglass_sand_top_transitory`);
+            stable_base_trans_top.setAttribute("class", `hourglass_sand_top_transitory_active negative_hourglass_sand_top_transitory`);
 
             stable_base_trans_bottom.style.opacity = play_backwards ? 1 : 0;
             stable_base_trans_top.style.opacity = play_backwards ? 1 : 0;
 
-            document.getElementById(`${stable_base_ID}_hourglass_sand_bottom`).classList.add("sand_fading");
-            document.getElementById(`${stable_base_ID}_hourglass_sand_top`).classList.add("sand_fading");
+            //document.getElementById(`${stable_base_ID}_hourglass_sand_bottom`).classList.add("sand_fading");
+            //document.getElementById(`${stable_base_ID}_hourglass_sand_top`).classList.add("sand_fading");
 
         });
 
@@ -895,6 +1040,12 @@ animation_manager.change_process_cleanup = function(animation_args) {
     } else {
         inbetweens[round_n][s_time][s_process]["old_time_jumps"][0].forEach(function(new_time_jump_id, index) {
             document.getElementById(new_time_jump_id).style.visibility = "hidden";
+        });
+    }
+    // Notify stones which have effects associated
+    if (s_process != "setup") {
+        stone_effects[round_n][s_time][s_process].forEach(function(effect_array, effect_index) {
+            animation_manager.cleanup_stone_effect(effect_array);
         });
     }
     // Hide base capture markers

@@ -74,6 +74,14 @@ function cubic_bezier_boomerang(t, params) {
     // t = 1 => 0
     return (1-t)*((1-t)*(t*params[0])+t*((1-t)*params[0]+t*params[1]))+t*((1-t)*((1-t)*params[0]+t*params[1])+t*((1-t)*params[1]));
 }
+function trimmed_cubic_bezier(t, params, trim_value) {
+    // squishes t_max from 1 to trim_value, rest is set to 1
+    if (t / trim_value > 1.0) {
+        return(1.0);
+    } else {
+        return(cubic_bezier(t / trim_value, params));
+    }
+}
 
 function arrays_equal(arr1, arr2) {
     return arr1.every((value, index) => value == arr2[index]);
@@ -141,6 +149,21 @@ function animated_scalar_transformation(val_start, val_end, total_frames, frame_
         case "cloud_opacity":
             return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.1, 0.0]);
             break;
+        // explosion from a bombardier attack
+        case "explosion_layer_0":
+            return val_start + (val_end - val_start) * trimmed_cubic_bezier(frame_key / total_frames, [0.0, 2.0], 0.6);
+        case "explosion_layer_1":
+            return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.0, 1.75], 1.0);
+        case "explosion_layer_2":
+            return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.0, 1.5], 1.0);
+        case "explosion_layer_3":
+            return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.0, 1.2], 1.0);
+        case "explosion_layer_4":
+            return val_start + (val_end - val_start) * trimmed_cubic_bezier(frame_key / total_frames, [0.1, 1.0], 0.6);
+        case "explosion_layer_5":
+            return val_start + (val_end - val_start) * trimmed_cubic_bezier(frame_key / total_frames, [0.1, 1.0], 0.6);
+        case "explosion_layer_6":
+            return val_start + (val_end - val_start) * trimmed_cubic_bezier(frame_key / total_frames, [0.1, 1.0], 0.6);
 
     }
     /*if (method == "traverse") {

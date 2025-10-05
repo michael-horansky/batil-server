@@ -1,0 +1,25 @@
+[
+    {
+        "element" : "polyline",
+        "element_class" : "bombardier_legs",
+        "points" : "25,65 50,30 75,65"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "bombardier_left_face",
+        "points" : "20,25 45,25 45,70"
+    },
+    {
+        "element" : "polygon",
+        "element_class" : "bombardier_right_face",
+        "points" : "80,25 55,25 55,70"
+    },
+    {
+        "element" : "rect",
+        "element_class" : "bombardier_welding",
+        "x" : 45,
+        "y" : 15,
+        "width" : 10,
+        "height" : 50
+    }
+]

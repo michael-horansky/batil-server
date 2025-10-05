@@ -18,7 +18,10 @@ from flask import (
 from batil.engine.rendering.class_Renderer import Renderer
 from batil.engine.rendering.class_Abstract_Output import Abstract_Output
 
-element_source_keywords = ["base"]
+element_source_keywords = {
+    "board_elements" : ["base", "tank", "bombardier", "sniper", "tagger", "wildcard", "box", "mine"],
+    "temporary_animation_elements" : ["explosion", "tagscreen", "capture"]
+    }
 
 class TutorialHTMLRenderer(Renderer):
 
@@ -52,20 +55,23 @@ class TutorialHTMLRenderer(Renderer):
 
         # ----------------------- Element html sources ------------------------
 
-        self.element_sources = {} # {keyword : list of element dicts}
-        for kw in element_source_keywords:
-            source_file = open(os.path.join(current_app.root_path, "engine", "rendering", "element_html", f"{kw}.json"), "r")
-            self.element_sources[kw] = json.load(source_file)
+        self.element_sources = {} # {"type of template" : {"template name" : template}}
+        for kw in element_source_keywords.keys():
+            self.element_sources[kw] = {}
+            for kw_val in element_source_keywords[kw]:
+                source_file = open(os.path.join(current_app.root_path, "engine", "rendering", "element_html", kw, f"{kw_val}.json"), "r")
+                self.element_sources[kw][kw_val] = json.load(source_file)
 
     # ----------------------- Data manipulation methods -----------------------
 
-    def element_source_to_rep(self, element_kw, base_class = None, base_id = None):
+    def element_source_to_rep(self, element_type, element_kw, base_class = None, base_id = None):
         # every sub-element gets its normal class plus {base_class}_{normal class}
         # and if given, indexed as base_id_{normal class}
         res = []
-        for el in self.element_sources[element_kw]:
-
-
+        for el in self.element_sources[element_type][element_kw]:
+            if el["element"] == "/g":
+                res.append("</g>")
+                continue
             if base_id is None:
                 el_attributes = ""
             else:
@@ -83,7 +89,10 @@ class TutorialHTMLRenderer(Renderer):
                 if attr in ["element", "element_id", "element_class"]:
                     continue
                 el_attributes += f" {attr}=\"{el[attr]}\""
-            res.append(f"<{el["element"]} {el_attributes}></{el["element"]}>")
+            if el["element"] == "g":
+                res.append(f"<{el["element"]} {el_attributes}>")
+            else:
+                res.append(f"<{el["element"]} {el_attributes}></{el["element"]}>")
         return(res)
 
     # ------------------- Output file communication methods -------------------
@@ -215,7 +224,8 @@ class TutorialHTMLRenderer(Renderer):
         self.deposit_object("stone_endpoints", self.render_object.stone_endpoints)
         self.deposit_object("base_trajectories", self.render_object.base_trajectories)
         self.deposit_list("stone_actions", self.render_object.stone_actions)
-        self.deposit_list("board_actions", self.render_object.board_actions)
+        self.deposit_object("board_actions", self.render_object.board_actions)
+        self.deposit_object("stone_effects", self.render_object.stone_effects)
 
         #self.deposit_object("reverse_causality_flags", self.render_object.reverse_causality_flags)
         self.deposit_object("reverse_causality_flag_properties", self.render_object.reverse_causality_flag_properties)
@@ -276,6 +286,8 @@ class TutorialHTMLRenderer(Renderer):
         background_rectangle = f"<rect x=\"0\" y =\"0\" id=\"board_window_background\" />"
         self.commit_to_output([enclosing_div, svg_window, background_rectangle])
         self.board_window_definitions()
+
+        self.draw_templates()
 
     def close_board_window(self):
         svg_window = "</svg>"
@@ -466,6 +478,26 @@ class TutorialHTMLRenderer(Renderer):
             self.board_layer_structure[n].append([f"</g>"])
         self.commit_to_output(self.board_layer_structure)
 
+    # ------------------------------- Templates -------------------------------
+
+    def draw_templates(self):
+        self.commit_to_output("<g id=\"group_templates\" display=\"none\">")
+
+        self.draw_animation_effect_templates()
+
+        self.commit_to_output("</g>")
+
+    def draw_animation_effect_templates(self):
+        for TAE_effect in element_source_keywords["temporary_animation_elements"]:
+            self.commit_to_output([
+                f"<g id=\"TAE_{TAE_effect}_template\">",
+                self.element_source_to_rep("temporary_animation_elements", TAE_effect, base_class = None, base_id = None),
+                "</g>"
+                ])
+
+
+
+
     def draw_board_square(self, x, y):
         # Draws a board square object into the active context
         # ID is position
@@ -507,50 +539,7 @@ class TutorialHTMLRenderer(Renderer):
         stone_object.append(f"      <rect x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"stone_pedestal\" visibility=\"hidden\" />")
 
         # Now the main body of the stone
-        # Playable stone types
-        if stone_type == "tank":
-            stone_object.append(f"      <polygon points=\"{self.get_regular_polygon_points(6, 30, (50, 50), "s")}\" class=\"{base_class}_body\" />")
-            stone_object.append(f"      <rect x=\"45\" y=\"10\" width=\"10\" height=\"45\" class=\"{base_class}_barrel\" />")
-            stone_object.append(f"      <circle cx=\"50\" cy=\"50\" r=\"12\" class=\"{base_class}_hatch\" />")
-        if stone_type == "bombardier":
-            stone_object.append(f"      <polyline points=\"{self.get_polygon_points([[25, 65], [50, 30], [75, 65]])}\" class=\"{base_class}_legs\" />")
-            stone_object.append(f"      <polygon points=\"{self.get_polygon_points([[20, 25], [45, 25], [45, 70]])}\" class=\"{base_class}_left_face\" />")
-            stone_object.append(f"      <polygon points=\"{self.get_polygon_points([[80, 25], [55, 25], [55, 70]])}\" class=\"{base_class}_right_face\" />")
-            stone_object.append(f"      <rect x=\"45\" y=\"15\" width=\"10\" height=\"50\" class=\"{base_class}_welding\" />")
-        if stone_type == "sniper":
-            r = 32
-            l = 7
-            stone_object.append(f"      <line x1=\"{r+l}\" y1=\"{r-l}\" x2=\"{r-l}\" y2=\"{r+l}\" class=\"{base_class}_foot\" />")
-            stone_object.append(f"      <line x1=\"{100-(r+l)}\" y1=\"{r-l}\" x2=\"{100-(r-l)}\" y2=\"{r+l}\" class=\"{base_class}_foot\" />")
-            stone_object.append(f"      <line x1=\"{r+l}\" y1=\"{100-(r-l)}\" x2=\"{r-l}\" y2=\"{100-(r+l)}\" class=\"{base_class}_foot\" />")
-            stone_object.append(f"      <line x1=\"{100-(r+l)}\" y1=\"{100-(r-l)}\" x2=\"{100-(r-l)}\" y2=\"{100-(r+l)}\" class=\"{base_class}_foot\" />")
-            stone_object.append(f"      <polygon points=\"{self.get_polygon_points([[25, 25], [30, 25], [75, 70], [75, 75], [70, 75], [25, 30]])}\" class=\"{base_class}_left_leg\" />")
-            stone_object.append(f"      <polygon points=\"{self.get_polygon_points([[75, 25], [70, 25], [25, 70], [25, 75], [30, 75], [75, 30]])}\" class=\"{base_class}_right_leg\" />")
-            stone_object.append(f"      <line x1=\"50\" y1=\"50\" x2=\"50\" y2=\"20\" class=\"{base_class}_gun\" />")
-            stone_object.append(f"      <rect x=\"40\" y=\"40\" width=\"20\" height=\"20\" class=\"{base_class}_nest\" />")
-        if stone_type == "tagger":
-            pentagon = self.get_regular_polygon_points(5, 30, convert_to_svg = False)
-            stone_object.append(f"      <polygon points=\"{self.get_polygon_points([pentagon[4], pentagon[0], pentagon[1], [0, 0]], (50, 50))}\" class=\"{base_class}_top_face\" />")
-            stone_object.append(f"      <polygon points=\"{self.get_polygon_points([pentagon[1], pentagon[2], [0, 0]], (50, 50))}\" class=\"{base_class}_right_face\" />")
-            stone_object.append(f"      <polygon points=\"{self.get_polygon_points([pentagon[2], pentagon[3], [0, 0]], (50, 50))}\" class=\"{base_class}_bottom_face\" />")
-            stone_object.append(f"      <polygon points=\"{self.get_polygon_points([pentagon[3], pentagon[4], [0, 0]], (50, 50))}\" class=\"{base_class}_left_face\" />")
-            stone_object.append(f"      <polyline points=\"{self.get_polygon_points(pentagon, [50, 50])}\" class=\"{base_class}_outline\" />")
-        if stone_type == "wildcard":
-            r = 30
-            k = 0.8
-            stone_object.append(f"      <circle cx=\"50\" cy=\"50\" r=\"{r}\" class=\"{base_class}_body\" />")
-            stone_object.append(f"      <line x1=\"{50-k*r}\" y1=\"{50-k*r}\" x2=\"{50+k*r}\" y2=\"{50+k*r}\" class=\"{base_class}_halo\" />")
-            stone_object.append(f"      <line x1=\"{50-k*r}\" y1=\"{50+k*r}\" x2=\"{50+k*r}\" y2=\"{50-k*r}\" class=\"{base_class}_halo\" />")
-        # Neutral stone types
-        if stone_type == "box":
-            stone_object.append(f"      <rect x=\"15\" y=\"15\" width=\"70\" height=\"70\" class=\"{base_class}_base\" />")
-            stone_object.append(f"      <line x1=\"15\" y1=\"15\" x2=\"85\" y2=\"85\" class=\"{base_class}_line\" />")
-            stone_object.append(f"      <line x1=\"15\" y1=\"85\" x2=\"85\" y2=\"15\" class=\"{base_class}_line\" />")
-            stone_object.append(f"      <rect x=\"15\" y=\"15\" width=\"70\" height=\"70\" class=\"{base_class}_outline\" />")
-        if stone_type == "mine":
-            stone_object.append(f"      <path d=\"M45,15 L45,25 A20,20,90,0,1,25,45 L15,45 A40,40,0,0,0,15,55 L25,55 A20,20,90,0,1,45,75 L45,85 A40,40,0,0,0,55,85 L55,75 A20,20,90,0,1,75,55 L85,55 A40,40,0,0,0,85,45 L75,45 A20,20,90,0,1,55,25 L55,15 A40,40,0,0,0, 45,15 Z\" class=\"{base_class}_body\" /> ")
-            stone_object.append(f"      <circle cx=\"50\" cy=\"50\" r=\"8\" class=\"{base_class}_button\" />")
-
+        stone_object.append(self.element_source_to_rep("board_elements", stone_type, base_class = allegiance, base_id = stone_ID))
 
         stone_object.append("    </g>")
         stone_object.append("  </g>")
@@ -562,7 +551,7 @@ class TutorialHTMLRenderer(Renderer):
         base_object = [
             f"<g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"base base_{base_allegiance}\" id=\"{iden}\" transform-origin=\"50px 50px\" style=\"pointer-events:none\">",
             f"  <g x=\"0\" y=\"0\" width=\"100\" height=\"100\" class=\"base_rotation\" id=\"{iden}_rotation\" transform-origin=\"50px 50px\" style=\"pointer-events:none\">",
-            self.element_source_to_rep("base", None, iden),
+            self.element_source_to_rep("board_elements", "base", None, iden),
             f"  </g>",
             f"</g>"
         ]

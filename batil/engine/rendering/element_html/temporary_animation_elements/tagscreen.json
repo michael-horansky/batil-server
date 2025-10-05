@@ -1,0 +1,126 @@
+[
+    {
+        "element" : "g",
+        "element_class" : "cloud_layer cloud_layer_0"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_canvas",
+        "d" : "M 30, 120 A 30 30 0 0 1 -20 90 A 45 45 0 0 1 -20, 30 A 35 35 0 0 1 20 -15 A 45 45 0 0 1 80 -30 A 40 40 0 0 1 110 30 A 35 35 0 0 1 115 90 A 45 45 0 0 1 30 120"
+    },
+    {
+        "element" : "/g"
+    },
+    {
+        "element" : "g",
+        "element_class" : "cloud_layer cloud_layer_1"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_bg",
+        "d" : "M 50 50 L 130 60 A 25 25 0 0 1 95 90 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_fg",
+        "d" : "M 130 60 A 25 25 0 0 1 95 90"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_bg",
+        "d" : "M 50 50 L -10 100 A 20 20 0 0 1 -20 60 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_fg",
+        "d" : "M -10 100 A 20 20 0 0 1 -20 60"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_bg",
+        "d" : "M 50 50 L 85 -10 A 16 16 0 1 1 115 10 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_fg",
+        "d" : "M 85 -10 A 16 16 0 1 1 115 10"
+    },
+    {
+        "element" : "/g"
+    },
+    {
+        "element" : "g",
+        "element_class" : "cloud_layer cloud_layer_2"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_bg",
+        "d" : "M 50 50 L 60 120 A 15 20 0 0 1 28 115 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_fg",
+        "d" : "M 60 120 A 15 20 0 0 1 28 115"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_bg",
+        "d" : "M 50 50 L -20 70 A 40 40 0 0 1 -10 0 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_fg",
+        "d" : "M -20 70 A 40 40 0 0 1 -10 0"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_bg",
+        "d" : "M 50 50 L 60 -20 A 20 20 0 1 1 85 0 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_fg",
+        "d" : "M 60 -20 A 20 20 0 1 1 85 0"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_bg",
+        "d" : "M 50 50 L 125 30 A 15 15 0 1 1 120 65 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_fg",
+        "d" : "M 125 30 A 15 15 0 1 1 120 65"
+    },
+    {
+        "element" : "/g"
+    },
+    {
+        "element" : "g",
+        "element_class" : "cloud_layer cloud_layer_3"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_bg",
+        "d" : "M 50 50 L -10 10 A 20 20 0 0 1 30 -15 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_fg",
+        "d" : "M -10 10 A 20 20 0 0 1 30 -15"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_bg",
+        "d" : "M 50 50 L 100 3 A 20 20 0 0 1 125 40 Z"
+    },
+    {
+        "element" : "path",
+        "element_class" : "cloud_fg",
+        "d" : "M 100 3 A 20 20 0 0 1 125 40"
+    },
+    {
+        "element" : "/g"
+    }
+
+]
