@@ -249,6 +249,8 @@ inspector.square_type_description = function(board_static_val) {
 inspector.selection_mode_enabled = false;
 inspector.selection_mode_stone_ID = null;
 
+inspector.stone_command_shortcuts = [];
+
 // General stone properties
 
 inspector.display_stone_info = function(x, y) {

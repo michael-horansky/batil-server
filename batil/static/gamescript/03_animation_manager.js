@@ -9,6 +9,7 @@ const board_action_marker_dictionary = {
     "tagscreen_hide" : ["TAE_tagscreen", 4]
 }
 const board_actions_by_s_process = {
+    "setup" : [],
     "flags" : [],
     "pushes" : ["capture"],
     "destructions" : ["tagscreen_lock", "tagscreen_unlock", "tagscreen_hide"],

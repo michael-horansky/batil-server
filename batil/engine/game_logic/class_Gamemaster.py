@@ -2566,17 +2566,13 @@ class Gamemaster():
             # only setup occured so far
             self.current_turn_index = 1
         else:
-            if self.outcome is not None:
-                # Game is already finished, we do not begin a new turn
-                self.current_turn_index = len(dynamic_data_representation) - 1
-            else:
-                # We execute all moves except the last one to see if it was finished
-                self.execute_moves(max_turn_index = len(dynamic_data_representation) - 2)
+            # We execute all moves except the last one to see if it was finished
+            self.execute_moves(max_turn_index = len(dynamic_data_representation) - 1)
 
-                if self.did_everyone_finish_turn(len(dynamic_data_representation) - 1):
-                    self.current_turn_index = len(dynamic_data_representation)
-                else:
-                    self.current_turn_index = len(dynamic_data_representation) - 1
+            if self.did_everyone_finish_turn(len(dynamic_data_representation) - 1):
+                self.current_turn_index = len(dynamic_data_representation)
+            else:
+                self.current_turn_index = len(dynamic_data_representation) - 1
 
         if self.current_turn_index == len(self.flags_by_turn):
             # Prepare new turn

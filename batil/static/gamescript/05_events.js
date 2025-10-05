@@ -2,6 +2,26 @@
 // ---------------------------------- Events ----------------------------------
 // ----------------------------------------------------------------------------
 
+// Keyboard shortcuts
+var KEYBOARD_SHORTCUTS = {};
+
+function register_shortcut(key, func, args) {
+    // key is a string, func is a function, args is a list
+    KEYBOARD_SHORTCUTS[key] = [func, args];
+}
+function remove_shortcut(key) {
+    // removes shortcut if it exists
+    if (KEYBOARD_SHORTCUTS[key] != null) {
+        delete KEYBOARD_SHORTCUTS[key];
+    }
+}
+function access_shortcut(key) {
+    // a key was pressed which is associated to a shortcut
+    if (KEYBOARD_SHORTCUTS[key] != null) {
+        KEYBOARD_SHORTCUTS[key][0](...(KEYBOARD_SHORTCUTS[key][1] || []));
+    }
+}
+
 function parse_keydown_event(event) {
     //alert(event.key);
     // If the focus is on a textbox, we ignore keypresses
@@ -83,6 +103,19 @@ function parse_keydown_event(event) {
         case "a":
             cameraman.move_key_down(event.key);
             break;
+        // inspector highlight manipulation
+        case "i":
+            inspector.move_selection("up");
+            break;
+        case "j":
+            inspector.move_selection("left");
+            break;
+        case "k":
+            inspector.move_selection("down");
+            break;
+        case "l":
+            inspector.move_selection("right");
+            break;
         case "Escape":
             // The "Escape" behaviour is highly contextual, and the different
             // contexts it affects are sorted by priority as follows:
@@ -98,10 +131,18 @@ function parse_keydown_event(event) {
             }
             break;
         case "Enter":
+            // If selection mode is open, submits selection. Otherwise, if all commands were added, submits entire turn.
             if (inspector.selection_mode_enabled && (inspector.selection_mode_information_level["square"] == false && inspector.selection_mode_information_level["azimuth"] == false && inspector.selection_mode_information_level["swap_effect"] == false)) {
                 inspector.submit_selection();
+            } else if (["GAME", "TUTORIAL"].includes(client_access_context)) {
+                if (!(commander.command_checklist.length > 0 || did_player_finish_turn)) {
+                    document.getElementById("command_form").submit();
+                }
             }
             break;
+        default:
+            // We check if a shortcut is registered for this
+            access_shortcut(event.key);
 
     }
 }

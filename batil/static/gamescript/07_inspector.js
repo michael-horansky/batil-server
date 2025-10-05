@@ -256,6 +256,9 @@ inspector.square_type_description = function(board_static_val) {
 
 // ---------------------------- Stone info methods ----------------------------
 
+// Trackers for selection shortcuts
+inspector.stone_command_shortcuts = []; // currently registered inspector shortcuts
+
 // Selection mode methods
 
 // Information level: for every "true", the user needs to specify the value of
@@ -300,7 +303,7 @@ inspector.turn_on_selection_mode = function(stone_ID, selection_mode_props) {
     animation_manager.clear_queue();
     set_round_navigation(false);
     select_round(active_round);
-    inspector.set_square_highlight(null);
+    //inspector.set_square_highlight(null);
     if (inspector.selection_mode_options["lock_timeslice"] != null) {
         set_timeslice_navigation(false);
         select_timeslice(inspector.selection_mode_options["lock_timeslice"]);
@@ -483,6 +486,7 @@ inspector.add_swap_effect_option = function(effect_ID) {
 }
 
 inspector.select_square = function(x, y) {
+    inspector.set_square_highlight([x, y]);
     // We find the correct element of squares
     for (let i = 0; i < inspector.selection_mode_options["squares"].length; i++) {
         if (inspector.selection_mode_options["squares"][i]["t"] == selected_timeslice && inspector.selection_mode_options["squares"][i]["x"] == x && inspector.selection_mode_options["squares"][i]["y"] == y) {
@@ -491,7 +495,6 @@ inspector.select_square = function(x, y) {
             let cur_square = inspector.selection_mode_options["squares"][i];
             inspector.selection["square"] = i;
             inspector.selection_mode_information_level["square"] = false;
-            inspector.set_square_highlight([x, y]);
             if (cur_square["a"] != null) {
                 if (cur_square["a"].length == 1) {
                     inspector.select_azimuth(cur_square["a"][0]);
@@ -544,7 +547,7 @@ inspector.select_square = function(x, y) {
 inspector.unselect_square = function() {
     inspector.selection["square"] = "NOT_SELECTED";
     inspector.selection_mode_information_level["square"] = true;
-    inspector.set_square_highlight(null);
+    //inspector.set_square_highlight(null);
     inspector.unselect_swap_effect();
     let selection_mode_dummies = document.getElementsByClassName("selection_mode_dummy");
     for (i = 0; i < selection_mode_dummies.length; i++) {
@@ -575,7 +578,6 @@ inspector.select_azimuth = function(target_azimuth) {
         inspector.selection["azimuth"] = target_azimuth;
         inspector.selection_mode_information_level["azimuth"] = false;
         inspector.toggle_submit_button();
-        console.log(`azimuth is known to be ${inspector.selection["azimuth"]}.`);
         show_canon_board_slice(selected_round, selected_timeslice);
     }
 }
@@ -663,7 +665,6 @@ inspector.undo_command = function() {
 
 inspector.prepare_command = function(stone_ID, command_key) {
     // Prompts user further to specify the arguments for the command
-    console.log(`stone ${stone_ID} performs ${command_key}`);
     let cur_cmd_props = available_commands[stone_ID]["command_properties"][command_key];
 
     inspector.selection_submission = new Object();
@@ -685,6 +686,10 @@ inspector.display_stone_commands = function(stone_ID) {
     // if stone_ID = null, hides stone commands
     let stone_inspector_commands_svg = document.getElementById("stone_inspector_commands_svg");
     if (stone_ID == null) {
+        for (let s_i = 0; s_i < inspector.stone_command_shortcuts.length; s_i++) {
+            remove_shortcut(inspector.stone_command_shortcuts[s_i]);
+        }
+        inspector.stone_command_shortcuts = [];
         while (stone_inspector_commands_svg.firstChild) {
             stone_inspector_commands_svg.removeChild(stone_inspector_commands_svg.lastChild);
         }
@@ -715,10 +720,23 @@ inspector.display_stone_commands = function(stone_ID) {
                 y : stone_command_btn_height / 2,
                 "text-anchor" : "middle"
             });
+            let new_button_shortcut_label = make_SVG_element("text", {
+                class : "button_label",
+                id : `stone_command_${list_of_commands[i]}_label`,
+                x : offset_x + stone_command_btn_width - 10,
+                y : stone_command_btn_height - 10,
+                "text-anchor" : "middle"
+            });
             new_button_label.textContent = available_commands[stone_ID]["command_properties"][list_of_commands[i]]["label"];
+            new_button_shortcut_label.textContent = `${i+1}`;
             stone_inspector_commands_svg.appendChild(new_button);
             stone_inspector_commands_svg.appendChild(new_button_label);
+            stone_inspector_commands_svg.appendChild(new_button_shortcut_label);
             offset_x += 110;
+
+            // The shortcut will be a number key for regular commands
+            register_shortcut(`${i+1}`, inspector.prepare_command, [stone_ID, list_of_commands[i]]);
+            inspector.stone_command_shortcuts.push(`${i+1}`);
 
         }
     }
@@ -727,6 +745,9 @@ inspector.display_stone_commands = function(stone_ID) {
 inspector.display_undo_button = function() {
     document.getElementById("stone_inspector_commands_svg").style.display = "none";
     document.getElementById("undo_command_button_svg").style.display = "block";
+
+    register_shortcut("Backspace", inspector.undo_command, []);
+    inspector.stone_command_shortcuts.push("Backspace");
 }
 
 
@@ -737,6 +758,13 @@ inspector.display_stone_info = function(x, y) {
     // Is there even a stone present?
     let stone_ID = find_stone_at_pos(x, y);
     inspector.inspector_elements["stone"]["title"].innerHTML = (stone_ID == null ? "No stone selected" : `A ${stone_highlight(stone_ID)} selected`);
+
+    // First, we remove all shortcuts
+    for (let s_i = 0; s_i < inspector.stone_command_shortcuts.length; s_i++) {
+        remove_shortcut(inspector.stone_command_shortcuts[s_i]);
+    }
+    inspector.stone_command_shortcuts = [];
+
 
     if (stone_ID != null) {
         inspector.display_value_list("stone", "allegiance", [stone_properties[stone_ID]["allegiance"]]);
@@ -871,11 +899,12 @@ inspector.hide_square_info = function() {
 
 inspector.board_square_click = function(x, y){
     if (inspector.selection_mode_enabled) {
-        for (let i = 0; i < inspector.selection_mode_options["squares"].length; i++) {
+        /*for (let i = 0; i < inspector.selection_mode_options["squares"].length; i++) {
             if (inspector.selection_mode_options["squares"][i]["t"] == selected_timeslice && inspector.selection_mode_options["squares"][i]["x"] == x && inspector.selection_mode_options["squares"][i]["y"] == y) {
                 inspector.select_square(x, y);
             }
-        }
+        }*/
+        inspector.select_square(x, y);
     } else {
         // We get information about the stone
         inspector.display_stone_info(x, y);
@@ -930,4 +959,34 @@ function tracking_endpoint() {
     }*/
     go_to_square(stone_endpoints[selected_round][cameraman.tracking_stone]["end"]["t"], stone_endpoints[selected_round][cameraman.tracking_stone]["end"]["x"], stone_endpoints[selected_round][cameraman.tracking_stone]["end"]["y"], false)
 }
+
+// Shortcut navigation
+inspector.move_selection = function(direction) {
+    if (inspector.highlighted_square != null) {
+        // We move the highlight
+        switch (direction) {
+            case "up":
+                if (inspector.highlighted_square[1] > 0) {
+                    inspector.board_square_click(inspector.highlighted_square[0], inspector.highlighted_square[1] - 1);
+                }
+                break;
+            case "left":
+                if (inspector.highlighted_square[0] > 0) {
+                    inspector.board_square_click(inspector.highlighted_square[0] - 1, inspector.highlighted_square[1]);
+                }
+                break;
+            case "down":
+                if (inspector.highlighted_square[1] < y_dim - 1) {
+                    inspector.board_square_click(inspector.highlighted_square[0], inspector.highlighted_square[1] + 1);
+                }
+                break;
+            case "right":
+                if (inspector.highlighted_square[0] < x_dim - 1) {
+                    inspector.board_square_click(inspector.highlighted_square[0] + 1, inspector.highlighted_square[1]);
+                }
+                break;
+        }
+    }
+}
+
 
