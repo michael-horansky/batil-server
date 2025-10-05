@@ -1129,7 +1129,8 @@ class Gamemaster():
             for stone_ID in self.board_dynamic[t][x][y].stones:
                 if self.stones[stone_ID].is_explosive_this_turn:
                     explosive_stones_present.append(stone_ID)
-                    break
+                    continue
+
             if len(explosive_stones_present) == 0:
                 continue
             elif len(explosive_stones_present) == 1 and not self.stones[explosive_stones_present[0]].susceptible_to_own_explosion:
