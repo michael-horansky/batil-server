@@ -465,7 +465,7 @@ inspector.add_swap_effect_option = function(effect_ID) {
         }
         // Inactive effects
         for (let effect_i = 0; effect_i < inspector.reverse_causality_flags[selected_round]["effects"]["inactive"].length; effect_i++) {
-            if (inspector.reverse_causality_flags[selected_round]["effects"]["active"][effect_i] == effect_ID) {
+            if (inspector.reverse_causality_flags[selected_round]["effects"]["inactive"][effect_i] == effect_ID) {
                 // Is inactive
                 option_desc = inspector.flag_description("effect", "inactive", effect_ID)
             }

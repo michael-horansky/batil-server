@@ -242,7 +242,7 @@ function show_active_timeslice(){
 function show_next_round() {
     if (round_navigation_enabled && (selected_round < active_round)) {
         select_round(selected_round += 1);
-        animation_manager.add_to_queue([["change_round", selected_round, selected_timeslice, ">>", "up"], ["reset_to_canon", selected_round, selected_timeslice]]);
+        animation_manager.add_to_queue([["change_round", selected_round, selected_timeslice, ">>", "up"]]);
         if (selected_timeslice == 0) {
             // We also show how the setup changed
             animation_manager.add_to_queue([["change_process", selected_round, 0, "setup", false]]);
@@ -250,6 +250,8 @@ function show_next_round() {
                 animation_manager.add_to_queue([["change_process", selected_round, 0, process_keys[process_key_index], false]]);
             }
             animation_manager.add_to_queue([["reset_to_canon", selected_round, 0]]);
+        } else {
+        animation_manager.add_to_queue([["reset_to_canon", selected_round, selected_timeslice]]);
         }
     }
 }

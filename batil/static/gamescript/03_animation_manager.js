@@ -120,7 +120,7 @@ function hourglass_paths_from_height(time_slice, clip_prev_time_slice = false) {
     if (clip_prev_time_slice) {
         if (time_slice == 1) {
             return [
-                [[x_corner_left, y_corner_down], [x_corner_right, y_corner_down], [sand_levels[time_slice][0], sand_levels[time_slice][1]], [100 - sand_levels[time_slice][0], sand_levels[time_slice][1]]],
+                [[x_corner_right, y_corner_down], [x_corner_left, y_corner_down], [sand_levels[time_slice][0], sand_levels[time_slice][1]], [100 - sand_levels[time_slice][0], sand_levels[time_slice][1]]],
                 [[x_corner_left,y_corner_up], [x_corner_right,y_corner_up], [100 - sand_levels[time_slice][0], 100 - sand_levels[time_slice][1]], [sand_levels[time_slice][0], 100 - sand_levels[time_slice][1]]]
             ];
         }
@@ -675,14 +675,35 @@ animation_manager.create_stone_action_marker = function(stone_action) {
                 y : 0
             });
             document.getElementById("board_layer_2").appendChild(sniper_attack_group);
-            let sniper_laser_line = make_SVG_element("line", {
+            let sniper_laser_line;
+            if (stone_action[4] == stone_action[2]) {
+                // vertical shot
+                sniper_laser_line = make_SVG_element("line", {
+                    x1 : 50,
+                    y1 : 40,
+                    x2 : 50,
+                    y2 : 60,
+                    "stroke" : "red",
+                    "stroke-width" : 5
+                });
+            } else {
+                sniper_laser_line = make_SVG_element("line", {
+                    x1 : 40,
+                    y1 : 50,
+                    x2 : 60,
+                    y2 : 50,
+                    "stroke" : "red",
+                    "stroke-width" : 5
+                });
+            }
+            /*let sniper_laser_line = make_SVG_element("line", {
                 x1 : 50 - 2*(stone_action[4]-stone_action[2]),
                 y1 : 50 - 2*(stone_action[5]-stone_action[3]),
                 x2 : 50 + 2*(stone_action[4]-stone_action[2]),
                 y2 : 50 + 2*(stone_action[5]-stone_action[3]),
                 "stroke" : "red",
                 "stroke-width" : 5
-            });
+            });*/
             sniper_attack_group.appendChild(sniper_laser_line);
             sniper_attack_group.style.transform = `translate(${100 * stone_action[2]}px,${100 * stone_action[3]}px)`;
 
@@ -722,7 +743,7 @@ animation_manager.update_temporary_animation_elements = function(frame_key) {
     show_class_at_state("TAE_explosion", null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, frame_key, "cloud_opacity"));
     show_class_at_state("explosion_flash", animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, frame_key));
     for (i = 0; i < 7; i++) {
-        show_class_at_state(`explosion_layer_${i}`, animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, frame_key, `explosion_layer_${i}`));
+        show_class_at_state(`explosion_layer_${i}`, animated_scalar_transformation(0.0, 1.8, animation_manager.total_frames, frame_key, `explosion_layer_${i}`));
     }
 
     // capture explosion
@@ -1096,7 +1117,7 @@ animation_manager.change_round_preparation = function(animation_args) {
     let animation_overlay_msg = animation_args[2];
     let transition_direction = animation_args[3];
     // disable timeslice navigation
-    set_timeslice_navigation(false);
+    //set_timeslice_navigation(false);
     // Show the animation overlay
     document.getElementById("board_animation_overlay_text").textContent = animation_overlay_msg;
     document.getElementById("board_animation_overlay_bg").style.fill = "rgb(200, 200, 200)";
@@ -1154,7 +1175,7 @@ animation_manager.change_round_cleanup = function(animation_args) {
     document.getElementById("board_animation_overlay").style.visibility = "hidden";
     document.getElementById("board_animation_overlay").style.transform = "";
 
-    set_timeslice_navigation(true);
+    //set_timeslice_navigation(true);
 
 }
 

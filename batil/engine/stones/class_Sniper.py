@@ -150,6 +150,9 @@ class Sniper(Stone):
                 # Sniper can shoot past stones of the same faction
                 if gm.stones[gm.board_dynamic[t][los_pos.x][los_pos.y].stones[0]].player_faction != self.player_faction:
                     return(Message("destruction", los_pos))
+            if not gm.is_square_available(los_pos.x, los_pos.y):
+                # The sniper hits a wall
+                return(Message("destruction", los_pos))
             los_pos.step(cur_a)
         return(Message("pass"))
 

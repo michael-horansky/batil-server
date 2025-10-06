@@ -205,6 +205,12 @@ for (let inbetween_round_index = 0; inbetween_round_index <= active_round; inbet
                         }
                     }
                 }*/
+                // stone actions
+                if (start_process == "tagscreens") {
+                    if (stone_actions[inbetween_round_index][inbetween_time].length > 0) {
+                        is_redundant = false;
+                    }
+                }
                 // If board actions included for this start_process, animation is not redundant
                 for (let b_a_i = 0; b_a_i < board_actions_by_s_process[start_process].length; b_a_i++) {
                     if (board_actions[inbetween_round_index][inbetween_time][board_actions_by_s_process[start_process][b_a_i]].length > 0) {

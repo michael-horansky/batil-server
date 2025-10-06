@@ -135,7 +135,7 @@ function animated_scalar_transformation(val_start, val_end, total_frames, frame_
             return val_start + (val_end - val_start) * frame_key / total_frames;
             break;
         case "cloud_layer_0":
-            return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.0, 2.0]);
+            return val_start + (val_end - val_start) * trimmed_cubic_bezier(frame_key / total_frames, [0.0, 2.0], 0.8);
             break;
         case "cloud_layer_1":
             return val_start + (val_end - val_start) * cubic_bezier(frame_key / total_frames, [0.0, 1.75]);
