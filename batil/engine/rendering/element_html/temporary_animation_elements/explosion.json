@@ -1,7 +1,7 @@
 [
     {
         "element" : "g",
-        "element_class" : "explosion_layer explosion_layer_0"
+        "element_class" : "explosion_layer big_explosion_layer_0"
     },
     {
         "element" : "polygon",
@@ -13,7 +13,7 @@
     },
     {
         "element" : "g",
-        "element_class" : "explosion_layer explosion_layer_1"
+        "element_class" : "explosion_layer big_explosion_layer_1"
     },
     {
         "element" : "path",
@@ -50,7 +50,7 @@
     },
     {
         "element" : "g",
-        "element_class" : "explosion_layer explosion_layer_2"
+        "element_class" : "explosion_layer big_explosion_layer_2"
     },
     {
         "element" : "path",
@@ -107,7 +107,7 @@
     },
     {
         "element" : "g",
-        "element_class" : "explosion_layer explosion_layer_3"
+        "element_class" : "explosion_layer big_explosion_layer_3"
     },
     {
         "element" : "path",
@@ -154,7 +154,7 @@
     },
     {
         "element" : "g",
-        "element_class" : "explosion_layer explosion_layer_4"
+        "element_class" : "explosion_layer big_explosion_layer_4"
     },
     {
         "element" : "polygon",
@@ -191,7 +191,7 @@
     },
     {
         "element" : "g",
-        "element_class" : "explosion_layer explosion_layer_5"
+        "element_class" : "explosion_layer big_explosion_layer_5"
     },
     {
         "element" : "polygon",
@@ -228,7 +228,7 @@
     },
     {
         "element" : "g",
-        "element_class" : "explosion_layer explosion_layer_6"
+        "element_class" : "explosion_layer big_explosion_layer_6"
     },
     {
         "element" : "polygon",

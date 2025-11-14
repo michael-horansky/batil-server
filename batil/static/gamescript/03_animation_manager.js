@@ -743,7 +743,10 @@ animation_manager.update_temporary_animation_elements = function(frame_key) {
     show_class_at_state("TAE_explosion", null, animated_scalar_transformation(1.0, 0.0, animation_manager.total_frames, frame_key, "cloud_opacity"));
     show_class_at_state("explosion_flash", animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, frame_key));
     for (i = 0; i < 7; i++) {
-        show_class_at_state(`explosion_layer_${i}`, animated_scalar_transformation(0.0, 1.8, animation_manager.total_frames, frame_key, `explosion_layer_${i}`));
+        show_class_at_state(`explosion_layer_${i}`, animated_scalar_transformation(0.0, 1.0, animation_manager.total_frames, frame_key, `explosion_layer_${i}`));
+    }
+    for (i = 0; i < 7; i++) {
+        show_class_at_state(`big_explosion_layer_${i}`, animated_scalar_transformation(0.0, 1.8, animation_manager.total_frames, frame_key, `explosion_layer_${i}`));
     }
 
     // capture explosion
