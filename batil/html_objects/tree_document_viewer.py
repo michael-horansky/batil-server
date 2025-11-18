@@ -60,12 +60,12 @@ class TreeDocumentViewer(HTMLObject):
             display_siblings_data = db.execute("SELECT CHAPTER_ID, LABEL, NEXT_CHAPTER, FIRST_SUBCHAPTER FROM BOC_TREE_DOCUMENTS WHERE VIEWER = ? AND PARENT_CHAPTER = ?", (self.iden, self.display_element["PARENT_CHAPTER"])).fetchall()
             self.display_siblings = {}
             for datum in display_siblings_data:
-                self.display_siblings[datum["CHAPTER_ID"]] = datum
+                self.display_siblings[datum['CHAPTER_ID']] = datum
 
-        display_children_data = db.execute("SELECT CHAPTER_ID, LABEL, NEXT_CHAPTER, FIRST_SUBCHAPTER FROM BOC_TREE_DOCUMENTS WHERE VIEWER = ? AND PARENT_CHAPTER = ?", (self.iden, self.display_element["CHAPTER_ID"])).fetchall()
+        display_children_data = db.execute("SELECT CHAPTER_ID, LABEL, NEXT_CHAPTER, FIRST_SUBCHAPTER FROM BOC_TREE_DOCUMENTS WHERE VIEWER = ? AND PARENT_CHAPTER = ?", (self.iden, self.display_element['CHAPTER_ID'])).fetchall()
         self.display_children = {}
         for datum in display_children_data:
-            self.display_children[datum["CHAPTER_ID"]] = datum
+            self.display_children[datum['CHAPTER_ID']] = datum
 
     def chapter_href(self, chapter_id):
         return(url_for(f"{self.bp}.{self.home_index}", **self.persistent_get_args, **{f"{self.iden}_chapter" : chapter_id}))
@@ -77,19 +77,19 @@ class TreeDocumentViewer(HTMLObject):
             ])
 
         if self.display_parent is not None:
-            self.structured_html.append(f"      <li><a href=\"{self.chapter_href(self.display_parent["CHAPTER_ID"])}\">(up) {self.display_parent["LABEL"]}</a></li>")
+            self.structured_html.append(f"      <li><a href=\"{self.chapter_href(self.display_parent['CHAPTER_ID'])}\">(up) {self.display_parent['LABEL']}</a></li>")
 
             cur_sibling = self.display_parent["FIRST_SUBCHAPTER"]
             while(cur_sibling is not None):
                 if cur_sibling == self.current_display:
-                    self.structured_html.append(f"      <li><span class=\"tdv_nav_this\">{self.display_siblings[cur_sibling]["LABEL"]}</span></li>")
+                    self.structured_html.append(f"      <li><span class=\"tdv_nav_this\">{self.display_siblings[cur_sibling]['LABEL']}</span></li>")
                 else:
-                    self.structured_html.append(f"      <li><a href=\"{self.chapter_href(self.display_siblings[cur_sibling]["CHAPTER_ID"])}\">{self.display_siblings[cur_sibling]["LABEL"]}</a></li>")
+                    self.structured_html.append(f"      <li><a href=\"{self.chapter_href(self.display_siblings[cur_sibling]['CHAPTER_ID'])}\">{self.display_siblings[cur_sibling]['LABEL']}</a></li>")
 
                 cur_sibling = self.display_siblings[cur_sibling]["NEXT_CHAPTER"]
         else:
             # Root has no siblings since tree is always connected
-            self.structured_html.append(f"      <li><span class=\"tdv_nav_this\">{self.display_element["LABEL"]}</span></li>")
+            self.structured_html.append(f"      <li><span class=\"tdv_nav_this\">{self.display_element['LABEL']}</span></li>")
 
         self.structured_html.append([
             f"    </ul>",
@@ -125,9 +125,10 @@ class TreeDocumentViewer(HTMLObject):
 
     def make_main_content(self):
         if self.client_privilege == "ADMIN":
+            form_target_url = url_for(f"{self.bp}.action_{self.iden}")
             self.structured_html.append([
                 f"  <div id=\"{self.iden}_content\" class=\"tdv_main\">",
-                f"    <form id=\"{self.iden}_form\" class=\"tdv_form\" action=\"{url_for(f"{self.bp}.action_{self.iden}")}\" method=\"post\">",
+                f"    <form id=\"{self.iden}_form\" class=\"tdv_form\" action=\"{form_target_url}\" method=\"post\">",
                 f"      <div id=\"{self.iden}_tabs\" class=\"tdv_tabs\">",
                 f"        <div id=\"{self.iden}_tab_read\" class=\"tdv_tab active\" onclick=\"tdv_{self.iden}_read()\">Read</div>",
                 f"        <div id=\"{self.iden}_tab_edit\" class=\"tdv_tab\" onclick=\"tdv_{self.iden}_edit()\">Edit</div>",
@@ -135,13 +136,13 @@ class TreeDocumentViewer(HTMLObject):
                 f"      <div id=\"{self.iden}_section_container\" class=\"tdv_section_container\">",
                 f"        <div id=\"{self.iden}_section_read\" class=\"tdv_section_read tdv_section active\">",
                 f"          <div id=\"{self.iden}_section_read_content\" class=\"tdv_section_content\">",
-                self.parse_content_for_display(self.display_element["CONTENT"]),
+                self.parse_content_for_display(self.display_element['CONTENT']),
                 f"          </div>",
                 f"        </div>",
                 f"        <div id=\"{self.iden}_section_edit\" class=\"tdv_section_edit tdv_section\">",
                 f"          <div id=\"{self.iden}_section_edit_content\" class=\"tdv_section_content\">",
-                f"            <input type=\"text\" class=\"tdv_edit_label\" name=\"chapter_label\" value=\"{self.display_element["LABEL"]}\">",
-                f"            <textarea class=\"tdv_edit_textarea\" name=\"chapter_content\">{self.display_element["CONTENT"]}</textarea>",
+                f"            <input type=\"text\" class=\"tdv_edit_label\" name=\"chapter_label\" value=\"{self.display_element['LABEL']}\">",
+                f"            <textarea class=\"tdv_edit_textarea\" name=\"chapter_content\">{self.display_element['CONTENT']}</textarea>",
                 f"          </div>",
                 f"        </div>",
                 f"      </div>",
@@ -155,7 +156,7 @@ class TreeDocumentViewer(HTMLObject):
             self.structured_html.append([
                 f"        <button type=\"submit\" class=\"tdv_action_button\" name=\"{self.iden}_action\" value=\"insert_new_child\">Add new child</button>",
                 f"      </div>",
-                f"      <input type=\"hidden\" name=\"{self.iden}_chapter\" value=\"{self.display_element["CHAPTER_ID"]}\">",
+                f"      <input type=\"hidden\" name=\"{self.iden}_chapter\" value=\"{self.display_element['CHAPTER_ID']}\">",
                 f"    </form>",
                 f"  </div>"
                 ])
@@ -165,7 +166,7 @@ class TreeDocumentViewer(HTMLObject):
                 f"    <div id=\"{self.iden}_section_container\" class=\"tdv_section_container\">",
                 f"      <div id=\"{self.iden}_section_read\" class=\"tdv_section_read tdv_section active\">",
                 f"        <div id=\"{self.iden}_section_read_content\" class=\"tdv_section_content\">",
-                self.parse_content_for_display(self.display_element["CONTENT"]),
+                self.parse_content_for_display(self.display_element['CONTENT']),
                 f"        </div>",
                 f"      </div>",
                 f"    </div>",
@@ -180,7 +181,7 @@ class TreeDocumentViewer(HTMLObject):
 
         cur_child = self.display_element["FIRST_SUBCHAPTER"]
         while(cur_child is not None):
-            self.structured_html.append(f"      <li><a href=\"{self.chapter_href(self.display_children[cur_child]["CHAPTER_ID"])}\">{self.display_children[cur_child]["LABEL"]}</a></li>")
+            self.structured_html.append(f"      <li><a href=\"{self.chapter_href(self.display_children[cur_child]['CHAPTER_ID'])}\">{self.display_children[cur_child]['LABEL']}</a></li>")
             cur_child = self.display_children[cur_child]["NEXT_CHAPTER"]
 
         self.structured_html.append([

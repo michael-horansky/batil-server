@@ -132,10 +132,10 @@ class ActionForm(HTMLObject):
                 tab_id = f"action_form_{self.identifier}_tab_{section_i}"
                 self.structured_html.append([
                         "  <script>",
-                        f"  if (document.getElementById({json.dumps(self.tab_properties[section_i]["selection_condition"])}).value == \"\") {{",
+                        f"  if (document.getElementById({json.dumps(self.tab_properties[section_i]['selection_condition'])}).value == \"\") {{",
                         f"    document.getElementById({json.dumps(tab_id)}).style.display = \"none\";",
                         f"  }}",
-                        f"  document.getElementById({json.dumps(self.tab_properties[section_i]["selection_condition"])}).addEventListener(\"change\", function(){{",
+                        f"  document.getElementById({json.dumps(self.tab_properties[section_i]['selection_condition'])}).addEventListener(\"change\", function(){{",
                         f"    if (this.value == \"\") {{",
                         f"      document.getElementById({json.dumps(tab_id)}).style.display = \"none\";",
                         f"    }} else {{",

@@ -69,30 +69,30 @@ class TutorialHTMLRenderer(Renderer):
         # and if given, indexed as base_id_{normal class}
         res = []
         for el in self.element_sources[element_type][element_kw]:
-            if el["element"] == "/g":
+            if el['element'] == "/g":
                 res.append("</g>")
                 continue
             if base_id is None:
                 el_attributes = ""
             else:
                 if "element_id" in el.keys():
-                    el_attributes = f"id=\"{base_id}_{el["element_id"]}\""
+                    el_attributes = f"id=\"{base_id}_{el['element_id']}\""
                 else:
                     # we assume the element_class is unique
-                    el_attributes = f"id=\"{base_id}_{el["element_class"]}\""
+                    el_attributes = f"id=\"{base_id}_{el['element_class']}\""
 
             if base_class is None:
-                el_attributes += f" class=\"{el["element_class"]}\""
+                el_attributes += f" class=\"{el['element_class']}\""
             else:
-                el_attributes += f" class=\"{el["element_class"]} {base_class}_{el["element_class"]}\""
+                el_attributes += f" class=\"{el['element_class']} {base_class}_{el['element_class']}\""
             for attr in el.keys():
                 if attr in ["element", "element_id", "element_class"]:
                     continue
                 el_attributes += f" {attr}=\"{el[attr]}\""
-            if el["element"] == "g":
-                res.append(f"<{el["element"]} {el_attributes}>")
+            if el['element'] == "g":
+                res.append(f"<{el['element']} {el_attributes}>")
             else:
-                res.append(f"<{el["element"]} {el_attributes}></{el["element"]}>")
+                res.append(f"<{el['element']} {el_attributes}></{el['element']}>")
         return(res)
 
     # ------------------- Output file communication methods -------------------
@@ -731,7 +731,7 @@ class TutorialHTMLRenderer(Renderer):
                 if possible_role == self.editor_role:
                     client_role_setting.append(f"    <button class=\"editor_role_disabled_link\">{possible_role}</button>")
                 else:
-                    client_role_setting.append(f"    <a href=\"{url_for("tutorial.tutorial", tutorial_id = self.tutorial_id, editor_role = possible_role)}\" class=\"editor_role_link\">{possible_role}</a>")
+                    client_role_setting.append(f"    <a href=\"{url_for('tutorial.tutorial', tutorial_id = self.tutorial_id, editor_role = possible_role)}\" class=\"editor_role_link\">{possible_role}</a>")
             client_role_setting.append(f"  </div>")
         else:
             client_role_setting = ""
@@ -768,7 +768,7 @@ class TutorialHTMLRenderer(Renderer):
     def draw_command_form(self):
         command_form = []
         command_form.append(f"<div id=\"command_form_div\">")
-        command_form.append(f"  <form id=\"command_form\" class=\"submission_form\" action=\"{url_for("tutorial.command_submission", tutorial_id=self.tutorial_id, editor_role=self.editor_role)}\" method=\"POST\">")
+        command_form.append(f"  <form id=\"command_form\" class=\"submission_form\" action=\"{url_for('tutorial.command_submission', tutorial_id=self.tutorial_id, editor_role=self.editor_role)}\" method=\"POST\">")
         if not self.render_object.did_player_finish_turn:
             for stone_ID in self.render_object.stones_to_be_commanded:
                 command_form.append(f"    <fieldset id=\"command_data_{stone_ID}\" class=\"command_data_field\">")
@@ -832,7 +832,7 @@ class TutorialHTMLRenderer(Renderer):
         if self.client_role == "editor":
             # Tutorial editor: can edit the tutorial comment
             self.commit_to_output([
-                f"<form id=\"tutorial_comment_form\" action=\"{url_for(f"tutorial.tutorial_edit_tutorial_comments", tutorial_id = self.tutorial_id, editor_role = self.editor_role)}\" method=\"post\">",
+                f"<form id=\"tutorial_comment_form\" action=\"{url_for('tutorial.tutorial_edit_tutorial_comments', tutorial_id = self.tutorial_id, editor_role = self.editor_role)}\" method=\"post\">",
                 f"  <textarea id=\"tcf_textarea\" name=\"tutorial_comment\"></textarea>",
                 f"  <input type=\"hidden\" id=\"tcf_turn_index\" name=\"turn_index\" value=\"\"></input>",
                 f"  <button type=\"submit\" id=\"tcf_edit_tutorial_comment_btn\" name=\"tcf_action\" value=\"edit_tutorial_comment\">Save</button>",

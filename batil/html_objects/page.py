@@ -110,8 +110,8 @@ class Page(HTMLObject):
             self.structured_html.append([
                 "  <div class=\"sidebar_pfp\">",
                 f"    <div class=\"sidebar_pfp_username\">{ g.user['username'] }</div>",
-                f"    <div class=\"sidebar_pfp_username\">{ self.client_row["RATING_ROUND"] }</div>",
-                f"    <img src=\"{pfp_url}\" alt=\"{g.user["username"]} profile picture\">",
+                f"    <div class=\"sidebar_pfp_username\">{ self.client_row['RATING_ROUND'] }</div>",
+                f"    <img src=\"{pfp_url}\" alt=\"{g.user['username']} profile picture\">",
                 "  </div>"
                 ])
 

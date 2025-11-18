@@ -104,9 +104,9 @@ class ActionTable(HTMLObject):
         self.structured_html.append("  <tbody>")
         for datum in data:
             if row_class_by_col is None:
-                self.structured_html.append(f"    <tr data-rowid=\"{datum["IDENTIFIER"]}\">")
+                self.structured_html.append(f"    <tr data-rowid=\"{datum['IDENTIFIER']}\">")
             else:
-                self.structured_html.append(f"    <tr data-rowid=\"{datum["IDENTIFIER"]}\" class=\"{self.identifier}_row_{datum[row_class_by_col]}\">")
+                self.structured_html.append(f"    <tr data-rowid=\"{datum['IDENTIFIER']}\" class=\"{self.identifier}_row_{datum[row_class_by_col]}\">")
             for column_id in self.headers.keys():
                 if column_id in self.col_links.keys():
                     td_content = f"<a href=\"{self.col_links[column_id](datum)}\" target=\"_blank\" class=\"action_table_col_link\">{ datum[column_id] }</a>"
@@ -121,13 +121,13 @@ class ActionTable(HTMLObject):
                     td_content = datum[column_id]
 
                 if self.include_select:
-                    self.structured_html.append(f"      <td class=\"{self.identifier}_select_row_btn\" data-rowid=\"{ datum["IDENTIFIER"] }\">{ td_content }</td>")
+                    self.structured_html.append(f"      <td class=\"{self.identifier}_select_row_btn\" data-rowid=\"{ datum['IDENTIFIER'] }\">{ td_content }</td>")
                 else:
                     self.structured_html.append(f"      <td>{ td_content }</td>")
             if self.include_select:
                 self.structured_html.append([
                         "      <td>",
-                        f"        <button type=\"button\" class=\"{self.identifier}_select_row_btn action_table_column_button\" data-rowid=\"{ datum["IDENTIFIER"] }\">Select</button>",
+                        f"        <button type=\"button\" class=\"{self.identifier}_select_row_btn action_table_column_button\" data-rowid=\"{ datum['IDENTIFIER'] }\">Select</button>",
                         "      </td>"
                     ])
             if self.actions is not None:
@@ -143,7 +143,7 @@ class ActionTable(HTMLObject):
                             if datum[self.action_instructions[iden]["condition"]] == 0:
                                 self.structured_html.append([
                                     "      <td>",
-                                    f"        <button type=\"button\" class=\"{self.identifier}_submit_btn action_table_column_button\" data-rowid=\"{ datum["IDENTIFIER"] }\" disabled>{name}</button>",
+                                    f"        <button type=\"button\" class=\"{self.identifier}_submit_btn action_table_column_button\" data-rowid=\"{ datum['IDENTIFIER'] }\" disabled>{name}</button>",
                                     "      </td>"
                                 ])
                                 continue
@@ -167,13 +167,13 @@ class ActionTable(HTMLObject):
                         else:
                             self.structured_html.append([
                                     "      <td>",
-                                    f"        <button type=\"submit\" name=\"action_{self.identifier}\" value=\"{iden}\" class=\"{self.identifier}_submit_btn action_table_column_button\" data-rowid=\"{ datum["IDENTIFIER"] }\">{name}</button>",
+                                    f"        <button type=\"submit\" name=\"action_{self.identifier}\" value=\"{iden}\" class=\"{self.identifier}_submit_btn action_table_column_button\" data-rowid=\"{ datum['IDENTIFIER'] }\">{name}</button>",
                                     "      </td>"
                                 ])
                     else:
                         self.structured_html.append([
                                 "      <td>",
-                                f"        <button type=\"submit\" name=\"action_{self.identifier}\" value=\"{iden}\" class=\"{self.identifier}_submit_btn action_table_column_button\" data-rowid=\"{ datum["IDENTIFIER"] }\">{name}</button>",
+                                f"        <button type=\"submit\" name=\"action_{self.identifier}\" value=\"{iden}\" class=\"{self.identifier}_submit_btn action_table_column_button\" data-rowid=\"{ datum['IDENTIFIER'] }\">{name}</button>",
                                 "      </td>"
                             ])
             self.structured_html.append("    </tr>")

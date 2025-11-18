@@ -44,23 +44,23 @@ class PageBoardEditor(Page):
             setup_commands = []
             for i_b in range(n_bases):
                 new_command = {"type" : "add_base"}
-                for kw_b_i in range(len(element_keywords["bases"])):
+                for kw_b_i in range(len(element_keywords['bases'])):
                     if element_keywords["bases_types"][kw_b_i] == "int":
-                        new_command[element_keywords["bases"][kw_b_i]] = int(request.form.get(f"base_{i_b}_{element_keywords["bases"][kw_b_i]}"))
+                        new_command[element_keywords['bases'][kw_b_i]] = int(request.form.get(f"base_{i_b}_{element_keywords['bases'][kw_b_i]}"))
                     else:
-                        new_command[element_keywords["bases"][kw_b_i]] = request.form.get(f"base_{i_b}_{element_keywords["bases"][kw_b_i]}")
+                        new_command[element_keywords['bases'][kw_b_i]] = request.form.get(f"base_{i_b}_{element_keywords['bases'][kw_b_i]}")
                 setup_commands.append(new_command)
 
             for i_s in range(n_stones):
                 new_command = {"type" : "add_stone"}
-                for kw_s_i in range(len(element_keywords["stones"])):
-                    if element_keywords["stones"][kw_s_i] == "a":
+                for kw_s_i in range(len(element_keywords['stones'])):
+                    if element_keywords['stones'][kw_s_i] == "a":
                         if not static_stone_data[new_command["stone_type"]]["orientable"]:
                             continue
                     if element_keywords["stones_types"][kw_s_i] == "int":
-                        new_command[element_keywords["stones"][kw_s_i]] = int(request.form.get(f"stone_{i_s}_{element_keywords["stones"][kw_s_i]}"))
+                        new_command[element_keywords['stones'][kw_s_i]] = int(request.form.get(f"stone_{i_s}_{element_keywords['stones'][kw_s_i]}"))
                     else:
-                        new_command[element_keywords["stones"][kw_s_i]] = request.form.get(f"stone_{i_s}_{element_keywords["stones"][kw_s_i]}")
+                        new_command[element_keywords['stones'][kw_s_i]] = request.form.get(f"stone_{i_s}_{element_keywords['stones'][kw_s_i]}")
                 setup_commands.append(new_command)
 
             setup_rep = compress_commands(setup_commands) #json.dumps(setup_commands)

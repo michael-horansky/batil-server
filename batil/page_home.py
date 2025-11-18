@@ -88,7 +88,7 @@ class PageHome(Page):
                 else:
                     ruleset_selection[rulegroup_row["RULE_GROUP"]] = request.form.get(rulegroup_row["RULE_GROUP"])
 
-            new_blind_challenge(None, g.user["username"], ruleset_selection)
+            new_blind_challenge(None, g.user['username'], ruleset_selection)
 
 
         elif request.form.get("action_new_game") == "blind_opponent":
@@ -102,7 +102,7 @@ class PageHome(Page):
                 else:
                     ruleset_selection[rulegroup_row["RULE_GROUP"]] = request.form.get(rulegroup_row["RULE_GROUP"])
 
-            new_blind_challenge(int(request.form.get("action_table_select_board_for_new_game_selected_row")), g.user["username"], ruleset_selection)
+            new_blind_challenge(int(request.form.get("action_table_select_board_for_new_game_selected_row")), g.user['username'], ruleset_selection)
         elif request.form.get("action_new_game") == "targeted_challenge":
             print("New challenge: targeted!")
             ruleset_selection = {}
@@ -114,7 +114,7 @@ class PageHome(Page):
                 else:
                     ruleset_selection[rulegroup_row["RULE_GROUP"]] = request.form.get(rulegroup_row["RULE_GROUP"])
 
-            new_targeted_challenge(int(request.form.get("action_table_select_board_for_new_game_selected_row")), request.form.get("action_table_select_opponent_for_new_game_selected_row"), g.user["username"], ruleset_selection)
+            new_targeted_challenge(int(request.form.get("action_table_select_board_for_new_game_selected_row")), request.form.get("action_table_select_opponent_for_new_game_selected_row"), g.user['username'], ruleset_selection)
 
     def resolve_action_your_boards(self):
         db = get_db()
@@ -131,7 +131,7 @@ class PageHome(Page):
                         (?, ?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.0, ?,
                         0.0, (SELECT PARAMETER_VALUE FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_ESTIMATE_HANDICAP_STD\"),
                         (SELECT 2 * PARAMETER_VALUE / (1 - PARAMETER_VALUE) FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_ESTIMATE_DRAW_PROBABILITY\"), 0.0)
-                    """, (self.board_template["T_DIM"], self.board_template["X_DIM"], self.board_template["Y_DIM"], self.board_template["STATIC_REPRESENTATION"], self.board_template["SETUP_REPRESENTATION"], g.user["username"], self.board_template["BOARD_NAME"]))
+                    """, (self.board_template["T_DIM"], self.board_template["X_DIM"], self.board_template["Y_DIM"], self.board_template["STATIC_REPRESENTATION"], self.board_template["SETUP_REPRESENTATION"], g.user['username'], self.board_template["BOARD_NAME"]))
                 db.commit()
         elif "action_your_boards_unpublished" in request.form.keys():
             # row action on an unpublished board
@@ -141,13 +141,13 @@ class PageHome(Page):
                 db.commit()
             elif request.form.get("action_your_boards_unpublished") == "publish":
                 db.execute("UPDATE BOC_BOARDS SET IS_PUBLIC = 1, D_PUBLISHED = CURRENT_TIMESTAMP WHERE BOARD_ID = ?", (action_board_id,))
-                db.execute("INSERT INTO BOC_USER_BOARD_RELATIONSHIPS (BOARD_ID, USERNAME, STATUS, D_STATUS) VALUES (?, ?, \"saved\", CURRENT_TIMESTAMP)", (action_board_id, g.user["username"]))
+                db.execute("INSERT INTO BOC_USER_BOARD_RELATIONSHIPS (BOARD_ID, USERNAME, STATUS, D_STATUS) VALUES (?, ?, \"saved\", CURRENT_TIMESTAMP)", (action_board_id, g.user['username']))
                 db.commit()
         elif "action_your_boards_published" in request.form.keys():
             action_board_id = int(request.form.get("action_table_your_boards_published_selected_row"))
             if request.form.get("action_your_boards_published") == "hide":
                 # published boards are always shown from BOC_USER_BOARD_RELATIONSHIPS, this just deletes the relational line
-                hide_board(g.user["username"], action_board_id)
+                hide_board(g.user['username'], action_board_id)
             elif request.form.get("action_your_boards_published") == "fork":
                 db.execute("""
                     INSERT INTO BOC_BOARDS
@@ -156,7 +156,7 @@ class PageHome(Page):
                     SELECT T_DIM, X_DIM, Y_DIM, STATIC_REPRESENTATION, SETUP_REPRESENTATION, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.0, BOARD_NAME || \" (fork)\",
                         0.0, (SELECT PARAMETER_VALUE FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_ESTIMATE_HANDICAP_STD\"),
                         (SELECT 2 * PARAMETER_VALUE / (1 - PARAMETER_VALUE) FROM BOC_RATING_PARAMETERS WHERE PARAMETER_NAME = \"INITIAL_ESTIMATE_DRAW_PROBABILITY\"), 0.0
-                    FROM BOC_BOARDS WHERE BOARD_ID = ?""", (g.user["username"], action_board_id))
+                    FROM BOC_BOARDS WHERE BOARD_ID = ?""", (g.user['username'], action_board_id))
                 db.commit()
 
 
@@ -171,43 +171,43 @@ class PageHome(Page):
             action_board_id = int(request.form.get("action_table_board_marketplace_table_selected_row"))
             if request.form.get("action_board_marketplace_table") == "save":
                 # The user saves a board to their collection
-                relevant_row = db.execute("SELECT BOARD_ID, D_STATUS FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user["username"])).fetchone()
+                relevant_row = db.execute("SELECT BOARD_ID, D_STATUS FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user['username'])).fetchone()
                 if relevant_row is None:
                     # We create a new row
-                    db.execute("INSERT INTO BOC_USER_BOARD_RELATIONSHIPS (BOARD_ID, USERNAME, STATUS, D_STATUS) VALUES (?, ?, \"saved\", CURRENT_TIMESTAMP)", (action_board_id, g.user["username"]))
+                    db.execute("INSERT INTO BOC_USER_BOARD_RELATIONSHIPS (BOARD_ID, USERNAME, STATUS, D_STATUS) VALUES (?, ?, \"saved\", CURRENT_TIMESTAMP)", (action_board_id, g.user['username']))
                 else:
                     # We update the existing row
-                    db.execute("UPDATE BOC_USER_BOARD_RELATIONSHIPS SET STATUS = \"saved\", D_STATUS = CURRENT_TIMESTAMP WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user["username"]))
+                    db.execute("UPDATE BOC_USER_BOARD_RELATIONSHIPS SET STATUS = \"saved\", D_STATUS = CURRENT_TIMESTAMP WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user['username']))
                 db.commit()
             elif request.form.get("action_board_marketplace_table") == "remove":
                 # The user removes a board from their collection
-                db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ? AND STATUS = \"saved\"", (action_board_id, g.user["username"]))
+                db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ? AND STATUS = \"saved\"", (action_board_id, g.user['username']))
                 db.commit()
             elif request.form.get("action_board_marketplace_table") == "block":
                 # The user adds a board to their blacklist
-                relevant_row = db.execute("SELECT BOARD_ID, D_STATUS FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user["username"])).fetchone()
+                relevant_row = db.execute("SELECT BOARD_ID, D_STATUS FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user['username'])).fetchone()
                 if relevant_row is None:
                     # We create a new row
-                    db.execute("INSERT INTO BOC_USER_BOARD_RELATIONSHIPS (BOARD_ID, USERNAME, STATUS, D_STATUS) VALUES (?, ?, \"blocked\", CURRENT_TIMESTAMP)", (action_board_id, g.user["username"]))
+                    db.execute("INSERT INTO BOC_USER_BOARD_RELATIONSHIPS (BOARD_ID, USERNAME, STATUS, D_STATUS) VALUES (?, ?, \"blocked\", CURRENT_TIMESTAMP)", (action_board_id, g.user['username']))
                 else:
                     # We update the existing row
-                    db.execute("UPDATE BOC_USER_BOARD_RELATIONSHIPS SET STATUS = \"blocked\", D_STATUS = CURRENT_TIMESTAMP WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user["username"]))
+                    db.execute("UPDATE BOC_USER_BOARD_RELATIONSHIPS SET STATUS = \"blocked\", D_STATUS = CURRENT_TIMESTAMP WHERE BOARD_ID = ? AND USERNAME = ?", (action_board_id, g.user['username']))
                 db.commit()
             elif request.form.get("action_board_marketplace_table") == "unblock":
                 # The user removes a board from their blacklist
-                db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ? AND STATUS = \"blocked\"", (action_board_id, g.user["username"]))
+                db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ? AND STATUS = \"blocked\"", (action_board_id, g.user['username']))
                 db.commit()
         if "action_your_saved_boards" in request.form:
             if request.form.get("action_your_saved_boards") == "remove":
                 # The user removes a board from their collection
                 removed_board_id = int(request.form.get("action_table_your_saved_boards_selected_row"))
-                db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ? AND STATUS = \"saved\"", (removed_board_id, g.user["username"]))
+                db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ? AND STATUS = \"saved\"", (removed_board_id, g.user['username']))
                 db.commit()
         if "action_your_blocked_boards" in request.form:
             if request.form.get("action_your_blocked_boards") == "unblock":
                 # The user removes a board from their blacklist
                 removed_board_id = int(request.form.get("action_table_your_blocked_boards_selected_row"))
-                db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ? AND STATUS = \"blocked\"", (removed_board_id, g.user["username"]))
+                db.execute("DELETE FROM BOC_USER_BOARD_RELATIONSHIPS WHERE BOARD_ID = ? AND USERNAME = ? AND STATUS = \"blocked\"", (removed_board_id, g.user['username']))
                 db.commit()
 
     def resolve_action_users(self):
@@ -218,17 +218,17 @@ class PageHome(Page):
         if "action_leaderboard" in request.form:
             action_username = request.form.get("action_table_leaderboard_selected_row")
             if request.form.get("action_leaderboard") == "send_friend_request":
-                send_friend_request(g.user["username"], action_username)
+                send_friend_request(g.user['username'], action_username)
             elif request.form.get("action_leaderboard") == "accept_friend_request":
-                accept_friend_request(g.user["username"], action_username)
+                accept_friend_request(g.user['username'], action_username)
             if request.form.get("action_leaderboard") == "withdraw_friend_request":
-                withdraw_friend_request(g.user["username"], action_username)
+                withdraw_friend_request(g.user['username'], action_username)
             if request.form.get("action_leaderboard") == "unfriend":
-                unfriend_user(g.user["username"], action_username)
+                unfriend_user(g.user['username'], action_username)
             if request.form.get("action_leaderboard") == "block_user":
-                block_user(g.user["username"], action_username)
+                block_user(g.user['username'], action_username)
             if request.form.get("action_leaderboard") == "unblock_user":
-                unblock_user(g.user["username"], action_username)
+                unblock_user(g.user['username'], action_username)
 
     def resolve_action_pending_friend_requests(self):
         db = get_db()
@@ -237,9 +237,9 @@ class PageHome(Page):
         if "action_friend_requests_for_you" in request.form:
             action_username = request.form.get("action_table_friend_requests_for_you_selected_row")
             if request.form.get("action_friend_requests_for_you") == "accept":
-                accept_friend_request(g.user["username"], action_username)
+                accept_friend_request(g.user['username'], action_username)
             elif request.form.get("action_friend_requests_for_you") == "decline":
-                decline_friend_request(g.user["username"], action_username)
+                decline_friend_request(g.user['username'], action_username)
 
 
     def resolve_action_your_profile(self):
@@ -253,29 +253,29 @@ class PageHome(Page):
                     pfp_file = request.files.get("new_profile_picture")
                     pfp_ext = get_file_extension(pfp_file)
                     if pfp_ext is not None:
-                        save_path = os.path.join(current_app.root_path, "static", "user_content", "profile_pictures", f"{g.user["username"]}_pfp{PFP_EXTENSIONS[pfp_ext]}")
+                        save_path = os.path.join(current_app.root_path, "static", "user_content", "profile_pictures", f"{g.user['username']}_pfp{PFP_EXTENSIONS[pfp_ext]}")
                         pfp_img = Image.open(pfp_file)
                         pfp_img.thumbnail((256, 256))
                         pfp_img.save(save_path, quality=85)
-                        db.execute("UPDATE BOC_USER SET PROFILE_PICTURE_EXTENSION = ? WHERE USERNAME = ?", (pfp_ext, g.user["username"]))
+                        db.execute("UPDATE BOC_USER SET PROFILE_PICTURE_EXTENSION = ? WHERE USERNAME = ?", (pfp_ext, g.user['username']))
                         db.commit()
 
                 # Now we check if the language selection changed
-                print(f"Language setting changed to {request.form.get("user_language_select")}")
+                print(f"Language setting changed to {request.form.get('user_language_select')}")
 
                 # Now to see if the password changed
                 if request.form.get("new_password") != "" and request.form.get("new_password") == request.form.get("new_password_confirm"):
-                    db.execute("UPDATE BOC_USER SET PASSWORD = ? WHERE USERNAME = ?", (generate_password_hash(request.form.get("new_password")), g.user["username"]))
+                    db.execute("UPDATE BOC_USER SET PASSWORD = ? WHERE USERNAME = ?", (generate_password_hash(request.form.get("new_password")), g.user['username']))
                     db.commit()
 
         if "action_your_friends" in request.form:
             action_username = request.form.get("action_table_your_friends_selected_row")
             if request.form.get("action_your_friends") == "unfriend":
-                unfriend_user(g.user["username"], action_username)
+                unfriend_user(g.user['username'], action_username)
         if "action_your_blocked" in request.form:
             action_username = request.form.get("action_table_your_blocked_selected_row")
             if request.form.get("action_your_blocked") == "unblock":
-                unblock_user(g.user["username"], action_username)
+                unblock_user(g.user['username'], action_username)
 
     def resolve_action_tutorial_guide(self):
         if "tutorial_guide_action" in request.form:
@@ -316,7 +316,7 @@ class PageHome(Page):
             f"""SELECT BOC_BOARDS.BOARD_ID AS BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_USER_BOARD_RELATIONSHIPS.D_STATUS AS D_SAVED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_BOARDS.HANDICAP AS HANDICAP, COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED
             FROM BOC_BOARDS
                 LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
-                INNER JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_BOARDS.BOARD_ID = BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = \"{g.user["username"]}\" AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
+                INNER JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_BOARDS.BOARD_ID = BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = \"{g.user['username']}\" AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
                 GROUP BY BOC_BOARDS.BOARD_ID""",
             "BOARD_ID", ["BOARD_NAME", "AUTHOR", "D_SAVED", "GAMES_PLAYED", "HANDICAP"],
             include_select = True,
@@ -339,7 +339,7 @@ class PageHome(Page):
         form_new_game.set_tab_property(2, "selection_condition", "action_table_select_board_for_new_game_selected_row_input")
 
         form_new_game.add_ordered_table(2, "select_opponent_for_new_game",
-            f"SELECT BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])})) AND BOC_USER_RELATIONSHIPS.STATUS=\"friends\"",
+            f"SELECT BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user['username'])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user['username'])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user['username'])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user['username'])})) AND BOC_USER_RELATIONSHIPS.STATUS=\"friends\"",
             "USERNAME", ["USERNAME", "RATING_ROUND", "COUNT_GAMES"],
             include_select = True,
             headers = {"USERNAME" : "User", "RATING_ROUND" : "Rating", "COUNT_GAMES" : "# of games played with you"},
@@ -360,13 +360,13 @@ class PageHome(Page):
         self.open_container("play_forms_right")
 
         # Pending challenges
-        pending_challenges_sample = db.execute(f"SELECT CHALLENGE_ID FROM BOC_CHALLENGES WHERE BOC_CHALLENGES.STATUS = 'active' AND BOC_CHALLENGES.CHALLENGEE = ? LIMIT 1", (g.user["username"],)).fetchone()
+        pending_challenges_sample = db.execute(f"SELECT CHALLENGE_ID FROM BOC_CHALLENGES WHERE BOC_CHALLENGES.STATUS = 'active' AND BOC_CHALLENGES.CHALLENGEE = ? LIMIT 1", (g.user['username'],)).fetchone()
         if pending_challenges_sample is not None:
             form_pending_challenges = ActionForm("your_pending_challenges", "Challenges for you", "home")
             form_pending_challenges.initialise_tabs(["Incoming challenges"])
 
             form_pending_challenges.add_ordered_table(0, "pending_challenges",
-                f"SELECT BOC_CHALLENGES.CHALLENGE_ID AS CHALLENGE_ID, BOC_CHALLENGES.CHALLENGER AS CHALLENGER, BOC_CHALLENGES.DATE_CREATED AS DATE_CREATED, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.BOARD_ID AS BOARD_ID FROM BOC_CHALLENGES LEFT JOIN BOC_BOARDS ON BOC_CHALLENGES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE BOC_CHALLENGES.STATUS = 'active' AND BOC_CHALLENGES.CHALLENGEE = {json.dumps(g.user["username"])}",
+                f"SELECT BOC_CHALLENGES.CHALLENGE_ID AS CHALLENGE_ID, BOC_CHALLENGES.CHALLENGER AS CHALLENGER, BOC_CHALLENGES.DATE_CREATED AS DATE_CREATED, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.BOARD_ID AS BOARD_ID FROM BOC_CHALLENGES LEFT JOIN BOC_BOARDS ON BOC_CHALLENGES.BOARD_ID = BOC_BOARDS.BOARD_ID WHERE BOC_CHALLENGES.STATUS = 'active' AND BOC_CHALLENGES.CHALLENGEE = {json.dumps(g.user['username'])}",
                 "CHALLENGE_ID", ["CHALLENGER", "BOARD_NAME", "DATE_CREATED", "BOARD_ID"],
                 include_select = False,
                 headers = {"CHALLENGER" : "Challenger", "BOARD_NAME" : "Board", "DATE_CREATED" : "Date"},
@@ -412,7 +412,7 @@ class PageHome(Page):
                         (BOC_GAMES.PLAYER_B = ? AND LM.players_at_latest = 'B')
                     )
                 LIMIT 1
-            """, (g.user["username"], g.user["username"], g.user["username"], g.user["username"])
+            """, (g.user['username'], g.user['username'], g.user['username'], g.user['username'])
             ).fetchone()
         active_games_your_turn_sample = db.execute(
             f"""
@@ -439,7 +439,7 @@ class PageHome(Page):
                         (BOC_GAMES.PLAYER_B = ? AND LM.players_at_latest = 'B')
                     )
                 LIMIT 1
-            """, (g.user["username"], g.user["username"], g.user["username"], g.user["username"])
+            """, (g.user['username'], g.user['username'], g.user['username'], g.user['username'])
             ).fetchone()
 
         if active_games_not_your_turn_sample is None and active_games_your_turn_sample is None:
@@ -474,7 +474,7 @@ class PageHome(Page):
                     SELECT
                         BOC_GAMES.GAME_ID AS GAME_ID,
                         CASE
-                            WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} THEN BOC_GAMES.PLAYER_B
+                            WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])} THEN BOC_GAMES.PLAYER_B
                             ELSE BOC_GAMES.PLAYER_A
                         END AS OPPONENT,
                         BOC_GAMES.D_STARTED AS D_STARTED,
@@ -486,7 +486,7 @@ class PageHome(Page):
                             WHEN rules.deadline_rule = 'one_day_per_move'
                                 THEN 86400 - COALESCE(
                                     strftime('%s','now') - strftime('%s',
-                                        CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                        CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])}
                                             THEN BOC_GAMES.PLAYER_A_PROMPTED
                                             ELSE BOC_GAMES.PLAYER_B_PROMPTED END
                                     ), 0
@@ -494,29 +494,29 @@ class PageHome(Page):
                             WHEN rules.deadline_rule = 'three_days_per_move'
                                 THEN 259200 - COALESCE(
                                     strftime('%s','now') - strftime('%s',
-                                        CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                        CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])}
                                             THEN BOC_GAMES.PLAYER_A_PROMPTED
                                             ELSE BOC_GAMES.PLAYER_B_PROMPTED END
                                     ), 0
                                 )
                             WHEN rules.deadline_rule = 'one_hour_cumulative'
-                                THEN (CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                THEN (CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])}
                                         THEN BOC_GAMES.PLAYER_A_CUMULATIVE_SECONDS
                                         ELSE BOC_GAMES.PLAYER_B_CUMULATIVE_SECONDS END)
                                     - COALESCE(
                                         strftime('%s','now') - strftime('%s',
-                                            CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                            CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])}
                                                 THEN BOC_GAMES.PLAYER_A_PROMPTED
                                                 ELSE BOC_GAMES.PLAYER_B_PROMPTED END
                                         ), 0
                                     )
                             WHEN rules.deadline_rule = 'one_day_cumulative'
-                                THEN (CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                THEN (CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])}
                                         THEN BOC_GAMES.PLAYER_A_CUMULATIVE_SECONDS
                                         ELSE BOC_GAMES.PLAYER_B_CUMULATIVE_SECONDS END)
                                     - COALESCE(
                                         strftime('%s','now') - strftime('%s',
-                                            CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                            CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])}
                                                 THEN BOC_GAMES.PLAYER_A_PROMPTED
                                                 ELSE BOC_GAMES.PLAYER_B_PROMPTED END
                                         ), 0
@@ -529,12 +529,12 @@ class PageHome(Page):
                         INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID
                         JOIN rules ON rules.GAME_ID = BOC_GAMES.GAME_ID
                     WHERE
-                        (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
+                        (BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user['username'])})
                         AND BOC_GAMES.STATUS = \"in_progress\"
                         AND NOT (
-                            (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'A')
+                            (BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])} AND LM.players_at_latest = 'A')
                             OR
-                            (BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'B')
+                            (BOC_GAMES.PLAYER_B = {json.dumps(g.user['username'])} AND LM.players_at_latest = 'B')
                         )
                     """, "GAME_ID", ["OPPONENT", "BOARD_NAME", "TIME_LEFT_SECONDS", "D_STARTED", "BOARD_ID"],
                     include_select = False,
@@ -572,7 +572,7 @@ class PageHome(Page):
                     SELECT
                         BOC_GAMES.GAME_ID AS GAME_ID,
                         CASE
-                            WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} THEN BOC_GAMES.PLAYER_B
+                            WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])} THEN BOC_GAMES.PLAYER_B
                             ELSE BOC_GAMES.PLAYER_A
                         END AS OPPONENT,
                         BOC_GAMES.D_STARTED AS D_STARTED,
@@ -584,7 +584,7 @@ class PageHome(Page):
                             WHEN rules.deadline_rule = 'one_day_per_move'
                                 THEN 86400 - COALESCE(
                                     strftime('%s','now') - strftime('%s',
-                                        CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                        CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])}
                                             THEN BOC_GAMES.PLAYER_A_PROMPTED
                                             ELSE BOC_GAMES.PLAYER_B_PROMPTED END
                                     ), 0
@@ -592,29 +592,29 @@ class PageHome(Page):
                             WHEN rules.deadline_rule = 'three_days_per_move'
                                 THEN 259200 - COALESCE(
                                     strftime('%s','now') - strftime('%s',
-                                        CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                        CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])}
                                             THEN BOC_GAMES.PLAYER_A_PROMPTED
                                             ELSE BOC_GAMES.PLAYER_B_PROMPTED END
                                     ), 0
                                 )
                             WHEN rules.deadline_rule = 'one_hour_cumulative'
-                                THEN (CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                THEN (CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])}
                                         THEN BOC_GAMES.PLAYER_A_CUMULATIVE_SECONDS
                                         ELSE BOC_GAMES.PLAYER_B_CUMULATIVE_SECONDS END)
                                     - COALESCE(
                                         strftime('%s','now') - strftime('%s',
-                                            CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                            CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])}
                                                 THEN BOC_GAMES.PLAYER_A_PROMPTED
                                                 ELSE BOC_GAMES.PLAYER_B_PROMPTED END
                                         ), 0
                                     )
                             WHEN rules.deadline_rule = 'one_day_cumulative'
-                                THEN (CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                THEN (CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])}
                                         THEN BOC_GAMES.PLAYER_A_CUMULATIVE_SECONDS
                                         ELSE BOC_GAMES.PLAYER_B_CUMULATIVE_SECONDS END)
                                     - COALESCE(
                                         strftime('%s','now') - strftime('%s',
-                                            CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])}
+                                            CASE WHEN BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])}
                                                 THEN BOC_GAMES.PLAYER_A_PROMPTED
                                                 ELSE BOC_GAMES.PLAYER_B_PROMPTED END
                                         ), 0
@@ -626,12 +626,12 @@ class PageHome(Page):
                         INNER JOIN BOC_BOARDS ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID
                         JOIN rules ON rules.GAME_ID = BOC_GAMES.GAME_ID
                     WHERE
-                        (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])})
+                        (BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])} OR BOC_GAMES.PLAYER_B = {json.dumps(g.user['username'])})
                         AND BOC_GAMES.STATUS = \"in_progress\"
                         AND (
-                            (BOC_GAMES.PLAYER_A = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'A')
+                            (BOC_GAMES.PLAYER_A = {json.dumps(g.user['username'])} AND LM.players_at_latest = 'A')
                             OR
-                            (BOC_GAMES.PLAYER_B = {json.dumps(g.user["username"])} AND LM.players_at_latest = 'B')
+                            (BOC_GAMES.PLAYER_B = {json.dumps(g.user['username'])} AND LM.players_at_latest = 'B')
                         )
                     """, "GAME_ID", ["OPPONENT", "BOARD_NAME", "TIME_LEFT_SECONDS", "D_STARTED", "BOARD_ID"],
                     include_select = False,
@@ -656,7 +656,7 @@ class PageHome(Page):
     def render_section_your_boards(self):
         db = get_db()
         # One action form with two tabs: Published boards and Workshop
-        your_published_boards_sample = db.execute("SELECT BOARD_ID FROM BOC_BOARDS WHERE AUTHOR = ? AND IS_PUBLIC = 1 LIMIT 1", (g.user["username"],)).fetchone()
+        your_published_boards_sample = db.execute("SELECT BOARD_ID FROM BOC_BOARDS WHERE AUTHOR = ? AND IS_PUBLIC = 1 LIMIT 1", (g.user['username'],)).fetchone()
         any_published_boards = your_published_boards_sample is not None
 
         form_your_boards_tabs = ["Boards workshop"]
@@ -667,7 +667,7 @@ class PageHome(Page):
         form_your_boards.initialise_tabs(form_your_boards_tabs)
 
         form_your_boards.add_ordered_table(0, "your_boards_unpublished",
-            f"SELECT BOARD_ID, BOARD_NAME, D_CREATED, D_CHANGED FROM BOC_BOARDS WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 0",
+            f"SELECT BOARD_ID, BOARD_NAME, D_CREATED, D_CHANGED FROM BOC_BOARDS WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user['username'])} AND BOC_BOARDS.IS_PUBLIC = 0",
             "BOARD_ID", ["BOARD_NAME", "D_CHANGED", "D_CREATED"],
             include_select = False,
             headers = {"BOARD_NAME" : "Board", "D_CHANGED" : "Changed", "D_CREATED" : "Created"},
@@ -686,8 +686,8 @@ class PageHome(Page):
                         COUNT(BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID) AS SAVED_BY
                     FROM BOC_BOARDS
                         LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
-                        LEFT JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME != {json.dumps(g.user["username"])} AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
-                    WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1 GROUP BY BOC_BOARDS.BOARD_ID""",
+                        LEFT JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME != {json.dumps(g.user['username'])} AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
+                    WHERE BOC_BOARDS.AUTHOR = {json.dumps(g.user['username'])} AND BOC_BOARDS.IS_PUBLIC = 1 GROUP BY BOC_BOARDS.BOARD_ID""",
                 "BOARD_ID", ["BOARD_NAME", "D_PUBLISHED", "GAMES_PLAYED", "SAVED_BY", "HANDICAP"],
                 include_select = False,
                 headers = {"BOARD_NAME" : "Board", "D_PUBLISHED" : "Published", "GAMES_PLAYED" : "# games played", "SAVED_BY" : "# users saved", "HANDICAP" : "Handicap"},
@@ -716,18 +716,18 @@ class PageHome(Page):
                     COUNT(BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID) AS SAVED_BY,
                     CASE
                         WHEN EXISTS (SELECT 1 FROM BOC_USER_BOARD_RELATIONSHIPS
-                            WHERE BOC_USER_BOARD_RELATIONSHIPS.USERNAME = {json.dumps(g.user["username"])} AND BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\") THEN "remove"
+                            WHERE BOC_USER_BOARD_RELATIONSHIPS.USERNAME = {json.dumps(g.user['username'])} AND BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\") THEN "remove"
                         ELSE "save"
                     END AS SAVE_TOGGLE,
                     CASE
                         WHEN EXISTS (SELECT 1 FROM BOC_USER_BOARD_RELATIONSHIPS
-                            WHERE BOC_USER_BOARD_RELATIONSHIPS.USERNAME = {json.dumps(g.user["username"])} AND BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"blocked\") THEN "unblock"
+                            WHERE BOC_USER_BOARD_RELATIONSHIPS.USERNAME = {json.dumps(g.user['username'])} AND BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"blocked\") THEN "unblock"
                         ELSE "block"
                     END AS BLOCK_TOGGLE
             FROM BOC_BOARDS
                 LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
-                LEFT JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME != {json.dumps(g.user["username"])} AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
-            WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1
+                LEFT JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME != {json.dumps(g.user['username'])} AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
+            WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user['username'])} AND BOC_BOARDS.IS_PUBLIC = 1
             GROUP BY BOC_BOARDS.BOARD_ID""",
             "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "SAVED_BY", "D_PUBLISHED", "HANDICAP", "SAVE_TOGGLE", "BLOCK_TOGGLE"], include_select = False,
             headers = {"BOARD_NAME" : "Board", "AUTHOR" : "Author", "GAMES_PLAYED" : "# games played", "SAVED_BY" : "# users saved", "D_PUBLISHED" : "Published", "HANDICAP" : "Handicap"},
@@ -750,8 +750,8 @@ class PageHome(Page):
             f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP,
                     COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_USER_BOARD_RELATIONSHIPS.D_STATUS AS D_SAVED
                 FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
-                                INNER JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = {json.dumps(g.user["username"])} AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
-            WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user["username"])} AND BOC_BOARDS.IS_PUBLIC = 1
+                                INNER JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = {json.dumps(g.user['username'])} AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"saved\"
+            WHERE BOC_BOARDS.AUTHOR != {json.dumps(g.user['username'])} AND BOC_BOARDS.IS_PUBLIC = 1
             GROUP BY BOC_BOARDS.BOARD_ID""",
             "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "D_PUBLISHED", "D_SAVED", "HANDICAP"],
             include_select = False,
@@ -769,7 +769,7 @@ class PageHome(Page):
             f"""SELECT BOC_BOARDS.BOARD_ID as BOARD_ID, BOC_BOARDS.BOARD_NAME AS BOARD_NAME, BOC_BOARDS.D_PUBLISHED AS D_PUBLISHED, BOC_BOARDS.HANDICAP AS HANDICAP,
                     COUNT(BOC_GAMES.BOARD_ID) AS GAMES_PLAYED, BOC_BOARDS.AUTHOR AS AUTHOR, BOC_USER_BOARD_RELATIONSHIPS.D_STATUS AS D_BLOCKED
                 FROM BOC_BOARDS LEFT JOIN BOC_GAMES ON BOC_GAMES.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_GAMES.STATUS = \"concluded\"
-                                INNER JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = {json.dumps(g.user["username"])} AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"blocked\"
+                                INNER JOIN BOC_USER_BOARD_RELATIONSHIPS ON BOC_USER_BOARD_RELATIONSHIPS.BOARD_ID = BOC_BOARDS.BOARD_ID AND BOC_USER_BOARD_RELATIONSHIPS.USERNAME = {json.dumps(g.user['username'])} AND BOC_USER_BOARD_RELATIONSHIPS.STATUS = \"blocked\"
             WHERE BOC_BOARDS.IS_PUBLIC = 1
             GROUP BY BOC_BOARDS.BOARD_ID""",
             "BOARD_ID", ["BOARD_NAME", "AUTHOR", "GAMES_PLAYED", "D_PUBLISHED", "D_BLOCKED", "HANDICAP"],
@@ -794,33 +794,33 @@ class PageHome(Page):
 
         form_users.add_ordered_table(0, "leaderboard",
             f"""SELECT
-            BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES,
+            BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user['username'])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user['username'])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES,
             CASE
                 WHEN (EXISTS (SELECT 1
                     FROM BOC_USER_RELATIONSHIPS
                     WHERE (
-                        (BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])} AND BOC_USER_RELATIONSHIPS.USER_2 = BOC_USER.USERNAME)
+                        (BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user['username'])} AND BOC_USER_RELATIONSHIPS.USER_2 = BOC_USER.USERNAME)
                         OR
-                        (BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])} AND BOC_USER_RELATIONSHIPS.USER_1 = BOC_USER.USERNAME)
+                        (BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user['username'])} AND BOC_USER_RELATIONSHIPS.USER_1 = BOC_USER.USERNAME)
                     )
-                    AND BOC_USER_RELATIONSHIPS.STATUS = "blocked")) OR BOC_USER.USERNAME = {json.dumps(g.user["username"])} THEN 0
+                    AND BOC_USER_RELATIONSHIPS.STATUS = "blocked")) OR BOC_USER.USERNAME = {json.dumps(g.user['username'])} THEN 0
                 ELSE 1
             END AS IS_AMICABLE,
             CASE
-                WHEN BOC_USER.USERNAME = {json.dumps(g.user["username"])} THEN 0
+                WHEN BOC_USER.USERNAME = {json.dumps(g.user['username'])} THEN 0
                 ELSE 1
             END AS IS_NOT_YOU,
             CASE
                 WHEN EXISTS (SELECT 1 FROM BOC_USER_RELATIONSHIPS
-                    WHERE BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])} AND BOC_USER_RELATIONSHIPS.USER_2 = BOC_USER.USERNAME AND BOC_USER_RELATIONSHIPS.STATUS = \"friends_pending\") THEN "withdraw_friend_request"
+                    WHERE BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user['username'])} AND BOC_USER_RELATIONSHIPS.USER_2 = BOC_USER.USERNAME AND BOC_USER_RELATIONSHIPS.STATUS = \"friends_pending\") THEN "withdraw_friend_request"
                 WHEN EXISTS (SELECT 1 FROM BOC_USER_RELATIONSHIPS
-                    WHERE BOC_USER_RELATIONSHIPS.USER_1 = BOC_USER.USERNAME AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])} AND BOC_USER_RELATIONSHIPS.STATUS = \"friends_pending\") THEN "accept_friend_request"
+                    WHERE BOC_USER_RELATIONSHIPS.USER_1 = BOC_USER.USERNAME AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user['username'])} AND BOC_USER_RELATIONSHIPS.STATUS = \"friends_pending\") THEN "accept_friend_request"
                 WHEN EXISTS (SELECT 1
                     FROM BOC_USER_RELATIONSHIPS
                     WHERE (
-                        (BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])} AND BOC_USER_RELATIONSHIPS.USER_2 = BOC_USER.USERNAME)
+                        (BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user['username'])} AND BOC_USER_RELATIONSHIPS.USER_2 = BOC_USER.USERNAME)
                         OR
-                        (BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])} AND BOC_USER_RELATIONSHIPS.USER_1 = BOC_USER.USERNAME)
+                        (BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user['username'])} AND BOC_USER_RELATIONSHIPS.USER_1 = BOC_USER.USERNAME)
                     )
                     AND BOC_USER_RELATIONSHIPS.STATUS = "friends") THEN \"unfriend\"
                 ELSE "send_friend_request"
@@ -828,7 +828,7 @@ class PageHome(Page):
             CASE
                 WHEN EXISTS (SELECT 1
                     FROM BOC_USER_RELATIONSHIPS
-                    WHERE (BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])} AND BOC_USER_RELATIONSHIPS.USER_2 = BOC_USER.USERNAME)
+                    WHERE (BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user['username'])} AND BOC_USER_RELATIONSHIPS.USER_2 = BOC_USER.USERNAME)
                         AND BOC_USER_RELATIONSHIPS.STATUS = "blocked") THEN \"unblock_user\"
                 ELSE \"block_user\"
             END AS BLOCK_TOGGLE
@@ -864,12 +864,12 @@ class PageHome(Page):
         # If you have any pending friend requests sent your way, they will be displayed in a separate form on top
         self.open_container("your_profile_forms_container")
 
-        pending_friend_requests_sample = db.execute("SELECT * FROM BOC_USER_RELATIONSHIPS WHERE USER_2 = ? AND STATUS = \"friends_pending\" LIMIT 1", (g.user["username"],)).fetchone()
+        pending_friend_requests_sample = db.execute("SELECT * FROM BOC_USER_RELATIONSHIPS WHERE USER_2 = ? AND STATUS = \"friends_pending\" LIMIT 1", (g.user['username'],)).fetchone()
         if pending_friend_requests_sample is not None:
             form_pending_friend_requests = ActionForm("pending_friend_requests", "Pending friend requests", "home")
             form_pending_friend_requests.initialise_tabs(["Friend requests for you"])
             form_pending_friend_requests.add_ordered_table(0, "friend_requests_for_you",
-                f"SELECT USER_1, D_STATUS FROM BOC_USER_RELATIONSHIPS WHERE USER_2 = {json.dumps(g.user["username"])} AND STATUS = \"friends_pending\"",
+                f"SELECT USER_1, D_STATUS FROM BOC_USER_RELATIONSHIPS WHERE USER_2 = {json.dumps(g.user['username'])} AND STATUS = \"friends_pending\"",
                 "USER_1", ["USER_1", "D_STATUS"],
                 include_select = False,
                 headers = {"USER_1" : "Sender", "D_STATUS" : "When received"},
@@ -910,11 +910,11 @@ class PageHome(Page):
         form_your_profile.add_button(0, "submit", "save_changes", "Save changes", "save_changes")
 
         # Archive of past games
-        form_your_profile.add_game_archive(1, "your_archive", g.user["username"], rows_per_view = 8)
+        form_your_profile.add_game_archive(1, "your_archive", g.user['username'], rows_per_view = 8)
 
         # List of friends
         form_your_profile.add_ordered_table(2, "your_friends",
-            f"""SELECT BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user["username"])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])})) AND BOC_USER_RELATIONSHIPS.STATUS=\"friends\"""",
+            f"""SELECT BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user['username'])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user['username'])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON ((BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_1 AND BOC_USER_RELATIONSHIPS.USER_2 = {json.dumps(g.user['username'])}) OR (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user['username'])})) AND BOC_USER_RELATIONSHIPS.STATUS=\"friends\"""",
             "USERNAME", ["USERNAME", "RATING_ROUND", "COUNT_GAMES"],
             include_select = False,
             headers = {"USERNAME" : "User", "RATING_ROUND" : "Rating", "COUNT_GAMES" : "# of games played with you"},
@@ -930,7 +930,7 @@ class PageHome(Page):
 
         # List of blocked users
         form_your_profile.add_ordered_table(3, "your_blocked",
-            f"""SELECT BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user["username"])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user["username"])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user["username"])}) AND BOC_USER_RELATIONSHIPS.STATUS=\"blocked\"""",
+            f"""SELECT BOC_USER.USERNAME AS USERNAME, CAST(ROUND(BOC_USER.RATING) AS INTEGER) AS RATING_ROUND, (SELECT COUNT(*) FROM BOC_GAMES WHERE ( ( (PLAYER_A = {json.dumps(g.user['username'])} AND PLAYER_B = BOC_USER.USERNAME) OR (PLAYER_B = {json.dumps(g.user['username'])} AND PLAYER_A = BOC_USER.USERNAME)) AND STATUS = \"concluded\")) AS COUNT_GAMES FROM BOC_USER INNER JOIN BOC_USER_RELATIONSHIPS ON (BOC_USER.USERNAME = BOC_USER_RELATIONSHIPS.USER_2 AND BOC_USER_RELATIONSHIPS.USER_1 = {json.dumps(g.user['username'])}) AND BOC_USER_RELATIONSHIPS.STATUS=\"blocked\"""",
             "USERNAME", ["USERNAME", "RATING_ROUND", "COUNT_GAMES"],
             include_select = False,
             headers = {"USERNAME" : "User", "RATING_ROUND" : "Rating", "COUNT_GAMES" : "# of games played with you"},
@@ -952,7 +952,7 @@ class PageHome(Page):
     def render_section_tutorials(self):
         if g.user:
             db = get_db()
-            client_privilege = db.execute("SELECT PRIVILEGE FROM BOC_USER WHERE USERNAME = ?", (g.user["username"],)).fetchone()["PRIVILEGE"]
+            client_privilege = db.execute("SELECT PRIVILEGE FROM BOC_USER WHERE USERNAME = ?", (g.user['username'],)).fetchone()["PRIVILEGE"]
         else:
             client_privilege = "GUEST"
 

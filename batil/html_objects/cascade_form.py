@@ -20,12 +20,12 @@ class CascadeForm(HTMLObject):
 
         self.elements_by_group = {}
         for group in self.groups:
-            self.elements_by_group[group["ID"]] = []
+            self.elements_by_group[group['ID']] = []
             for element in self.elements:
-                if element["GROUP"] == group["ID"]:
-                    self.elements_by_group[group["ID"]].append(element)
+                if element["GROUP"] == group['ID']:
+                    self.elements_by_group[group['ID']].append(element)
             # Now we order the elements in each group
-            self.elements_by_group[group["ID"]].sort(key=lambda x : x["ORDER"])
+            self.elements_by_group[group['ID']].sort(key=lambda x : x["ORDER"])
 
         self.make_selector()
 
@@ -35,25 +35,25 @@ class CascadeForm(HTMLObject):
         default_restriction = "" # restriction imposed by the default element
         for group in self.groups:
             self.structured_html.append([
-                    f"<div id=\"cascade_form_{self.identifier}_selection_group_{group["ID"]}\" class=\"cascade_form_selection_group\">",
-                    f"  <label for=\"cascade_form_{self.identifier}_selection_group_{group["ID"]}_select\" class=\"cascade_form_label\">{group["DESCRIPTION"]}</label>",
-                    f"  <select id=\"cascade_form_{self.identifier}_selection_group_{group["ID"]}_select\" name=\"{group["ID"]}\" class=\"cascade_form_select\">"
+                    f"<div id=\"cascade_form_{self.identifier}_selection_group_{group['ID']}\" class=\"cascade_form_selection_group\">",
+                    f"  <label for=\"cascade_form_{self.identifier}_selection_group_{group['ID']}_select\" class=\"cascade_form_label\">{group['DESCRIPTION']}</label>",
+                    f"  <select id=\"cascade_form_{self.identifier}_selection_group_{group['ID']}_select\" name=\"{group['ID']}\" class=\"cascade_form_select\">"
                 ])
             if default_restriction != "":
                 # We hide the restricted options in the default selection
-                for element in self.elements_by_group[group["ID"]]:
+                for element in self.elements_by_group[group['ID']]:
                     if element["REQUIREMENT"] == default_restriction:
-                        self.structured_html.append(f"    <option value=\"{element["ID"]}\">{element["LABEL"]}</option>")
+                        self.structured_html.append(f"    <option value=\"{element['ID']}\">{element['LABEL']}</option>")
                     else:
-                        self.structured_html.append(f"    <option value=\"{element["ID"]}\" disabled hidden>{element["LABEL"]}</option>")
+                        self.structured_html.append(f"    <option value=\"{element['ID']}\" disabled hidden>{element['LABEL']}</option>")
             else:
                 # We show all options
-                for element in self.elements_by_group[group["ID"]]:
-                    self.structured_html.append(f"    <option value=\"{element["ID"]}\">{element["LABEL"]}</option>")
-            default_restriction = self.elements_by_group[group["ID"]][0]["RESTRICTION"]
+                for element in self.elements_by_group[group['ID']]:
+                    self.structured_html.append(f"    <option value=\"{element['ID']}\">{element['LABEL']}</option>")
+            default_restriction = self.elements_by_group[group['ID']][0]["RESTRICTION"]
             self.structured_html.append([
                     f"  </select>",
-                    f"  <button type=\"button\" class=\"cascade_form_explain\" id=\"cascade_form_{self.identifier}_explain_{group["ID"]}\">Explain</button>",
+                    f"  <button type=\"button\" class=\"cascade_form_explain\" id=\"cascade_form_{self.identifier}_explain_{group['ID']}\">Explain</button>",
                     f"</div>"
                 ])
         # We add the div for explanations
@@ -71,19 +71,19 @@ class CascadeForm(HTMLObject):
         for i in range(1, len(self.groups)):
             # We check if previous row has RESTRICTIONS
             subject_to_restriction = False
-            for element in self.elements_by_group[self.groups[i-1]["ID"]]:
+            for element in self.elements_by_group[self.groups[i-1]['ID']]:
                 if element["RESTRICTION"] != "":
                     subject_to_restriction = True
                     break
             if subject_to_restriction:
                 groups_subject_to_restrictions.append(i)
                 # We add the structure and the listener
-                self.structured_html.append(f"  \"{self.groups[i]["ID"]}\" : {{")
-                for element in self.elements_by_group[self.groups[i-1]["ID"]]:
-                    self.structured_html.append(f"    \"{element["ID"]}\" : [")
-                    for successor in self.elements_by_group[self.groups[i]["ID"]]:
+                self.structured_html.append(f"  \"{self.groups[i]['ID']}\" : {{")
+                for element in self.elements_by_group[self.groups[i-1]['ID']]:
+                    self.structured_html.append(f"    \"{element['ID']}\" : [")
+                    for successor in self.elements_by_group[self.groups[i]['ID']]:
                         if successor["REQUIREMENT"] == element["RESTRICTION"]:
-                            self.structured_html.append(f"      \"{successor["ID"]}\",")
+                            self.structured_html.append(f"      \"{successor['ID']}\",")
                     # We need to get rid of the final comma
                     self.structured_html[-1] = self.structured_html[-1][:-1]
                     self.structured_html.append(f"    ],")
@@ -95,12 +95,12 @@ class CascadeForm(HTMLObject):
         # Add onclick listeners for explain buttons (and store element descriptions)
         self.structured_html.append("const element_labels = {")
         for element in self.elements:
-            self.structured_html.append(f"  \"{element["ID"]}\" : {json.dumps(element["LABEL"])},")
+            self.structured_html.append(f"  \"{element['ID']}\" : {json.dumps(element['LABEL'])},")
         self.structured_html[-1] = self.structured_html[-1][:-1]
         self.structured_html.append("};\n")
         self.structured_html.append("const element_descriptions = {")
         for element in self.elements:
-            self.structured_html.append(f"  \"{element["ID"]}\" : {json.dumps(element["DESCRIPTION"])},")
+            self.structured_html.append(f"  \"{element['ID']}\" : {json.dumps(element['DESCRIPTION'])},")
         self.structured_html[-1] = self.structured_html[-1][:-1]
         self.structured_html.append("};\n")
 
@@ -117,12 +117,12 @@ class CascadeForm(HTMLObject):
         for i in range(1, len(self.groups)):
             if i in groups_subject_to_restrictions:
                 self.structured_html.append([
-                        f"document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[i-1]["ID"]}_select\").addEventListener(\"change\", function() {{",
+                        f"document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[i-1]['ID']}_select\").addEventListener(\"change\", function() {{",
                         f"  const value = this.value;",
-                        f"  const affected = document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[i]["ID"]}_select\");",
+                        f"  const affected = document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[i]['ID']}_select\");",
                         f"  let selection_update_pending = true",
                         f"  Array.from(affected.options).forEach(opt => {{",
-                        f"    if (restrictions[\"{self.groups[i]["ID"]}\"][value].includes(opt.value)) {{",
+                        f"    if (restrictions[\"{self.groups[i]['ID']}\"][value].includes(opt.value)) {{",
                         f"      opt.hidden = false;",
                         f"      opt.disabled = false;",
                         f"      if (selection_update_pending) {{",
@@ -134,14 +134,14 @@ class CascadeForm(HTMLObject):
                         f"      opt.disabled = true;",
                         f"    }}",
                         f"  }});",
-                        f"  elaborate_on_that(\"{self.groups[i-1]["ID"]}\");",
+                        f"  elaborate_on_that(\"{self.groups[i-1]['ID']}\");",
                         f"}});"
                     ])
             else:
-                self.structured_html.append(f"document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[i-1]["ID"]}_select\").addEventListener(\"change\", () => elaborate_on_that(\"{self.groups[i-1]["ID"]}\"));")
-        self.structured_html.append(f"document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[-1]["ID"]}_select\").addEventListener(\"change\", () => elaborate_on_that(\"{self.groups[-1]["ID"]}\"));") # the last group is never restricting another group
+                self.structured_html.append(f"document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[i-1]['ID']}_select\").addEventListener(\"change\", () => elaborate_on_that(\"{self.groups[i-1]['ID']}\"));")
+        self.structured_html.append(f"document.getElementById(\"cascade_form_{self.identifier}_selection_group_{self.groups[-1]['ID']}_select\").addEventListener(\"change\", () => elaborate_on_that(\"{self.groups[-1]['ID']}\"));") # the last group is never restricting another group
 
         for group in self.groups:
-            self.structured_html.append(f"document.getElementById(\"cascade_form_{self.identifier}_explain_{group["ID"]}\").addEventListener(\"click\", () => elaborate_on_that(\"{group["ID"]}\"));")
+            self.structured_html.append(f"document.getElementById(\"cascade_form_{self.identifier}_explain_{group['ID']}\").addEventListener(\"click\", () => elaborate_on_that(\"{group['ID']}\"));")
         self.structured_html.append("</script>")
 

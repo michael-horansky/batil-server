@@ -71,30 +71,30 @@ class BoardEditorHTMLRenderer(Renderer):
         # and if given, indexed as base_id_{normal class}
         res = []
         for el in self.element_sources[element_type][element_kw]:
-            if el["element"] == "/g":
+            if el['element'] == "/g":
                 res.append("</g>")
                 continue
             if base_id is None:
                 el_attributes = ""
             else:
                 if "element_id" in el.keys():
-                    el_attributes = f"id=\"{base_id}_{el["element_id"]}\""
+                    el_attributes = f"id=\"{base_id}_{el['element_id']}\""
                 else:
                     # we assume the element_class is unique
-                    el_attributes = f"id=\"{base_id}_{el["element_class"]}\""
+                    el_attributes = f"id=\"{base_id}_{el['element_class']}\""
 
             if base_class is None:
-                el_attributes += f" class=\"{el["element_class"]}\""
+                el_attributes += f" class=\"{el['element_class']}\""
             else:
-                el_attributes += f" class=\"{el["element_class"]} {base_class}_{el["element_class"]}\""
+                el_attributes += f" class=\"{el['element_class']} {base_class}_{el['element_class']}\""
             for attr in el.keys():
                 if attr in ["element", "element_id", "element_class"]:
                     continue
                 el_attributes += f" {attr}=\"{el[attr]}\""
-            if el["element"] == "g":
-                res.append(f"<{el["element"]} {el_attributes}>")
+            if el['element'] == "g":
+                res.append(f"<{el['element']} {el_attributes}>")
             else:
-                res.append(f"<{el["element"]} {el_attributes}></{el["element"]}>")
+                res.append(f"<{el['element']} {el_attributes}></{el['element']}>")
         return(res)
 
     # ------------------- Output file communication methods -------------------
@@ -130,18 +130,18 @@ class BoardEditorHTMLRenderer(Renderer):
 
     def encode_board_square_class(self, x, y):
         # returns a tuple (class_name, z_index)
-        if self.render_object["board_static"][x][y] == " ":
+        if self.render_object['board_static'][x][y] == " ":
             return("board_square_empty")
-        elif self.render_object["board_static"][x][y] == "X":
+        elif self.render_object['board_static'][x][y] == "X":
             return("board_square_wall")
         else:
             return("board_square_unknown")
 
     def encode_stone_ID(self, stone):
-        return(f"stone_{stone["x"]}_{stone["y"]}")
+        return(f"stone_{stone['x']}_{stone['y']}")
 
     def encode_base_ID(self, base):
-        return(f"base_{base["x"]}_{base["y"]}")
+        return(f"base_{base['x']}_{base['y']}")
 
     # ---------------------------- Data depositing ----------------------------
 
@@ -175,13 +175,13 @@ class BoardEditorHTMLRenderer(Renderer):
         # This means the main script can be global for all the games :)
         self.commit_to_output(f"<script>")
         # ------------------------ General properties -------------------------
-        self.deposit_list("board_static", self.render_object["board_static"])
-        self.deposit_datum("t_dim", self.render_object["t_dim"])
-        self.deposit_datum("x_dim", self.render_object["x_dim"])
-        self.deposit_datum("y_dim", self.render_object["y_dim"])
+        self.deposit_list("board_static", self.render_object['board_static'])
+        self.deposit_datum("t_dim", self.render_object['t_dim'])
+        self.deposit_datum("x_dim", self.render_object['x_dim'])
+        self.deposit_datum("y_dim", self.render_object['y_dim'])
 
-        self.deposit_object("bases", self.render_object["bases"])
-        self.deposit_object("stones", self.render_object["stones"])
+        self.deposit_object("bases", self.render_object['bases'])
+        self.deposit_object("stones", self.render_object['stones'])
 
         # -------------------------- Static app data --------------------------
         static_stone_data_file = current_app.open_resource("engine/stones/stone_properties.json")
@@ -192,8 +192,8 @@ class BoardEditorHTMLRenderer(Renderer):
         self.deposit_list("board_square_types", list(self.board_squares_info_data.keys()))
         self.deposit_object("board_square_info", self.board_squares_info_data)
 
-        self.deposit_list("bases_keywords", self.element_keywords["bases"])
-        self.deposit_list("stones_keywords", self.element_keywords["stones"])
+        self.deposit_list("bases_keywords", self.element_keywords['bases'])
+        self.deposit_list("stones_keywords", self.element_keywords['stones'])
 
         self.deposit_datum("client_action", self.render_object["client_action"])
 
@@ -284,7 +284,7 @@ class BoardEditorHTMLRenderer(Renderer):
         self.commit_to_output("</defs>")
 
     def open_board_window_camera_scope(self):
-        self.commit_to_output(f"<g id=\"camera_subject\" transform-origin=\"{self.render_object["x_dim"] * self.board_square_base_side_length / 2}px {self.render_object["y_dim"] * self.board_square_base_side_length / 2}px\">")
+        self.commit_to_output(f"<g id=\"camera_subject\" transform-origin=\"{self.render_object['x_dim'] * self.board_square_base_side_length / 2}px {self.render_object['y_dim'] * self.board_square_base_side_length / 2}px\">")
 
     def close_board_window_camera_scope(self):
         self.commit_to_output("</g>")
@@ -293,8 +293,8 @@ class BoardEditorHTMLRenderer(Renderer):
         # Highlights
         selection_mode_highlights = []
         selection_mode_highlights.append(f"<g id=\"selection_mode_highlights\" visibility=\"hidden\">")
-        for x in range(self.render_object["x_dim"]):
-            for y in range(self.render_object["y_dim"]):
+        for x in range(self.render_object['x_dim']):
+            for y in range(self.render_object['y_dim']):
                 selection_mode_highlights.append(f"  <rect width=\"{self.board_square_base_side_length}\" height=\"{self.board_square_base_side_length}\" x=\"{x * self.board_square_base_side_length}\" y=\"{y * self.board_square_base_side_length}\" class=\"selection_mode_highlight\" id=\"selection_mode_highlight_{x}_{y}\" />")
         selection_mode_highlights.append(f"</g>")
         self.commit_to_output(selection_mode_highlights)
@@ -371,19 +371,19 @@ class BoardEditorHTMLRenderer(Renderer):
         #self.commit_to_output(enclosing_group)
 
         self.board_layer_structure[0].append("<g id=\"group_squares\">")
-        for x in range(self.render_object["x_dim"]):
-            for y in range(self.render_object["y_dim"]):
+        for x in range(self.render_object['x_dim']):
+            for y in range(self.render_object['y_dim']):
                 self.draw_board_square(x, y)
         self.board_layer_structure[0].append("</g>")
 
     # Stone type particulars
     def create_stone(self, stone, special_id = None, special_id_display="none", special_id_onclick=None):
         # Stone_ID can be set to "dummy" for the selection mode dummies
-        base_class = f"{stone["faction"]}_{stone["stone_type"]}"
+        base_class = f"{stone['faction']}_{stone['stone_type']}"
         stone_object = []
         if "x" in stone.keys():
-            stone_x = stone["x"] * self.board_square_base_side_length
-            stone_y = stone["y"] * self.board_square_base_side_length
+            stone_x = stone['x'] * self.board_square_base_side_length
+            stone_y = stone['y'] * self.board_square_base_side_length
         else:
             stone_x = 0
             stone_y = 0
@@ -406,9 +406,9 @@ class BoardEditorHTMLRenderer(Renderer):
 
         # Now the main body of the stone
         if special_id is not None:
-            stone_object.append(self.element_source_to_rep("board_elements", stone["stone_type"], base_class = stone["faction"], base_id = special_id))
+            stone_object.append(self.element_source_to_rep("board_elements", stone['stone_type'], base_class = stone['faction'], base_id = special_id))
         else:
-            stone_object.append(self.element_source_to_rep("board_elements", stone["stone_type"], base_class = stone["faction"], base_id = self.encode_stone_ID(stone)))
+            stone_object.append(self.element_source_to_rep("board_elements", stone['stone_type'], base_class = stone['faction'], base_id = self.encode_stone_ID(stone)))
 
         stone_object.append("    </g>")
         stone_object.append("  </g>")
@@ -416,10 +416,10 @@ class BoardEditorHTMLRenderer(Renderer):
         return(stone_object)
 
     def create_base(self, base, special_id = None, special_id_display="none", special_id_onclick=None):
-        base_class = f"base_{base["faction"]}"
+        base_class = f"base_{base['faction']}"
         if "x" in base.keys():
-            base_x = base["x"] * self.board_square_base_side_length
-            base_y = base["y"] * self.board_square_base_side_length
+            base_x = base['x'] * self.board_square_base_side_length
+            base_y = base['y'] * self.board_square_base_side_length
         else:
             base_x = 0
             base_y = 0
@@ -444,14 +444,14 @@ class BoardEditorHTMLRenderer(Renderer):
         # These are drawn on the x=0,y=0 square with display:none, and will be
         # moved around by JavaScript using the 'transform' attrib1ute.
         self.board_layer_structure[4].append("<g id=\"group_stones\">")
-        for stone in self.render_object["stones"]:
+        for stone in self.render_object['stones']:
             self.board_layer_structure[4].append(self.create_stone(stone))
         self.board_layer_structure[4].append("</g>")
 
     def draw_bases(self):
         # Same principle as stones
         self.board_layer_structure[2].append("<g id=\"group_bases\">")
-        for base in self.render_object["bases"]:
+        for base in self.render_object['bases']:
             self.board_layer_structure[2].append(self.create_base(base))
         self.board_layer_structure[2].append("</g>")
 
@@ -539,11 +539,11 @@ class BoardEditorHTMLRenderer(Renderer):
             f"<form id=\"board_dimensions_inspector_form\">",
             f"  <div id=\"board_dimensions_left_col\">",
             f"    <label for=\"board_dimensions_t_input\">Timeslices in round:</label>",
-            f"    <input type=\"number\" id=\"board_dimensions_t_input\" name=\"board_dimensions_t_input\" value=\"{self.render_object["t_dim"]}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
+            f"    <input type=\"number\" id=\"board_dimensions_t_input\" name=\"board_dimensions_t_input\" value=\"{self.render_object['t_dim']}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
             f"    <label for=\"board_dimensions_x_input\">Squares horizontally:</label>",
-            f"    <input type=\"number\" id=\"board_dimensions_x_input\" name=\"board_dimensions_x_input\" value=\"{self.render_object["x_dim"]}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
+            f"    <input type=\"number\" id=\"board_dimensions_x_input\" name=\"board_dimensions_x_input\" value=\"{self.render_object['x_dim']}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
             f"    <label for=\"board_dimensions_y_input\">Squares vertically:</label>",
-            f"    <input type=\"number\" id=\"board_dimensions_y_input\" name=\"board_dimensions_y_input\" value=\"{self.render_object["y_dim"]}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
+            f"    <input type=\"number\" id=\"board_dimensions_y_input\" name=\"board_dimensions_y_input\" value=\"{self.render_object['y_dim']}\" min=\"3\" max=\"30\" onchange=\"toggle_board_dimensions_buttons()\">",
             f"  </div>",
             f"  <div id=\"board_dimensions_right_col\">",
             f"    <input type=\"button\" id=\"board_dimensions_update_btn\" value=\"Update\" onclick=\"inspector.update_board_dimensions()\" hidden>",
@@ -648,44 +648,45 @@ class BoardEditorHTMLRenderer(Renderer):
         board_edit_form = []
         board_edit_form.append(f"<div id=\"board_edit_form_div\">")
         if self.render_object["client_action"] == "edit":
-            board_edit_form.append(f"  <form id=\"board_edit_form\" class=\"submission_form\" action=\"{url_for("board.board_edit_submission", board_id=self.board_id)}\" method=\"POST\">")
+            board_edit_form.append(f"  <form id=\"board_edit_form\" class=\"submission_form\" action=\"{url_for('board.board_edit_submission', board_id=self.board_id)}\" method=\"POST\">")
             # ------------------------ Invisible elements -------------------------
             # Fieldset Header: t_dim, x_dim, y_dim, total number of bases/stones
             board_edit_form.append(f"    <fieldset id=\"header_data\" class=\"board_edit_data_field\">")
-            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_t_dim\" id=\"h_t_dim\" value=\"{self.render_object["t_dim"]}\">")
-            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_x_dim\" id=\"h_x_dim\" value=\"{self.render_object["x_dim"]}\">")
-            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_y_dim\" id=\"h_y_dim\" value=\"{self.render_object["y_dim"]}\">")
-            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_number_of_bases\" id=\"h_number_of_bases\" value=\"{len(self.render_object["bases"])}\">")
-            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_number_of_stones\" id=\"h_number_of_stones\" value=\"{len(self.render_object["stones"])}\">")
+            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_t_dim\" id=\"h_t_dim\" value=\"{self.render_object['t_dim']}\">")
+            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_x_dim\" id=\"h_x_dim\" value=\"{self.render_object['x_dim']}\">")
+            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_y_dim\" id=\"h_y_dim\" value=\"{self.render_object['y_dim']}\">")
+            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_number_of_bases\" id=\"h_number_of_bases\" value=\"{len(self.render_object['bases'])}\">")
+            board_edit_form.append(f"      <input type=\"hidden\" name=\"h_number_of_stones\" id=\"h_number_of_stones\" value=\"{len(self.render_object['stones'])}\">")
             board_edit_form.append(f"    </fieldset>")
             # Fieldset Squares: For each square its type
             board_edit_form.append(f"    <fieldset id=\"squares_data\" class=\"board_edit_data_field\">")
-            for y in range(self.render_object["y_dim"]):
-                for x in range(self.render_object["x_dim"]):
-                    board_edit_form.append(f"      <input type=\"hidden\" name=\"square_{x}_{y}\" id=\"square_{x}_{y}\" value=\"{self.render_object["board_static"][x][y]}\">")
+            for y in range(self.render_object['y_dim']):
+                for x in range(self.render_object['x_dim']):
+                    board_edit_form.append(f"      <input type=\"hidden\" name=\"square_{x}_{y}\" id=\"square_{x}_{y}\" value=\"{self.render_object['board_static'][x][y]}\">")
             board_edit_form.append(f"    </fieldset>")
             # Fieldset Bases: For each base its position and allegiance
             board_edit_form.append(f"    <fieldset id=\"bases_data\" class=\"board_edit_data_field\">")
-            for base_i in range(len(self.render_object["bases"])):
-                for kw in self.element_keywords["bases"]:
-                    board_edit_form.append(f"      <input type=\"hidden\" name=\"base_{base_i}_{kw}\" id=\"base_{base_i}_{kw}\" value=\"{self.render_object["bases"][base_i][kw]}\" >")
+            for base_i in range(len(self.render_object['bases'])):
+                for kw in self.element_keywords['bases']:
+                    board_edit_form.append(f"      <input type=\"hidden\" name=\"base_{base_i}_{kw}\" id=\"base_{base_i}_{kw}\" value=\"{self.render_object['bases'][base_i][kw]}\" >")
             board_edit_form.append(f"    </fieldset>")
             # Fieldset Stones: For each stone its allegiance, type, position, and azimuth
             board_edit_form.append(f"    <fieldset id=\"stones_data\" class=\"board_edit_data_field\">")
-            for stone_i in range(len(self.render_object["stones"])):
-                for kw in self.element_keywords["stones"]:
-                    board_edit_form.append(f"      <input type=\"hidden\" name=\"stone_{stone_i}_{kw}\" id=\"stone_{stone_i}_{kw}\" value=\"{self.render_object["stones"][stone_i][kw]}\" >")
+            for stone_i in range(len(self.render_object['stones'])):
+                for kw in self.element_keywords['stones']:
+                    board_edit_form.append(f"      <input type=\"hidden\" name=\"stone_{stone_i}_{kw}\" id=\"stone_{stone_i}_{kw}\" value=\"{self.render_object['stones'][stone_i][kw]}\" >")
             board_edit_form.append(f"    </fieldset>")
 
             # ------------------------- Visible elements --------------------------
-            board_edit_form.append(f"    <input type=\"text\" name=\"board_name\" id=\"board_name\" required value=\"{self.render_object["board_name"]}\" >")
+            board_edit_form.append(f"    <input type=\"text\" name=\"board_name\" id=\"board_name\" required value=\"{self.render_object['board_name']}\" >")
 
 
             board_edit_form.append(f"    <button type=\"submit\" name=\"board_submission\" value=\"submit\" id=\"save_board_button\">Save board</button>")
             board_edit_form.append(f"  </form>")
         else:
             # Link to author
-            board_edit_form.append(f"  <a href=\"{url_for("user.user", username = self.render_object["author"])}\" target=\"_blank\" class=\"action_table_col_link\">{ self.render_object["author"] }</a>")
+            author_url = url_for('user.user', username = self.render_object['author'])
+            board_edit_form.append(f"  <a href=\"{author_url}\" target=\"_blank\" class=\"action_table_col_link\">{ self.render_object['author'] }</a>")
         board_edit_form.append(f"</div>")
         self.commit_to_output(board_edit_form)
 
@@ -708,6 +709,7 @@ class BoardEditorHTMLRenderer(Renderer):
     # --------------------------- guest info table ----------------------------
 
     def draw_gameside_info_table(self):
+        author_link_url = url_for('user.user', username = self.render_object['author'])
         self.commit_to_output([
             f"  <table id=\"gameside_info_table\" class=\"action_table\">",
             f"    <thead>",
@@ -727,16 +729,16 @@ class BoardEditorHTMLRenderer(Renderer):
             f"    </thead>",
             f"    <tbody>",
             f"      <tr>",
-            f"        <td>{self.render_object["board_name"]}</td>",
-            f"        <td><a href=\"{url_for("user.user", username = self.render_object["author"])}\" target=\"_blank\" class=\"action_table_col_link\">{ self.render_object["author"] }</a></td>",
-            f"        <td>{self.render_object["t_dim"]}</td>",
-            f"        <td>{self.render_object["x_dim"]}</td>",
-            f"        <td>{self.render_object["y_dim"]}</td>",
-            f"        <td>{self.render_object["games_played"]}</td>",
-            f"        <td>{self.render_object["saved_by"]}</td>",
-            f"        <td>{self.render_object["handicap"]}</td>",
-            f"        <td>{self.render_object["p_draw"]}</td>",
-            f"        <td>{self.render_object["d_published"]}</td>",
+            f"        <td>{self.render_object['board_name']}</td>",
+            f"        <td><a href=\"{author_link_url}\" target=\"_blank\" class=\"action_table_col_link\">{ self.render_object['author'] }</a></td>",
+            f"        <td>{self.render_object['t_dim']}</td>",
+            f"        <td>{self.render_object['x_dim']}</td>",
+            f"        <td>{self.render_object['y_dim']}</td>",
+            f"        <td>{self.render_object['games_played']}</td>",
+            f"        <td>{self.render_object['saved_by']}</td>",
+            f"        <td>{self.render_object['handicap']}</td>",
+            f"        <td>{self.render_object['p_draw']}</td>",
+            f"        <td>{self.render_object['d_published']}</td>",
             f"        <td><button type=\"submit\" name=\"action_game_management_table\" value=\"save_board\" class=\"action_game_management_submit_btn action_table_column_button\">Save board</button></td>",
             f"      </tr>",
             f"    </tbody>",

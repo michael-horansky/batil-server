@@ -69,30 +69,30 @@ class HTMLRenderer(Renderer):
         # and if given, indexed as base_id_{normal class}
         res = []
         for el in self.element_sources[element_type][element_kw]:
-            if el["element"] == "/g":
+            if el['element'] == "/g":
                 res.append("</g>")
                 continue
             if base_id is None:
                 el_attributes = ""
             else:
                 if "element_id" in el.keys():
-                    el_attributes = f"id=\"{base_id}_{el["element_id"]}\""
+                    el_attributes = f"id=\"{base_id}_{el['element_id']}\""
                 else:
                     # we assume the element_class is unique
-                    el_attributes = f"id=\"{base_id}_{el["element_class"]}\""
+                    el_attributes = f"id=\"{base_id}_{el['element_class']}\""
 
             if base_class is None:
-                el_attributes += f" class=\"{el["element_class"]}\""
+                el_attributes += f" class=\"{el['element_class']}\""
             else:
-                el_attributes += f" class=\"{el["element_class"]} {base_class}_{el["element_class"]}\""
+                el_attributes += f" class=\"{el['element_class']} {base_class}_{el['element_class']}\""
             for attr in el.keys():
                 if attr in ["element", "element_id", "element_class"]:
                     continue
                 el_attributes += f" {attr}=\"{el[attr]}\""
-            if el["element"] == "g":
-                res.append(f"<{el["element"]} {el_attributes}>")
+            if el['element'] == "g":
+                res.append(f"<{el['element']} {el_attributes}>")
             else:
-                res.append(f"<{el["element"]} {el_attributes}></{el["element"]}>")
+                res.append(f"<{el['element']} {el_attributes}></{el['element']}>")
         return(res)
 
     # ------------------- Output file communication methods -------------------
@@ -724,7 +724,8 @@ class HTMLRenderer(Renderer):
     def draw_command_form(self):
         command_form = []
         command_form.append(f"<div id=\"command_form_div\">")
-        command_form.append(f"  <form id=\"command_form\" class=\"submission_form\" action=\"{url_for("game_bp.command_submission", game_id=self.game_id)}\" method=\"POST\">")
+        command_submission_url = url_for("game_bp.command_submission", game_id=self.game_id)
+        command_form.append(f"  <form id=\"command_form\" class=\"submission_form\" action=\"{command_submission_url}\" method=\"POST\">")
         if not self.render_object.did_player_finish_turn:
             for stone_ID in self.render_object.stones_to_be_commanded:
                 command_form.append(f"    <fieldset id=\"command_data_{stone_ID}\" class=\"command_data_field\">")
@@ -778,7 +779,7 @@ class HTMLRenderer(Renderer):
                 }
 
             self.commit_to_output([
-                f"<form id=\"game_management_form\"  method=\"POST\" action=\"{url_for("game_bp.action_game_management", game_id = self.game_id)}\">",
+                f"<form id=\"game_management_form\"  method=\"POST\" action=\"{url_for('game_bp.action_game_management', game_id = self.game_id)}\">",
                 f"  <input type=\"hidden\" name=\"client_role\" value=\"{self.client_role}\">",
                 f"  <table id=\"game_management_table\" class=\"action_table\">",
                 f"    <thead>",
@@ -792,9 +793,9 @@ class HTMLRenderer(Renderer):
                 f"    </thead>",
                 f"    <tbody>",
                 f"      <tr>",
-                f"        <td><a href=\"{url_for("user.user", username = link_data["A"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["A"] }</a></td>",
-                f"        <td><a href=\"{url_for("user.user", username = link_data["B"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["B"] }</a></td>",
-                f"        <td><a href=\"{url_for("board.board", board_id = link_data["board"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["board_name"] }</a></td>",
+                f"        <td><a href=\"{url_for('user.user', username = link_data['A'])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data['A'] }</a></td>",
+                f"        <td><a href=\"{url_for('user.user', username = link_data['B'])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data['B'] }</a></td>",
+                f"        <td><a href=\"{url_for('board.board', board_id = link_data['board'])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data['board_name'] }</a></td>",
                 f"        <td>{ ruleset_labels }</td>"
                 ])
             for key, label in available_draw_offer_status_buttons.items():
@@ -820,9 +821,9 @@ class HTMLRenderer(Renderer):
                 f"  </thead>",
                 f"  <tbody>",
                 f"    <tr>",
-                f"      <td><a href=\"{url_for("user.user", username = link_data["A"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["A"] }</a></td>",
-                f"      <td><a href=\"{url_for("user.user", username = link_data["B"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["B"] }</a></td>",
-                f"      <td><a href=\"{url_for("board.board", board_id = link_data["board"])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data["board_name"] }</a></td>",
+                f"      <td><a href=\"{url_for('user.user', username = link_data['A'])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data['A'] }</a></td>",
+                f"      <td><a href=\"{url_for('user.user', username = link_data['B'])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data['B'] }</a></td>",
+                f"      <td><a href=\"{url_for('board.board', board_id = link_data['board'])}\" target=\"_blank\" class=\"action_table_col_link\">{ link_data['board_name'] }</a></td>",
                 f"      <td>{ ruleset_labels }</td>",
                 f"    </tr>",
                 f"  </tbody>",
