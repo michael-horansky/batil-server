@@ -1,0 +1,15 @@
+Master file specifying service located in /etc/systemd/system/batil.service
+Master folder for source located in /volume1/web/batil_live
+Most packages located in /var/services/homes/Misko/.local/lib/python3.9/site-packages (maybe TODO: move inside the venv?)
+
+App listening on port 127.0.0.1:8000
+App nginx config located in /etc/nginx/conf.d/alias.batil.conf
+Port served by gunicorn
+
+# How to operate daemon
+To reload daemon: sudo systemctl daemon-reload
+To start batil: sudo systemctl start batil
+To stop batil: sudo systemctl stop batil
+To restart batil (e.g. on service update): sudo systemctl restart batil
+To check batil: sudo systemctl status batil
+To check batil terminal outputs: journalctl -u batil -n 50 --no-pager
