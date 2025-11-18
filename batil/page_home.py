@@ -66,10 +66,8 @@ class PageHome(Page):
 
     def resolve_action_your_pending_challenges(self):
         if request.form.get("action_pending_challenges") == "accept":
-            print("Accept this challenge!")
             accept_challenge(int(request.form.get("action_table_pending_challenges_selected_row")))
         elif request.form.get("action_pending_challenges") == "decline":
-            print("Decline this challenge!")
             decline_challenge(int(request.form.get("action_table_pending_challenges_selected_row")))
 
     def resolve_action_existing_games(self):
@@ -78,7 +76,6 @@ class PageHome(Page):
     def resolve_action_new_game(self):
         db = get_db()
         if request.form.get("action_new_game") == "blind_board_blind_opponent":
-            print("New challenge: blind board, blind opponent!")
             ruleset_selection = {}
             all_rulegroups_raw = db.execute("SELECT RULE_GROUP FROM BOC_RULEGROUPS").fetchall()
             all_rulegroups = []
@@ -92,7 +89,6 @@ class PageHome(Page):
 
 
         elif request.form.get("action_new_game") == "blind_opponent":
-            print("New challenge: blind opponent!")
             ruleset_selection = {}
             all_rulegroups_raw = db.execute("SELECT RULE_GROUP FROM BOC_RULEGROUPS").fetchall()
             all_rulegroups = []
@@ -104,7 +100,6 @@ class PageHome(Page):
 
             new_blind_challenge(int(request.form.get("action_table_select_board_for_new_game_selected_row")), g.user['username'], ruleset_selection)
         elif request.form.get("action_new_game") == "targeted_challenge":
-            print("New challenge: targeted!")
             ruleset_selection = {}
             all_rulegroups_raw = db.execute("SELECT RULE_GROUP FROM BOC_RULEGROUPS").fetchall()
             all_rulegroups = []
@@ -212,8 +207,6 @@ class PageHome(Page):
 
     def resolve_action_users(self):
         db = get_db()
-        for k, v in request.form.items():
-            print(f" {k} -> {v}")
         # Database manipulation
         if "action_leaderboard" in request.form:
             action_username = request.form.get("action_table_leaderboard_selected_row")
@@ -232,8 +225,6 @@ class PageHome(Page):
 
     def resolve_action_pending_friend_requests(self):
         db = get_db()
-        for k, v in request.form.items():
-            print(f" {k} -> {v}")
         if "action_friend_requests_for_you" in request.form:
             action_username = request.form.get("action_table_friend_requests_for_you_selected_row")
             if request.form.get("action_friend_requests_for_you") == "accept":
@@ -261,7 +252,7 @@ class PageHome(Page):
                         db.commit()
 
                 # Now we check if the language selection changed
-                print(f"Language setting changed to {request.form.get('user_language_select')}")
+                #print(f"Language setting changed to {request.form.get('user_language_select')}")
 
                 # Now to see if the password changed
                 if request.form.get("new_password") != "" and request.form.get("new_password") == request.form.get("new_password_confirm"):

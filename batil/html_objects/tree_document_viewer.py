@@ -22,7 +22,6 @@ class TreeDocumentViewer(HTMLObject):
         result_get_args = {}
         if f"{iden}_chapter" in request.form:
             result_get_args[f"{iden}_chapter"] = request.form.get(f"{iden}_chapter")
-            print("Open chapter:", request.form.get(f"{iden}_chapter"))
         return(result_get_args)
 
     # Instance methods

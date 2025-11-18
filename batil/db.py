@@ -514,7 +514,6 @@ def decline_challenge(challenge_id):
 def create_new_tutorial(author, board_id, ruleset_selection):
     db = get_db()
     cur = db.cursor()
-    print("New tutorial by", author, board_id, ruleset_selection)
     cur.execute("INSERT INTO BOC_TUTORIALS (BOARD_ID, AUTHOR, STATUS) VALUES (?, ?, 'in_progress')", (board_id, author))
     new_tutorial_id = cur.lastrowid
 

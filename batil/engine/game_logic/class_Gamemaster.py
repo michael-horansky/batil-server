@@ -665,6 +665,10 @@ class Gamemaster():
         return(result)
 
     def check_game_status_at_end_of_round(self, round_n):
+        # if outcome has already been set, the game is concluded
+        if self.outcome is not None:
+            return(Message("concluded", self.outcome))
+
         if len(self.scenarios_by_round) > round_n + 1:
             scenario_for_next_round = self.scenarios_by_round[round_n + 1]
         else:
@@ -1280,8 +1284,7 @@ class Gamemaster():
                     commit_trackers_and_buffer(result_scenario, current_trackers)
                     return(result_scenario)
                 effect_iterator.next_state()
-            print("Paradox reached! Ending the game...")
-            quit() # TODO count points if doing that
+            self.outcome = "draw" # TODO not draw depending on the ruleset
         elif self.ruleset["paradox_action"] == "permanent_removal":
             reference_setup_ID_list = []
             for setup_stone_ID, setup_flag_ID in self.setup_stones.items():
@@ -2603,7 +2606,6 @@ class Gamemaster():
             game_status = self.check_game_status_at_end_of_round(current_round_number)
             if game_status.header == "concluded":
                 self.outcome = game_status.msg
-                print(f"Player {game_status.msg} wins the game!")
 
 
 

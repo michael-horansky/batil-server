@@ -76,7 +76,6 @@ class PageGame(Page):
 
     def resolve_request(self):
         db = get_db()
-        print("Resolving POST...")
         if request.method == 'POST':
             # We check what action is happening
             pass

@@ -59,8 +59,6 @@ class PageAdmin(Page):
 
     def resolve_action_new_tutorial(self):
         db = get_db()
-        for key, val in request.form.items():
-            print(f"{key} -> {val}")
         if "action_new_tutorial" in request.form:
             if request.form.get("action_new_tutorial") == "create_tutorial":
                 ruleset_selection = {}
@@ -75,8 +73,7 @@ class PageAdmin(Page):
                 create_new_tutorial(g.user["username"], selected_board_id, ruleset_selection)
 
     def resolve_action_edit_tutorials(self):
-        for key, val in request.form.items():
-            print(f"{key} -> {val}")
+        pass
 
     def render_section_stats(self):
         self.structured_html.append("<p>statistics about number of users, games, challenges, etc.</p>")

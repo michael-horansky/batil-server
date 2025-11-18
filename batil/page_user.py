@@ -22,10 +22,7 @@ class PageUser(Page):
         self.username = username
 
     def resolve_request(self):
-        if request.method == 'POST':
-            # We check what action is happening
-            for key, val in request.form.items():
-                print(f"  {key} --> {val} ({type(val)})")
+        pass
 
     def resolve_dynamic_get_form(self):
         # Table navigation GET preparation
@@ -41,8 +38,6 @@ class PageUser(Page):
 
     def resolve_action_profile_form(self):
         db = get_db()
-        for key, val in request.form.items():
-            print(f"  {key} --> {val} ({type(val)})")
         if "action_profile_form" in request.form:
             if request.form.get("action_profile_form") == "unfriend":
                 unfriend_user(g.user["username"], self.username)

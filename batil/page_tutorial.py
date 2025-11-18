@@ -56,11 +56,9 @@ class PageTutorial(Page):
 
     def resolve_request(self):
         db = get_db()
-        print("Resolving POST...")
         if request.method == 'POST':
             # We check what action is happening
-            for key, val in request.form.items():
-                print(f"{key} -> {val}")
+            pass
 
 
     def resolve_tutorial_comments_edit(self):
