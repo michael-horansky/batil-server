@@ -6,6 +6,13 @@ App listening on port 127.0.0.1:8000
 App nginx config located in /etc/nginx/conf.d/alias.batil.conf
 Port served by gunicorn
 
+Second nginx file was created at /etc/nginx/sites-enabled/www_siqo_sk_batil.conf
+This allows links with www prefix to be served.
+
+Note: when updating any nginx file, firstly stop batil, and afterwards run
+    sudo nginx -t            (to test nginx)
+    sudo nginx -s reload     (to apply changes)
+
 # How to operate daemon
 To reload daemon: sudo systemctl daemon-reload
 To start batil: sudo systemctl start batil
@@ -13,3 +20,46 @@ To stop batil: sudo systemctl stop batil
 To restart batil (e.g. on service update): sudo systemctl restart batil
 To check batil: sudo systemctl status batil
 To check batil terminal outputs: journalctl -u batil -n 50 --no-pager
+
+
+
+
+
+/etc/nginx/conf.d/alias.batil.conf content:
+# Serve static files for Flask app mounted at /batil
+location ^~ /batil/static/ {
+    alias /volume1/web/batil_live/batil/static/;
+}
+
+# Proxy all other requests to Flask
+location /batil/ {
+    proxy_pass http://127.0.0.1:8000/batil/;
+    proxy_http_version 1.1;
+
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    # crucial for subpath-mounted Flask apps
+    proxy_set_header X-Script-Name /batil;
+    proxy_set_header X-Forwarded-Prefix /batil;
+
+    proxy_redirect off;
+}
+
+/etc/nginx/sites-enabled/www_siqo_sk_batil.conf content:
+server {
+    listen 80;
+    server_name www.siqo.sk;
+
+    location /batil/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+
